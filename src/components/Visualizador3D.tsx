@@ -210,7 +210,7 @@ function CameraRig({
     camera.lookAt(target);
     camera.updateProjectionMatrix();
     if (controlsRef.current) {
-      controlsRef.current.target.copy(target);
+      (controlsRef.current as any).target.copy(target);
       controlsRef.current.update();
     }
   }, [preset, L_m, H_m, camera, controlsRef]);
