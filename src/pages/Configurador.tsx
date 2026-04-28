@@ -154,10 +154,7 @@ export default function Configurador() {
     toast.success("Orçamento gerado");
   };
 
-  // Plano de corte / produção
-  const [barraMm, setBarraMm] = useState<number>(6000);
-  const planoCorte = useMemo(() => planejarCorte(resultado.cortes, barraMm), [resultado.cortes, barraMm]);
-  const planoProducao = useMemo(() => planejarProducao(projeto.tipologia, resultado.cortes), [projeto.tipologia, resultado.cortes]);
+
 
   const exportarOP = () => {
     gerarOrdemProducaoPDF(projeto, planoCorte, planoProducao);
