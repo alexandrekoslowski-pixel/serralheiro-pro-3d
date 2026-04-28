@@ -101,7 +101,18 @@ export default function Configurador() {
 
   const totalAnimado = useAnimatedNumber(resultado?.totalGeral ?? 0);
 
-  if (!projeto || !resultado) return null;
+  // Plano de corte / produção (hooks must be called before any early return)
+  const [barraMm, setBarraMm] = useState<number>(6000);
+  const planoCorte = useMemo(
+    () => (resultado ? planejarCorte(resultado.cortes, barraMm) : null),
+    [resultado, barraMm],
+  );
+  const planoProducao = useMemo(
+    () => (projeto && resultado ? planejarProducao(projeto.tipologia, resultado.cortes) : null),
+    [projeto, resultado],
+  );
+
+  if (!projeto || !resultado || !planoCorte || !planoProducao) return null;
 
   const tip = tipologiaPorId(projeto.tipologia);
 
