@@ -1,0 +1,161 @@
+import { useEffect, useState } from "react";
+import { Building2, Save, Plus, Trash2, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
+import {
+  obterEmpresa, salvarEmpresa, obterCatalogo, salvarCatalogo,
+  restaurarCatalogoPadrao, DadosEmpresa,
+} from "@/lib/storage";
+import { Catalogo, Perfil, Acessorio } from "@/lib/catalogo";
+
+export default function Configuracoes() {
+  const [empresa, setEmpresa] = useState<DadosEmpresa>(obterEmpresa());
+  const [cat, setCat] = useState<Catalogo>(obterCatalogo());
+
+  useEffect(() => {
+    setEmpresa(obterEmpresa());
+    setCat(obterCatalogo());
+  }, []);
+
+  const salvarTudo = () => {
+    salvarEmpresa(empresa);
+    salvarCatalogo(cat);
+    toast.success("Configurações salvas");
+  };
+
+  const restaurar = () => {
+    const padrao = restaurarCatalogoPadrao();
+    setCat(padrao);
+    toast.success("Catálogo restaurado para o padrão");
+  };
+
+  const updPerfil = (i: number, patch: Partial<Perfil>) => {
+    const next = [...cat.perfis];
+    next[i] = { ...next[i], ...patch };
+    setCat({ ...cat, perfis: next });
+  };
+  const addPerfil = () =>
+    setCat({ ...cat, perfis: [...cat.perfis, { codigo: "NOVO", descricao: "Novo perfil", precoPorMetro: 0, pesoLinear: 0 }] });
+  const delPerfil = (i: number) =>
+    setCat({ ...cat, perfis: cat.perfis.filter((_, idx) => idx !== i) });
+
+  const updAce = (i: number, patch: Partial<Acessorio>) => {
+    const next = [...cat.acessorios];
+    next[i] = { ...next[i], ...patch };
+    setCat({ ...cat, acessorios: next });
+  };
+  const addAce = () =>
+    setCat({ ...cat, acessorios: [...cat.acessorios, { codigo: "NOVO", descricao: "Novo acessório", preco: 0, unidade: "un" }] });
+  const delAce = (i: number) =>
+    setCat({ ...cat, acessorios: cat.acessorios.filter((_, idx) => idx !== i) });
+
+  return (
+    <section className="container py-6 md:py-10 space-y-8">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="font-display text-2xl md:text-3xl flex items-center gap-2">
+            <Building2 className="h-6 w-6 text-primary" /> Empresa & Catálogo
+          </h1>
+          <p className="text-sm text-muted-foreground">Esses dados aparecem nos PDFs e influenciam os cálculos.</p>
+        </div>
+        <Button onClick={salvarTudo} className="bg-gradient-orange text-primary-foreground shadow-orange">
+          <Save className="mr-2 h-4 w-4" /> Salvar
+        </Button>
+      </div>
+
+      {/* Empresa */}
+      <div className="surface-card rounded-lg border border-border p-5">
+        <h2 className="font-display text-lg mb-4">Dados da empresa</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div><Label>Nome</Label><Input value={empresa.nome} onChange={(e) => setEmpresa({ ...empresa, nome: e.target.value })} /></div>
+          <div><Label>CNPJ</Label><Input value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} /></div>
+          <div><Label>Telefone</Label><Input value={empresa.telefone} onChange={(e) => setEmpresa({ ...empresa, telefone: e.target.value })} /></div>
+          <div><Label>E-mail</Label><Input type="email" value={empresa.email} onChange={(e) => setEmpresa({ ...empresa, email: e.target.value })} /></div>
+          <div className="md:col-span-2"><Label>Endereço</Label><Input value={empresa.endereco} onChange={(e) => setEmpresa({ ...empresa, endereco: e.target.value })} /></div>
+        </div>
+      </div>
+
+      {/* Perfis */}
+      <div className="surface-card rounded-lg border border-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-lg">Perfis</h2>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={restaurar}>
+              <RotateCcw className="mr-1 h-3.5 w-3.5" /> Restaurar padrão
+            </Button>
+            <Button size="sm" onClick={addPerfil} className="bg-primary text-primary-foreground">
+              <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar
+            </Button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
+            <thead>
+              <tr className="border-b border-border text-xs uppercase text-muted-foreground">
+                <th className="text-left py-2 pr-2">Código</th>
+                <th className="text-left py-2 pr-2">Descrição</th>
+                <th className="text-right py-2 pr-2">R$/m</th>
+                <th className="text-right py-2 pr-2">kg/m</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {cat.perfis.map((p, i) => (
+                <tr key={i} className="border-b border-border/50">
+                  <td className="py-1 pr-2"><Input className="h-8" value={p.codigo} onChange={(e) => updPerfil(i, { codigo: e.target.value })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8" value={p.descricao} onChange={(e) => updPerfil(i, { descricao: e.target.value })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={p.precoPorMetro} onChange={(e) => updPerfil(i, { precoPorMetro: Number(e.target.value) })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={p.pesoLinear} onChange={(e) => updPerfil(i, { pesoLinear: Number(e.target.value) })} /></td>
+                  <td className="py-1"><Button size="icon" variant="ghost" onClick={() => delPerfil(i)}><Trash2 className="h-4 w-4 text-destructive" /></Button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Acessórios */}
+      <div className="surface-card rounded-lg border border-border p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-lg">Acessórios</h2>
+          <Button size="sm" onClick={addAce} className="bg-primary text-primary-foreground">
+            <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar
+          </Button>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
+            <thead>
+              <tr className="border-b border-border text-xs uppercase text-muted-foreground">
+                <th className="text-left py-2 pr-2">Código</th>
+                <th className="text-left py-2 pr-2">Descrição</th>
+                <th className="text-right py-2 pr-2">Preço</th>
+                <th className="text-left py-2 pr-2">Unidade</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              {cat.acessorios.map((a, i) => (
+                <tr key={i} className="border-b border-border/50">
+                  <td className="py-1 pr-2"><Input className="h-8" value={a.codigo} onChange={(e) => updAce(i, { codigo: e.target.value })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8" value={a.descricao} onChange={(e) => updAce(i, { descricao: e.target.value })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={a.preco} onChange={(e) => updAce(i, { preco: Number(e.target.value) })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8" value={a.unidade} onChange={(e) => updAce(i, { unidade: e.target.value })} /></td>
+                  <td className="py-1"><Button size="icon" variant="ghost" onClick={() => delAce(i)}><Trash2 className="h-4 w-4 text-destructive" /></Button></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Vidro */}
+      <div className="surface-card rounded-lg border border-border p-5 md:max-w-md">
+        <h2 className="font-display text-lg mb-3">Vidro temperado</h2>
+        <Label>Preço por m² (R$)</Label>
+        <Input type="number" step="0.01" value={cat.vidroPorM2} onChange={(e) => setCat({ ...cat, vidroPorM2: Number(e.target.value) })} />
+      </div>
+    </section>
+  );
+}
