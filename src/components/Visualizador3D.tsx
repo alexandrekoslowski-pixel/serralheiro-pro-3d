@@ -330,17 +330,37 @@ function CanvasReadyHook({ onReady }: { onReady?: (c: HTMLCanvasElement) => void
   return null;
 }
 
-// Suaviza a transição da abertura (lerp via useFrame)
-function AberturaSuave({ alvo, onChange }: { alvo: number; onChange: (v: number) => void }) {
-  const atual = useRef(alvo);
+// Geometria com abertura suavizada (lerp via useFrame).
+// Mantém estado próprio dentro do Canvas para re-render por frame.
+function AnimatedGeometria({
+  tipologia, L_m, H_m, cor, wireframe, aberturaAlvo,
+}: {
+  tipologia: TipologiaId;
+  L_m: number;
+  H_m: number;
+  cor: string;
+  wireframe?: boolean;
+  aberturaAlvo: number;
+}) {
+  const [aberturaAtual, setAberturaAtual] = useState(aberturaAlvo);
+  const ref = useRef(aberturaAlvo);
   useFrame((_, delta) => {
-    const next = THREE.MathUtils.damp(atual.current, alvo, 4, delta);
-    if (Math.abs(next - atual.current) > 0.0005) {
-      atual.current = next;
-      onChange(next);
+    const next = THREE.MathUtils.damp(ref.current, aberturaAlvo, 4, delta);
+    if (Math.abs(next - ref.current) > 0.0005) {
+      ref.current = next;
+      setAberturaAtual(next);
     }
   });
-  return null;
+  return (
+    <GeometriaTipologia
+      tipologia={tipologia}
+      L_m={L_m}
+      H_m={H_m}
+      cor={cor}
+      wireframe={wireframe}
+      abertura={aberturaAtual}
+    />
+  );
 }
 
 export default function Visualizador3D({
@@ -364,12 +384,6 @@ export default function Visualizador3D({
   const L_m = largura_mm / 1000;
   const H_m = altura_mm / 1000;
   const acab = useMemo(() => acabamentoPorId(cor), [cor]);
-  const aberturaRef = useRef(abertura);
-  // Pequeno hack: re-render quando aberturaRef mudar via state
-  const [, setTick] = useMemo(() => {
-    let t = 0; const setters = new Set<(n: number) => void>();
-    return [t, (n: number) => setters.forEach((s) => s(n))];
-  }, []);
 
   // Iluminação por ambiente
   const isNoite = ambiente === "noite";
@@ -423,9 +437,8 @@ export default function Visualizador3D({
         />
       )}
 
-      <AberturaSuave alvo={abertura} onChange={(v) => { aberturaRef.current = v; }} />
-      <GeometriaWrapper
-        tipologia={tipologia} L_m={L_m} H_m={H_m} cor={acab.hex} wireframe={wireframe} aberturaRef={aberturaRef}
+      <AnimatedGeometria
+        tipologia={tipologia} L_m={L_m} H_m={H_m} cor={acab.hex} wireframe={wireframe} aberturaAlvo={abertura}
       />
 
       {/* Escala humana e carro */}
