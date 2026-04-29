@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Save, Copy, Download, Settings2, DollarSign,
   RotateCw, Box as BoxIcon, Grid3x3, Ruler, Plus, Trash2, RefreshCw, EyeOff, Eye,
-  Wrench, FileText, FileSpreadsheet,
+  Wrench, FileText, FileSpreadsheet, Smartphone, Sun, Moon, User, Car, Play,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -54,6 +54,10 @@ export default function Configurador() {
   const [showGrid, setShowGrid] = useState(true);
   const [showCotas, setShowCotas] = useState(true);
   const [bgColor, setBgColor] = useState("#1a1614");
+  const [ambiente, setAmbiente] = useState<"dia" | "noite">("dia");
+  const [showPessoa, setShowPessoa] = useState(false);
+  const [showCarro, setShowCarro] = useState(false);
+  const [aberto, setAberto] = useState(false);
 
   // Carrega projeto
   useEffect(() => {
@@ -190,6 +194,9 @@ export default function Configurador() {
           <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); toast.success("Salvo"); }}>
             <Save className="mr-1 h-4 w-4" /> Salvar
           </Button>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); navigate(`/app/projeto/${projeto.id}/atender`); }} title="Modo cliente: tela cheia, 3 passos">
+            <Smartphone className="mr-1 h-4 w-4" /> Atendimento
+          </Button>
           <Button variant="outline" size="sm" className="shrink-0" onClick={exportarOP} title="PDF para a oficina, sem preços">
             <FileSpreadsheet className="mr-1 h-4 w-4" /> Imprimir OS
           </Button>
@@ -300,10 +307,18 @@ export default function Configurador() {
                 ))}
                 <span className="mx-1 h-5 w-px bg-border shrink-0" />
                 <Toggle pressed={autoRotate} onPressedChange={setAutoRotate} size="sm" className="shrink-0" title="Rotação automática"><RotateCw className="h-3.5 w-3.5" /></Toggle>
+                <Toggle pressed={ambiente === "noite"} onPressedChange={(v) => setAmbiente(v ? "noite" : "dia")} size="sm" className="shrink-0" title="Dia / Noite">
+                  {ambiente === "noite" ? <Moon className="h-3.5 w-3.5" /> : <Sun className="h-3.5 w-3.5" />}
+                </Toggle>
+                <Toggle pressed={showPessoa} onPressedChange={setShowPessoa} size="sm" className="shrink-0" title="Pessoa de escala (1,75 m)"><User className="h-3.5 w-3.5" /></Toggle>
+                <Toggle pressed={showCarro} onPressedChange={setShowCarro} size="sm" className="shrink-0" title="Carro de escala (4,5 m)"><Car className="h-3.5 w-3.5" /></Toggle>
+                <Toggle pressed={aberto} onPressedChange={setAberto} size="sm" className={cn("shrink-0", aberto && "bg-primary text-primary-foreground")} title={aberto ? "Fechar" : "Abrir"}>
+                  <Play className="h-3.5 w-3.5" />
+                </Toggle>
                 <Toggle pressed={wireframe} onPressedChange={setWireframe} size="sm" className="shrink-0" title="Wireframe"><BoxIcon className="h-3.5 w-3.5" /></Toggle>
                 <Toggle pressed={showGrid} onPressedChange={setShowGrid} size="sm" className="shrink-0" title="Grid"><Grid3x3 className="h-3.5 w-3.5" /></Toggle>
                 <Toggle pressed={showCotas} onPressedChange={setShowCotas} size="sm" className="shrink-0" title="Cotas"><Ruler className="h-3.5 w-3.5" /></Toggle>
-                <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-7 w-7 shrink-0 cursor-pointer rounded border border-border bg-transparent" title="Cor de fundo" />
+                <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-7 w-7 shrink-0 cursor-pointer rounded border border-border bg-transparent" title="Cor de fundo" disabled={ambiente === "noite"} />
               </div>
             </div>
             <div className="h-[280px] sm:h-[360px] lg:h-[420px] touch-none">
@@ -318,6 +333,10 @@ export default function Configurador() {
                 showCotas={showCotas}
                 bgColor={bgColor}
                 preset={preset}
+                ambiente={ambiente}
+                showPessoa={showPessoa}
+                showCarro={showCarro}
+                abertura={aberto ? 1 : 0}
                 onCanvasReady={(c) => { canvasRef.current = c; }}
               />
             </div>
