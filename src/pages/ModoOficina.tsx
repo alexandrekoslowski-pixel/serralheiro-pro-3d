@@ -1,19 +1,19 @@
-// Modo Oficina — uma TELA SÓ, sem navegação, sem etiquetas.
-// Pensado pro funcionário olhar uma vez e entender tudo:
-// 1) o que é a peça (3D + dimensões),
-// 2) lista de cortes agrupada por perfil (codigo, medida, qtd, folga),
-// 3) sequência de montagem.
-// Sem preço. Sem botão "próxima". Sem QR. Pode imprimir (Ctrl+P).
+// Modo Oficina v2 — uma TELA SÓ, pra serralheiro peão olhar e entender:
+// 1) cabeçalho gigante (lê a 3 m): tipologia, medidas, cor;
+// 2) tabela de cortes com a MEDIDA PRA SERRA (já com folga) em destaque;
+// 3) diagrama de barras em escala (substitui etiqueta de peça — peça = cor + medida);
+// 4) resumo de material (quantas barras comprar);
+// 5) sequência curta de soldas/montagem.
+// Sem preço, sem QR, sem "próxima peça", sem login.
 import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Maximize2, ArrowLeft, Printer } from "lucide-react";
 import { obterProjeto, obterCatalogo } from "@/lib/storage";
 import { calcular } from "@/lib/calculator";
-import { planejarProducao } from "@/lib/producao";
-import { tipologiaPorId } from "@/lib/tipologias";
+import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao";
+import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
-
-const FOLGA_MM = 5; // mesma constante usada no calculator.ts
+import { DiagramaBarras } from "@/components/DiagramaBarras";
 
 export default function ModoOficina() {
   const { id = "" } = useParams();
@@ -41,7 +41,12 @@ export default function ModoOficina() {
     [projeto, resultado],
   );
 
-  // Agrupa os cortes por código de perfil, somando peças idênticas.
+  const planoCorte = useMemo(
+    () => (resultado ? planejarCorte(resultado.cortes, 6000) : null),
+    [resultado],
+  );
+
+  // Agrupa cortes idênticos (mesmo perfil + mesma medida).
   const cortesAgrupados = useMemo(() => {
     if (!resultado) return [];
     const map = new Map<string, { codigo: string; descricao: string; comprimento_mm: number; qtd: number }>();
@@ -51,19 +56,16 @@ export default function ModoOficina() {
       if (existing) existing.qtd += c.qtd;
       else map.set(key, { ...c });
     }
-    // ordena por código, depois maior comprimento
-    const arr = Array.from(map.values()).sort((a, b) => {
+    return Array.from(map.values()).sort((a, b) => {
       if (a.codigo !== b.codigo) return a.codigo.localeCompare(b.codigo);
       return b.comprimento_mm - a.comprimento_mm;
     });
-    return arr;
   }, [resultado]);
 
-  // Atalhos de teclado
+  // Atalhos
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key.toLowerCase() === "f") { e.preventDefault(); toggleFullscreen(); }
-      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { /* deixa o navegador imprimir */ }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -84,11 +86,12 @@ export default function ModoOficina() {
       </div>
     );
   }
-  if (!resultado || !planoProducao) {
+  if (!resultado || !planoProducao || !planoCorte) {
     return <div className="min-h-screen flex items-center justify-center bg-black text-white text-2xl">Carregando…</div>;
   }
 
   const tip = tipologiaPorId(projeto.tipologia);
+  const acab = acabamentoPorId(projeto.cor);
   const totalPecas = cortesAgrupados.reduce((s, c) => s + c.qtd, 0);
   const metragemTotal = cortesAgrupados.reduce((s, c) => s + (c.comprimento_mm * c.qtd) / 1000, 0);
 
@@ -100,7 +103,7 @@ export default function ModoOficina() {
           <ArrowLeft className="h-4 w-4" /> Sair
         </Link>
         <div className="text-zinc-400 text-sm font-mono uppercase tracking-wider truncate">
-          OS {projeto.id.slice(0, 6)} · {projeto.cliente || "Sem cliente"} · {tip.nome}
+          OS {projeto.id.slice(0, 6)} · {projeto.cliente || "Sem cliente"}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -119,20 +122,137 @@ export default function ModoOficina() {
         </div>
       </header>
 
-      {/* Cabeçalho da OS (visível na tela e no print) */}
-      <div className="px-6 py-4 border-b border-zinc-800 print:border-black grid grid-cols-4 gap-4">
-        <Big label="Largura" value={`${projeto.largura_mm} mm`} />
-        <Big label="Altura" value={`${projeto.altura_mm} mm`} />
-        <Big label="Cor / acabamento" value={projeto.cor.toUpperCase()} />
-        <Big label="Total de peças" value={String(totalPecas)} />
-      </div>
+      {/* CABEÇALHO GIGANTE — lê de 3 m */}
+      <section className="px-6 py-5 border-b-2 border-orange-500 print:border-black bg-zinc-950 print:bg-white">
+        <div className="flex items-baseline justify-between flex-wrap gap-4">
+          <h1 className="text-white print:text-black text-3xl md:text-5xl font-black uppercase tracking-tight leading-none">
+            {tip.nome}
+          </h1>
+          <div className="flex items-center gap-3 text-white print:text-black text-lg md:text-xl">
+            <span
+              className="inline-block h-6 w-6 rounded-full border-2 border-zinc-600 print:border-black shrink-0"
+              style={{ background: acab.hex }}
+              aria-hidden
+            />
+            <span className="font-bold uppercase">{acab.nome}</span>
+          </div>
+        </div>
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+          <BigStat label="Largura" value={`${projeto.largura_mm}`} unit="mm" />
+          <BigStat label="Altura" value={`${projeto.altura_mm}`} unit="mm" />
+          <BigStat label="Total de peças" value={`${totalPecas}`} unit="cortes" />
+          <BigStat label="Folga p/ corte" value={`+${FOLGA_CORTE_MM}`} unit="mm" highlight />
+        </div>
+        {projeto.cliente && (
+          <p className="mt-3 text-zinc-400 print:text-black text-sm">
+            Cliente: <span className="text-white print:text-black font-semibold">{projeto.cliente}</span>
+          </p>
+        )}
+      </section>
 
-      {/* Conteúdo principal: 3D à esquerda + Lista de cortes à direita */}
-      <main className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-0">
-        {/* 3D */}
-        <section className="bg-zinc-950 print:bg-white p-4 border-r border-zinc-800 print:border-black">
-          <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Como fica a peça</h2>
-          <div className="aspect-square w-full rounded overflow-hidden border border-zinc-900 print:border-zinc-400 bg-black print:bg-white">
+      {/* CORPO: tabela de cortes (esquerda) + diagrama de barras (direita) */}
+      <main className="grid grid-cols-1 lg:grid-cols-2 gap-0">
+        {/* TABELA DE CORTES — folga já embutida na coluna principal */}
+        <section className="p-5 border-r border-zinc-800 print:border-black">
+          <h2 className="text-orange-400 print:text-black text-sm font-black uppercase tracking-widest mb-3">
+            Cortar
+          </h2>
+          <div className="rounded border border-zinc-800 print:border-black overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-zinc-900 print:bg-zinc-200 text-zinc-300 print:text-black text-left">
+                <tr className="text-xs uppercase tracking-wider">
+                  <th className="px-3 py-2 w-16 text-center">Qtd</th>
+                  <th className="px-3 py-2">Perfil</th>
+                  <th className="px-3 py-2 text-right">Cortar em</th>
+                </tr>
+              </thead>
+              <tbody className="text-white print:text-black">
+                {cortesAgrupados.map((c, i) => (
+                  <tr key={i} className="border-t border-zinc-800 print:border-zinc-400 even:bg-zinc-950 print:even:bg-zinc-50 align-middle">
+                    <td className="px-3 py-3 text-center">
+                      <span className="inline-flex items-center justify-center bg-orange-500 text-black rounded font-black tabular-nums text-2xl md:text-3xl h-12 w-12 print:bg-black print:text-white">
+                        {c.qtd}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="font-bold text-base md:text-lg font-mono leading-tight">{c.codigo}</div>
+                      <div className="text-zinc-500 print:text-black text-xs leading-tight mt-0.5">{c.descricao}</div>
+                    </td>
+                    <td className="px-3 py-3 text-right">
+                      {/* MEDIDA PRA SERRA (já com folga) — gigante */}
+                      <div className="leading-none">
+                        <span className="font-black tabular-nums text-3xl md:text-5xl text-white print:text-black">
+                          {c.comprimento_mm + FOLGA_CORTE_MM}
+                        </span>
+                        <span className="text-orange-400 print:text-black ml-1 text-base font-bold">mm</span>
+                      </div>
+                      {/* medida útil — pequena, só pra conferência */}
+                      <div className="text-zinc-500 print:text-black text-xs mt-1 tabular-nums">
+                        útil {c.comprimento_mm} mm
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="mt-2 text-zinc-500 print:text-black text-xs">
+            A medida grande já inclui +{FOLGA_CORTE_MM} mm de folga. <strong>Use essa medida na régua.</strong>
+          </p>
+        </section>
+
+        {/* DIAGRAMA DE BARRAS — peça = cor + medida, sem etiqueta */}
+        <section className="p-5">
+          <h2 className="text-orange-400 print:text-black text-sm font-black uppercase tracking-widest mb-3">
+            Aproveitamento das barras
+          </h2>
+          <DiagramaBarras plano={planoCorte} />
+          <p className="mt-3 text-zinc-500 print:text-black text-xs leading-relaxed">
+            Cada barra de 6 m mostrada em escala. Peças do mesmo tamanho têm a mesma cor.
+            O número escrito é a medida pra serra (já com folga). Hachurado = sobra.
+          </p>
+        </section>
+      </main>
+
+      {/* MATERIAL NECESSÁRIO + PREVIEW 3D */}
+      <section className="px-6 py-5 border-t border-zinc-800 print:border-black grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="md:col-span-2">
+          <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-3">
+            Material necessário (compra)
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {planoCorte.perfis.map((p) => (
+              <div
+                key={p.codigo}
+                className="rounded border border-zinc-800 print:border-black bg-zinc-950 print:bg-white px-4 py-3 flex items-baseline justify-between gap-3"
+              >
+                <span className="font-mono font-bold text-white print:text-black text-base md:text-lg">
+                  {p.codigo}
+                </span>
+                <span className="text-right">
+                  <span className="text-3xl font-black tabular-nums text-orange-400 print:text-black">
+                    {p.totalBarras}
+                  </span>
+                  <span className="text-zinc-400 print:text-black text-sm ml-2">
+                    {p.totalBarras === 1 ? "barra" : "barras"} de 6 m
+                  </span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 text-zinc-400 print:text-black text-sm">
+            Metragem total a cortar:{" "}
+            <span className="text-white print:text-black font-bold">{metragemTotal.toFixed(2)} m</span>
+            {" · "}Sobra prevista:{" "}
+            <span className="text-orange-400 print:text-black font-bold">{planoCorte.perdaTotalM.toFixed(2)} m</span>
+          </div>
+        </div>
+
+        <div>
+          <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">
+            Como fica
+          </h2>
+          <div className="aspect-square w-full rounded overflow-hidden border border-zinc-800 print:border-black bg-black print:bg-white">
             <Visualizador3DClient
               tipologia={projeto.tipologia}
               largura_mm={projeto.largura_mm}
@@ -146,106 +266,44 @@ export default function ModoOficina() {
               preset="iso"
             />
           </div>
-          <div className="mt-3 text-zinc-400 print:text-black text-sm space-y-1">
-            <div>Metragem total de perfil: <span className="text-white print:text-black font-bold">{metragemTotal.toFixed(2)} m</span></div>
-            <div>Folga padrão de corte: <span className="text-orange-400 print:text-black font-bold">+{FOLGA_MM} mm</span> em cada peça</div>
-          </div>
-        </section>
-
-        {/* Lista de cortes — a estrela do show */}
-        <section className="p-4 print:p-2">
-          <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Lista de cortes</h2>
-          <div className="rounded border border-zinc-800 print:border-black overflow-hidden">
-            <table className="w-full">
-              <thead className="bg-zinc-900 print:bg-zinc-200 text-zinc-300 print:text-black text-left">
-                <tr className="text-sm uppercase tracking-wider">
-                  <th className="px-3 py-2 w-16 text-center">Qtd</th>
-                  <th className="px-3 py-2">Perfil</th>
-                  <th className="px-3 py-2">Função</th>
-                  <th className="px-3 py-2 text-right">Cortar em</th>
-                  <th className="px-3 py-2 text-right hidden md:table-cell print:table-cell">c/ folga</th>
-                </tr>
-              </thead>
-              <tbody className="text-white print:text-black">
-                {cortesAgrupados.map((c, i) => (
-                  <tr key={i} className="border-t border-zinc-800 print:border-zinc-400 even:bg-zinc-950 print:even:bg-zinc-50">
-                    <td className="px-3 py-3 text-center">
-                      <span className="inline-flex items-center justify-center bg-orange-500 text-black rounded font-black tabular-nums text-2xl md:text-3xl h-12 w-12 print:bg-black print:text-white">
-                        {c.qtd}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <div className="font-bold text-lg md:text-xl font-mono">{c.codigo}</div>
-                    </td>
-                    <td className="px-3 py-3 text-zinc-300 print:text-black text-base md:text-lg">{c.descricao}</td>
-                    <td className="px-3 py-3 text-right">
-                      <span className="font-black tabular-nums text-3xl md:text-5xl">
-                        {c.comprimento_mm}
-                      </span>
-                      <span className="text-zinc-500 print:text-black ml-1 text-base">mm</span>
-                    </td>
-                    <td className="px-3 py-3 text-right hidden md:table-cell print:table-cell">
-                      <span className="font-bold tabular-nums text-xl text-orange-400 print:text-black">
-                        {c.comprimento_mm + FOLGA_MM}
-                      </span>
-                      <span className="text-zinc-500 print:text-black ml-1 text-sm">mm</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="mt-2 text-zinc-500 print:text-black text-sm">
-            * "c/ folga" já inclui +{FOLGA_MM} mm pra ajuste/lixamento. Use essa medida na régua.
-          </p>
-        </section>
-      </main>
-
-      {/* Sequência de montagem — abaixo, em tela inteira */}
-      <section className="px-6 py-5 border-t border-zinc-800 print:border-black">
-        <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-3">Sequência de montagem</h2>
-        <ol className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-          {planoProducao.sequencia.map((passo, i) => (
-            <li key={i} className="flex gap-3 items-start">
-              <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-zinc-800 text-orange-400 print:bg-black print:text-white h-9 w-9 font-black tabular-nums text-lg">
-                {i + 1}
-              </span>
-              <span className="text-white print:text-black text-lg leading-snug pt-1">{passo}</span>
-            </li>
-          ))}
-        </ol>
+        </div>
       </section>
 
-      {/* Soldas + ferramentas + observações */}
-      <section className="px-6 py-5 border-t border-zinc-800 print:border-black grid grid-cols-1 md:grid-cols-3 gap-6 pb-10">
+      {/* MONTAR & SOLDAR — listas curtas */}
+      <section className="px-6 py-5 border-t border-zinc-800 print:border-black grid grid-cols-1 md:grid-cols-2 gap-6 pb-12">
         <div>
-          <h3 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Soldas</h3>
-          <ul className="space-y-1.5">
-            {planoProducao.soldas.map((s, i) => (
-              <li key={i} className="flex items-baseline gap-2 text-white print:text-black">
-                <span className="font-black tabular-nums text-orange-400 print:text-black w-8">{s.qtd}×</span>
-                <span className="flex-1">
-                  <span className="font-semibold">{s.descricao}</span>
-                  <span className="text-zinc-500 print:text-black ml-1 text-sm">({s.tipo})</span>
-                  {s.observacao && <div className="text-zinc-500 print:text-black text-xs italic">{s.observacao}</div>}
+          <h2 className="text-orange-400 print:text-black text-sm font-black uppercase tracking-widest mb-3">
+            Montar (em ordem)
+          </h2>
+          <ol className="space-y-2">
+            {planoProducao.sequencia.map((passo, i) => (
+              <li key={i} className="flex gap-3 items-start">
+                <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-zinc-800 text-orange-400 print:bg-black print:text-white h-8 w-8 font-black tabular-nums text-base">
+                  {i + 1}
                 </span>
+                <span className="text-white print:text-black text-base md:text-lg leading-snug pt-0.5">{passo}</span>
               </li>
             ))}
-          </ul>
+          </ol>
         </div>
         <div>
-          <h3 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Ferramentas</h3>
-          <ul className="space-y-1 text-white print:text-black text-sm">
-            {planoProducao.ferramentas.map((f, i) => (
-              <li key={i} className="flex gap-2"><span className="text-orange-400 print:text-black">•</span> {f}</li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h3 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Observações</h3>
-          <ul className="space-y-1.5 text-white print:text-black text-sm">
-            {planoProducao.observacoes.map((o, i) => (
-              <li key={i} className="flex gap-2"><span className="text-orange-400 print:text-black">!</span> {o}</li>
+          <h2 className="text-orange-400 print:text-black text-sm font-black uppercase tracking-widest mb-3">
+            Soldar
+          </h2>
+          <ul className="space-y-2">
+            {planoProducao.soldas.map((s, i) => (
+              <li key={i} className="flex items-baseline gap-3 border-b border-zinc-900 print:border-zinc-300 pb-2">
+                <span className="font-black tabular-nums text-orange-400 print:text-black text-2xl w-12 shrink-0">
+                  {s.qtd}×
+                </span>
+                <span className="flex-1">
+                  <span className="text-white print:text-black font-semibold text-base">{s.descricao}</span>
+                  <span className="text-zinc-500 print:text-black ml-2 text-xs uppercase tracking-wider">{s.tipo}</span>
+                  {s.observacao && (
+                    <div className="text-zinc-500 print:text-black text-xs italic mt-0.5">{s.observacao}</div>
+                  )}
+                </span>
+              </li>
             ))}
           </ul>
         </div>
@@ -254,11 +312,36 @@ export default function ModoOficina() {
   );
 }
 
-function Big({ label, value }: { label: string; value: string }) {
+function BigStat({
+  label,
+  value,
+  unit,
+  highlight,
+}: {
+  label: string;
+  value: string;
+  unit?: string;
+  highlight?: boolean;
+}) {
   return (
-    <div className="rounded border border-zinc-800 print:border-black bg-zinc-950 print:bg-white px-4 py-3">
-      <div className="text-zinc-500 print:text-black text-xs uppercase tracking-widest font-bold">{label}</div>
-      <div className="text-white print:text-black text-3xl md:text-4xl font-black tabular-nums leading-tight mt-1">{value}</div>
+    <div
+      className={
+        "rounded border px-4 py-3 " +
+        (highlight
+          ? "border-orange-500 bg-orange-500/10 print:bg-white print:border-black"
+          : "border-zinc-800 bg-zinc-950 print:border-black print:bg-white")
+      }
+    >
+      <div className="text-zinc-500 print:text-black text-[10px] md:text-xs uppercase tracking-widest font-bold">
+        {label}
+      </div>
+      <div className="flex items-baseline gap-1.5 mt-1">
+        <span className={"font-black tabular-nums leading-none " +
+          (highlight ? "text-orange-400 print:text-black text-3xl md:text-4xl" : "text-white print:text-black text-3xl md:text-5xl")}>
+          {value}
+        </span>
+        {unit && <span className="text-zinc-500 print:text-black text-sm font-semibold">{unit}</span>}
+      </div>
     </div>
   );
 }
