@@ -1,122 +1,100 @@
-# Melhorias 3D + Fluxo Cliente / Oficina (revisado)
 
-Ajustado: o funcionário **não escaneia nada**. A oficina recebe a informação de duas formas — **TV na bancada** ou **folha A4 impressa**, ambas pensadas para serem lidas a 2–3 metros de distância, sem toque, sem login.
+# Modo Oficina v2 — "olha e faz", sem clicar
 
----
+A ideia que você descreveu é essa: o dono fecha o orçamento (no cliente ou no balcão) e o funcionário **só pega a folha / olha a TV e começa a cortar e soldar**. Sem QR, sem etiqueta colada na peça, sem "próximo". Hoje o Modo Oficina já é uma tela só, mas ainda parece "relatório de engenheiro". Vou transformar em uma **ficha de bancada visual**.
 
-## 1. Modo Oficina — TV / Impressão (PRIORIDADE)
+## O que muda na prática
 
-### Modo TV (rota nova `/op/:id`)
-Tela cheia, fonte gigante, sem menu, sem preço, sem nada de orçamento. Pensado para uma TV/monitor na bancada do serralheiro.
-
-**Layout em 4 quadrantes grandes:**
+### 1) Cabeçalho gigante (lê de 3 m de distância)
+Faixa preta com 3 blocos enormes:
 
 ```text
-+------------------------------+------------------------------+
-|  VISTA 3D (frente)           |  PEÇA ATUAL                  |
-|  + dimensões totais          |  P3 — TUB 30x30              |
-|  L: 3500 mm                  |  Cortar: 2.980 mm            |
-|  H: 2000 mm                  |  Quantidade: 4               |
-+------------------------------+------------------------------+
-|  PRÓXIMOS PASSOS             |  PROGRESSO                   |
-|  1. Cortar verticais (4x)    |  Cortes:    [ 6 / 18 ]       |
-|  2. Pontear moldura          |  Soldas:    [ 0 / 12 ]       |
-|  3. Soldar cantos MIG        |  Etapa:     Corte            |
-+------------------------------+------------------------------+
++---------------------------------------------------------------+
+|  PORTÃO DE CORRER             3500 mm  x  2000 mm    PRETO    |
+|  Cliente: João da Silva       Folga de corte: +5 mm           |
++---------------------------------------------------------------+
 ```
 
-- **Auto-avanço opcional**: passa de peça em peça a cada X segundos (configurável), ou fica fixo. Sem precisar tocar.
-- **Controle remoto simples**: setas do teclado, ou um botão grande "Próxima peça" canto inferior — caso a TV tenha mouse/teclado wireless. Funciona também com presenter laser.
-- **Modo escuro de alto contraste**: fundo preto, texto branco/laranja, fontes 48–96 px. Legível a 3 m com pó/poeira na tela.
-- **Sem sair do projeto**: a página não tem links de navegação. É um "kiosco" — abre e fica.
-- **Sem preço, em lugar nenhum**. Garantido por construção (a página nem importa o módulo de preços).
+Fonte ~80 px nas medidas. Cor do acabamento como bolinha colorida ao lado do nome.
 
-### Modo Impressão (PDF redesenhado)
-Para quem não tem TV, o PDF da Ordem de Serviço vira **uma folha por etapa**, otimizada para grampear na bancada:
+### 2) Diagrama de cortes em escala (substitui a "etiqueta de peça")
+No lugar de imaginar etiquetas P1/P2/P3 coladas, desenho **cada barra de 6 m em escala**, com as peças coloridas e a medida escrita dentro. Mesma lógica do nesting que já existe em `planejarCorte()`, só que renderizada como SVG grande na tela:
 
-- **Página 1 — Resumo visual**: 3D frontal grande + dimensões totais + cor + quantidade de barras necessárias. Tudo em fonte 18 pt+.
-- **Página 2 — Mapa de corte**: cada barra desenhada com peças coloridas (já existe, melhorar tamanho), com lista numerada P1, P2, P3… ao lado.
-- **Página 3 — Etiquetas destacáveis**: a folha é dividida em **8 retângulos grandes**, cada um com `P3 / TUB 30x30 / 2.980 mm`. Funcionário corta com tesoura e cola na peça (com fita crepe). Sem QR — só o número e a medida em fonte enorme.
-- **Página 4 — Sequência de soldas**: lista numerada com fonte grande + checkbox quadrado de 8mm para riscar com lápis.
-- **Página 5 — Ferramentas / EPI**: checklist quadradão.
+```text
+TUB 30x30  — precisa de 3 barras de 6000 mm
+Barra 1: [████ 2980 ████][████ 2980 ████][ sobra 35 ]
+Barra 2: [██ 1950 ██][██ 1950 ██][██ 1950 ██][ s 145 ]
+Barra 3: [█ 600 █][█ 600 █][█ 600 █][█ 600 █]...
+```
 
-Tudo em **preto e branco** otimizado (PDF imprime bem em qualquer impressora barata da serralheria).
+O funcionário olha, pega a barra, mede **2.985 mm** (medida + folga já somada, escrita em cima de cada bloco), corta. Não precisa decorar nada nem colar papel.
 
-### Como o dono envia para a oficina
-- **Modo TV**: dono abre o projeto no celular → botão "Enviar para oficina" → gera um link curto tipo `/op/abc123` que abre direto em tela cheia. Cola no navegador da TV uma vez, fica salvo. Próximos projetos: dono só atualiza qual projeto está "ativo" e a TV recebe via localStorage compartilhado (ou recarrega).
-- **Modo Impressão**: botão "Imprimir OS" → gera o PDF acima, manda pra impressora.
+### 3) Tabela de cortes só com o essencial — agrupada e com folga embutida
+Reescrevo a tabela atual com 4 colunas, fonte enorme:
 
-**Sem preço aparece em nenhum dos dois.** O módulo de orçamento fica isolado em outra rota (`/app/...`) que o funcionário não tem motivo nem como abrir se a TV já está no kiosco.
+| QTD | PERFIL       | CORTAR EM | (= medida real + 5 mm) |
+|-----|--------------|-----------|------------------------|
+| **4** | TUB 30x30  | **2.985** mm | (peça útil 2.980)   |
+| **6** | TUB 30x30  | **1.955** mm | (peça útil 1.950)   |
+| **2** | METALON 50 | **3.505** mm | (peça útil 3.500)   |
 
----
+A coluna principal já é **a medida pra serra** (com folga). A medida útil fica em cinza pequeno embaixo, só pra conferência. Hoje é o contrário — a medida útil é grande e a folga é uma coluna escondida em mobile. Inverter isso resolve metade do problema.
 
-## 2. Visualização 3D — melhorias
+### 4) "Como soldar" virou desenho, não lista
+Hoje a sequência de montagem é texto numerado. Vou colocar **um mini-3D ao lado de cada passo** mostrando o que está sendo montado naquele estágio:
 
-### Hoje
-Geometria por tipologia, presets iso/frente/lateral/topo, cotas externas, rotação automática, wireframe, grid, cor de fundo.
+- Passo 1: só a moldura externa (4 peças coloridas)
+- Passo 2: moldura + verticais internos
+- Passo 3: moldura completa + detalhes
+- Passo 4: peça final
 
-### Adicionar
-- **Pessoa de escala** (silhueta 1,75 m) e **carro** (4,5 m) opcionais ao lado do portão. Vende a percepção de tamanho na hora — argumento de venda principal.
-- **Cotas internas**: vão livre, espaçamento entre montantes, altura útil.
-- **Animação Abrir/Fechar**: botão que anima cada tipologia (correr desliza, basculante bascula, pivotante gira, rolo enrola). É o item que mais impressiona em demo.
-- **Modo Dia/Noite**: dois setups de luz prontos. À noite cria efeito "vitrine" muito vendedor.
-- **Ambiente** (toggle): troca o grid por piso de cimento + parede texturizada para não parecer flutuando.
-- **Multi-snapshot no PDF**: o orçamento do cliente sai com 4 vistas (iso, frente, lateral, topo) automaticamente, não só a vista atual.
-- **Foto do vão como fundo** (mobile): vendedor tira foto do local, o portão 3D aparece sobreposto. Mais simples e mais útil que AR para o cenário do dono na casa do cliente.
+Reaproveita o `Visualizador3D` em modo "fase" — passa um prop `fase: 1|2|3|4` que esconde geometrias das fases seguintes. Funcionário vê em ordem o que tem que existir na bancada ao final de cada solda.
 
-(AR via `<model-viewer>` fica como item futuro, opcional — exige iOS/Android moderno.)
+### 5) Resumo de barras (compra de material) no rodapé
+Bloco simples: "Pra essa peça você vai usar **3 barras de TUB 30x30** + **1 barra de METALON 50**. Sobra de material: 1,2 m." Assim o serralheiro confere o estoque antes de começar, sem precisar ir ver no orçamento (que tem preço).
 
----
+### 6) Tira o "Sequência de montagem" como lista chata e reagrupa
+Layout final da tela única:
 
-## 3. Vendedor no celular — modo Atendimento
+```text
+┌─ CABEÇALHO GIGANTE ──────────────────────────────────────────┐
+├─ TABELA DE CORTES (esquerda) ─┬─ DIAGRAMA DE BARRAS (direita)┤
+│  QTD | PERFIL | CORTAR EM     │  Barra 1: [██████][████]     │
+│  ...                          │  Barra 2: [████][████][████] │
+├─────────────────────────────────────────────────────────────┤
+│  COMO MONTAR — 4 mini-3Ds em sequência horizontal             │
+│  [3D fase 1] → [3D fase 2] → [3D fase 3] → [3D fase 4]        │
+├─────────────────────────────────────────────────────────────┤
+│  MATERIAL NECESSÁRIO (compra) + observações curtas            │
+└──────────────────────────────────────────────────────────────┘
+```
 
-Hoje a tela tem sidebar 340 px que vira rolagem longa no celular. Para usar na casa do cliente:
+Rola uma vez, no máximo. Imprime em 1–2 páginas A4 paisagem.
 
-- **Modo "Atendimento"** (toggle no topo): wizard 3 passos em tela cheia — *Medidas → Acabamento → Resumo*. Sem tabela de materiais, sem corte, sem solda. Só o que o cliente quer ver.
-- **Teclado numérico custom** para largura/altura: botões grandes 0–9 + ±50 mm / ±100 mm. Mais rápido que o teclado do iOS, funciona com luva.
-- **Bottom sheet** no mobile: configurações deslizam de baixo, 3D ocupa a tela inteira por padrão.
-- **Assinatura no celular** (canvas touch) do cliente aprovando o orçamento — vira PDF assinado na hora.
-- **Compartilhar PDF** direto via WhatsApp/Email com `navigator.share` — um toque, sem baixar.
-- **PWA instalável** com ícone na tela inicial, funciona offline (já é local, falta o manifest + service worker).
+## Arquivos a mexer
 
----
+- **`src/pages/ModoOficina.tsx`** — refazer o layout. Usar `planejarCorte()` (já existe) pra alimentar o diagrama de barras. Tabela agrupada com folga embutida na coluna principal. Adicionar grid de mini-3Ds.
+- **`src/components/DiagramaBarras.tsx`** (novo) — SVG simples que recebe `PlanoCorte` e desenha cada barra em escala, com retângulos coloridos por peça e a medida (com folga) escrita em cima. Cores reaproveitam a `PALETA_BARRAS` que já existe no `Configurador.tsx`.
+- **`src/components/Visualizador3D.tsx`** — aceitar prop opcional `fase?: number` que limita quais geometrias renderiza, pra fazer o "como montar". Implementar pra `portao_correr`, `portao_basculante`, `portao_pivotante` e `estrutura_metalica` (cobre 80% dos casos). Os outros caem num fallback de 2 fases (moldura → completo).
+- **`src/lib/pdfProducao.ts`** — gerar o mesmo layout em PDF paisagem A4: cabeçalho gigante, tabela com folga, diagrama de barras em SVG embutido, mini-3Ds da sequência (snapshot via canvas off-screen). Sem QR, sem etiqueta destacável.
 
-## Detalhes técnicos (para referência)
+## O que deliberadamente NÃO faço
 
-### Arquivos a criar
-- `src/pages/ModoOficina.tsx` — rota `/op/:id`, layout TV em quadrantes, sem menu, sem preços. Lê do mesmo localStorage do projeto.
-- `src/pages/ModoAtendimento.tsx` — rota `/app/projeto/:id/atender`, wizard mobile.
-- `src/components/TecladoNumerico.tsx` — input custom de medidas.
-- `src/components/AssinaturaCanvas.tsx` — canvas touch para assinatura.
-- `src/components/PessoaEscala.tsx` + `CarroEscala.tsx` — primitivas 3D simples.
-- `src/lib/snapshot3d.ts` — captura programática das 4 vistas para PDF.
-- `vite.config.ts` + `public/manifest.webmanifest` — PWA via `vite-plugin-pwa`.
+- **Sem etiquetas P1/P2/P3** — você foi claro. A peça se identifica pela **cor no diagrama** + **medida**. Funcionário corta, encosta no diagrama, vê onde vai.
+- **Sem QR code, sem login, sem app pro funcionário.**
+- **Sem botão "próxima peça" / wizard / auto-avanço.** Tudo numa tela só.
+- **Sem preço em lugar nenhum** (mantém a blindagem atual — `ModoOficina` não importa nada de `pdf.ts` nem cálculo de margem).
 
-### Arquivos a editar
-- `src/components/Visualizador3D.tsx` — pessoa/carro, dia/noite, ambiente, animação de abertura via `useFrame` + estado.
-- `src/lib/pdfProducao.ts` — redesenhar para fonte grande, etiquetas destacáveis (8 por página), checkboxes 8 mm, P&B otimizado, **sem QR**.
-- `src/lib/pdf.ts` — multi-snapshot 4 vistas, condições comerciais, parcelas, assinatura.
-- `src/App.tsx` — adicionar rotas `/op/:id` e `/app/projeto/:id/atender`.
+## Detalhe técnico da folga
 
-### Dependências novas
-`react-signature-canvas`, `vite-plugin-pwa`. (Sem `qrcode`, sem `@google/model-viewer` por enquanto.)
-
-### Compatibilidade
-Mantém React 18 + `@react-three/fiber@^8.18` + `@react-three/drei@^9.122` + `three@^0.170`.
+Hoje `FOLGA_MM = 5` está hardcoded no `ModoOficina.tsx`. Vou centralizar em `src/lib/producao.ts` exportando `FOLGA_CORTE_MM` e usar nos dois lugares (tela e PDF). Se mais pra frente o dono quiser configurar folga por perfil (alumínio precisa menos, aço galvanizado mais), o ponto de mudança é único.
 
 ---
 
-## Sugestão de execução em 3 entregas
+Confirma que sigo? A peça mais "novidade" é o **diagrama de barras em escala** + **mini-3Ds da sequência de montagem**. Se quiser cortar escopo pra entregar em pedaços, a ordem que faz mais sentido é:
 
-**Entrega 1 — Oficina blindada (resolve a dor principal)**
-Modo TV (`/op/:id`), PDF de OS redesenhado (fonte grande, etiquetas, checkboxes), botão "Enviar para oficina". **Sem preço em nenhum dos dois.**
+1. Reorganizar tabela com folga na coluna principal (rápido, resolve a dor imediata).
+2. Diagrama de barras em escala (substitui de vez a ideia de etiqueta).
+3. Mini-3Ds da sequência de montagem (o "premium", mais trabalhoso).
 
-**Entrega 2 — Vendedor mobile**
-Modo Atendimento + teclado numérico + bottom sheet + assinatura + compartilhar + PWA.
-
-**Entrega 3 — 3D vendedor**
-Pessoa/carro de escala + dia/noite + animação de abertura + multi-snapshot no PDF.
-
----
-
-Confirma que sigo nessa ordem (Entrega 1 primeiro)? Ou quer ajustar alguma coisa do Modo TV — por exemplo, prefere uma tela única rolável em vez dos 4 quadrantes, ou quer que o auto-avanço seja padrão ligado/desligado?
+Faço os 3 de uma vez ou prefere ver o 1 e o 2 primeiro?
