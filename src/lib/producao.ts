@@ -4,6 +4,10 @@ import { TipologiaId } from "./tipologias";
 
 const KERF_MM = 3;
 
+// Folga padrão somada a cada peça na hora de cortar (compensa lixamento e ajuste).
+// Centralizada aqui pra que tela e PDF mostrem a mesma medida.
+export const FOLGA_CORTE_MM = 5;
+
 export interface PecaCorte {
   id: string;
   codigo: string;
