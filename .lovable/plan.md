@@ -1,109 +1,122 @@
+# Melhorias 3D + Fluxo Cliente / Oficina (revisado)
 
-# Serralheiro Pro 3D — Plano de construção
+Ajustado: o funcionário **não escaneia nada**. A oficina recebe a informação de duas formas — **TV na bancada** ou **folha A4 impressa**, ambas pensadas para serem lidas a 2–3 metros de distância, sem toque, sem login.
 
-App para serralheiros calcularem **plano de corte, orçamento e ordem de produção** de portões e esquadrias, com **visualização 3D em tempo real**, totalmente offline (localStorage). Stack adaptada à Lovable: **Vite + React 18 + React Router + Tailwind v3 + shadcn/ui**, mantendo 100% das funcionalidades, design e regras do spec original.
+---
 
-## Adaptações de stack (necessárias)
+## 1. Modo Oficina — TV / Impressão (PRIORIDADE)
 
-- TanStack Start file-based routing → **React Router v6** com a mesma estrutura de URLs (`/`, `/app`, `/app/projeto/:id`, `/app/configuracoes`).
-- React 19 → React 18 (já no projeto).
-- Tailwind v4 → **Tailwind v3** com tokens HSL em `src/index.css` (equivalentes aos `oklch` do spec).
-- Persistência: `localStorage` agora; futura migração para Lovable Cloud quando validado.
+### Modo TV (rota nova `/op/:id`)
+Tela cheia, fonte gigante, sem menu, sem preço, sem nada de orçamento. Pensado para uma TV/monitor na bancada do serralheiro.
 
-Tudo o mais (3D, cálculos, PDFs, design industrial dark/laranja, mobile-first) é preservado.
-
-## Identidade visual
-
-- Tema dark industrial (estilo Kochinski).
-- Tokens semânticos em `src/index.css`: `--background` carvão, `--card` grafite, `--primary` laranja queimado (~#E8612C), `--primary-glow`, sucesso/warning/destructive.
-- Utilitários: `.bg-gradient-orange`, `.text-gradient-orange`, `.shadow-orange`, `.surface-card`.
-- Tipografia: **Archivo Black** (display, uppercase) + **Inter** (body), via Google Fonts.
-
-## Estrutura de rotas
+**Layout em 4 quadrantes grandes:**
 
 ```text
-/                       Landing page pública
-/app                    Layout com header (logo, nav, hambúrguer mobile)
-/app                    Listagem de projetos
-/app/projeto/:id        Configurador (tela principal)
-/app/configuracoes      Empresa + catálogo de preços
++------------------------------+------------------------------+
+|  VISTA 3D (frente)           |  PEÇA ATUAL                  |
+|  + dimensões totais          |  P3 — TUB 30x30              |
+|  L: 3500 mm                  |  Cortar: 2.980 mm            |
+|  H: 2000 mm                  |  Quantidade: 4               |
++------------------------------+------------------------------+
+|  PRÓXIMOS PASSOS             |  PROGRESSO                   |
+|  1. Cortar verticais (4x)    |  Cortes:    [ 6 / 18 ]       |
+|  2. Pontear moldura          |  Soldas:    [ 0 / 12 ]       |
+|  3. Soldar cantos MIG        |  Etapa:     Corte            |
++------------------------------+------------------------------+
 ```
 
-## Tipologias suportadas (8)
+- **Auto-avanço opcional**: passa de peça em peça a cada X segundos (configurável), ou fica fixo. Sem precisar tocar.
+- **Controle remoto simples**: setas do teclado, ou um botão grande "Próxima peça" canto inferior — caso a TV tenha mouse/teclado wireless. Funciona também com presenter laser.
+- **Modo escuro de alto contraste**: fundo preto, texto branco/laranja, fontes 48–96 px. Legível a 3 m com pó/poeira na tela.
+- **Sem sair do projeto**: a página não tem links de navegação. É um "kiosco" — abre e fica.
+- **Sem preço, em lugar nenhum**. Garantido por construção (a página nem importa o módulo de preços).
 
-Portão de Correr, Basculante, Rolo, Pantográfico, Pivotante, Janela de Correr 2 folhas, Estrutura Metálica, Veneziana Metálica. Cada uma com larguras/alturas mín/máx/default e regras próprias de geração de cortes e geometria 3D. Acabamentos: branco, preto, natural, bronze.
+### Modo Impressão (PDF redesenhado)
+Para quem não tem TV, o PDF da Ordem de Serviço vira **uma folha por etapa**, otimizada para grampear na bancada:
 
-## Catálogo de materiais
+- **Página 1 — Resumo visual**: 3D frontal grande + dimensões totais + cor + quantidade de barras necessárias. Tudo em fonte 18 pt+.
+- **Página 2 — Mapa de corte**: cada barra desenhada com peças coloridas (já existe, melhorar tamanho), com lista numerada P1, P2, P3… ao lado.
+- **Página 3 — Etiquetas destacáveis**: a folha é dividida em **8 retângulos grandes**, cada um com `P3 / TUB 30x30 / 2.980 mm`. Funcionário corta com tesoura e cola na peça (com fita crepe). Sem QR — só o número e a medida em fonte enorme.
+- **Página 4 — Sequência de soldas**: lista numerada com fonte grande + checkbox quadrado de 8mm para riscar com lápis.
+- **Página 5 — Ferramentas / EPI**: checklist quadradão.
 
-Tabela padrão de perfis (tubos, chatas, lâminas, trilhos), acessórios (roldanas, fechaduras, molas, eixos, kits) e vidro temperado por m². Editável pelo usuário em `/app/configuracoes` (CRUD, importar/exportar CSV, restaurar padrão, multiplicador por cor).
+Tudo em **preto e branco** otimizado (PDF imprime bem em qualquer impressora barata da serralheria).
 
-## Calculadora
+### Como o dono envia para a oficina
+- **Modo TV**: dono abre o projeto no celular → botão "Enviar para oficina" → gera um link curto tipo `/op/abc123` que abre direto em tela cheia. Cola no navegador da TV uma vez, fica salvo. Próximos projetos: dono só atualiza qual projeto está "ativo" e a TV recebe via localStorage compartilhado (ou recarrega).
+- **Modo Impressão**: botão "Imprimir OS" → gera o PDF acima, manda pra impressora.
 
-`calcular(input)` por tipologia gera:
-- Lista de **cortes** (montantes, travessas, diagonais, lâminas, trilhos) em função de L×H, com folga de 5 mm/peça.
-- **Custos** (perfil, acessório, vidro, mão de obra %, margem %, desconto geral %, extras).
-- **Resumo** (metragem total, peso estimado).
-- Suporta **overrides** por linha (qtd, preço, % desconto, ocultar) e **extras** livres (frete, instalação).
+**Sem preço aparece em nenhum dos dois.** O módulo de orçamento fica isolado em outra rota (`/app/...`) que o funcionário não tem motivo nem como abrir se a TV já está no kiosco.
 
-## Visualização 3D
+---
 
-- `Visualizador3D` com `@react-three/fiber@^8.18` + `@react-three/drei@^9.122` + `three`/`three-stdlib`, carregado via `lazy + Suspense` para evitar SSR mismatch.
-- `OrbitControls`, `Environment preset="warehouse"`, ambient + 2 directional, `Grid` infinito.
-- Geometria por tipologia com `boxGeometry`/`cylinderGeometry`, material `meshStandardMaterial` (vidro = `meshPhysicalMaterial` translúcido), cor do acabamento.
-- Cotas flutuantes (largura/altura em mm) via `<Html>`.
-- Controles externos: `autoRotate`, `wireframe`, `showGrid`, `showCotas`, `bgColor`, `preset` (iso/frente/lateral/topo) — câmera realmente reposicionada via `CameraRig` interno.
-- `gl={{ preserveDrawingBuffer: true }}` + callback `onCanvasReady` para snapshot PNG nos PDFs.
+## 2. Visualização 3D — melhorias
 
-## Tela do configurador `/app/projeto/:id`
+### Hoje
+Geometria por tipologia, presets iso/frente/lateral/topo, cotas externas, rotação automática, wireframe, grid, cor de fundo.
 
-Layout 2 colunas no desktop (`lg:grid-cols-[340px_1fr]`), empilhado no mobile.
+### Adicionar
+- **Pessoa de escala** (silhueta 1,75 m) e **carro** (4,5 m) opcionais ao lado do portão. Vende a percepção de tamanho na hora — argumento de venda principal.
+- **Cotas internas**: vão livre, espaçamento entre montantes, altura útil.
+- **Animação Abrir/Fechar**: botão que anima cada tipologia (correr desliza, basculante bascula, pivotante gira, rolo enrola). É o item que mais impressiona em demo.
+- **Modo Dia/Noite**: dois setups de luz prontos. À noite cria efeito "vitrine" muito vendedor.
+- **Ambiente** (toggle): troca o grid por piso de cimento + parede texturizada para não parecer flutuando.
+- **Multi-snapshot no PDF**: o orçamento do cliente sai com 4 vistas (iso, frente, lateral, topo) automaticamente, não só a vista atual.
+- **Foto do vão como fundo** (mobile): vendedor tira foto do local, o portão 3D aparece sobreposto. Mais simples e mais útil que AR para o cenário do dono na casa do cliente.
 
-- **Top bar**: voltar, título/subtítulo, badge "salvando…/✓ salvo", ações Duplicar / Salvar / Exportar PDF (gradient laranja). No mobile, ações em scroll horizontal.
-- **Sidebar (accordion no mobile via `<CollapsiblePanel>`)**: Configuração (nome, cliente, tipologia, sliders L/H, swatches de cor 36–40px) + Orçamento (mão de obra, margem, desconto).
-- **Painel central**:
-  - Card 3D (h 280/360/420 px) com header de controles roláveis (presets de câmera + toggles + color picker), canvas `touch-none`.
-  - 4 cards de Resumo (Total geral em gradiente com **animação de contagem**, Materiais, Metragem, Peso).
-  - Tabs (lista rolável horizontal): **Materiais** (editor inline com overrides + extras), **Plano de corte**, **Produção**, **Orçamento**.
-- **Auto-save** após 800 ms de inatividade.
+(AR via `<model-viewer>` fica como item futuro, opcional — exige iOS/Android moderno.)
 
-## Módulo de produção
+---
 
-- `planejarCorte(cortes, barraMm)` — nesting 1D **First-Fit Decreasing** com kerf 3 mm; retorna barras numeradas, peças por barra, sobra, % aproveitamento, perda total.
-- `planejarProducao(tipologia, cortes)` — mapa de soldas (MIG/TIG/Eletrodo/Ponteamento), sequência de montagem numerada, ferramentas/EPI, observações técnicas.
-- Painel "Produção": 4 KPIs, select de barra (3000/5000/6000/12000), **mapa de corte visual** (barras como flex divs proporcionais, cores por peça, tooltip com id/mm), tabela de soldas com badges, etapas em cards numerados, checklist de ferramentas, alertas.
+## 3. Vendedor no celular — modo Atendimento
 
-## PDFs (jspdf + jspdf-autotable)
+Hoje a tela tem sidebar 340 px que vira rolagem longa no celular. Para usar na casa do cliente:
 
-- **Orçamento**: cabeçalho com empresa, dados do cliente, nº/data/validade 15 dias, snapshot 3D (PNG do canvas), tabela zebrada por categoria, subtotais, **TOTAL** em laranja, rodapé de condições/garantia.
-- **Ordem de Produção** (sem preços): cabeçalho técnico, mapa de corte desenhado com `rect()` proporcional, tabela de soldas, sequência de montagem, checklist com quadradinhos.
+- **Modo "Atendimento"** (toggle no topo): wizard 3 passos em tela cheia — *Medidas → Acabamento → Resumo*. Sem tabela de materiais, sem corte, sem solda. Só o que o cliente quer ver.
+- **Teclado numérico custom** para largura/altura: botões grandes 0–9 + ±50 mm / ±100 mm. Mais rápido que o teclado do iOS, funciona com luva.
+- **Bottom sheet** no mobile: configurações deslizam de baixo, 3D ocupa a tela inteira por padrão.
+- **Assinatura no celular** (canvas touch) do cliente aprovando o orçamento — vira PDF assinado na hora.
+- **Compartilhar PDF** direto via WhatsApp/Email com `navigator.share` — um toque, sem baixar.
+- **PWA instalável** com ícone na tela inicial, funciona offline (já é local, falta o manifest + service worker).
 
-## Landing page `/`
+---
 
-Hero dark com 2 gradientes radiais laranja, badge pill, título XL uppercase com palavra-chave em gradient, CTA "Começar agora", pills das 8 tipologias, grid de 6 features, CTA final, footer. Meta `title`/`description` otimizados para "plano de corte serralheria".
+## Detalhes técnicos (para referência)
 
-## Mobile (obrigatório)
+### Arquivos a criar
+- `src/pages/ModoOficina.tsx` — rota `/op/:id`, layout TV em quadrantes, sem menu, sem preços. Lê do mesmo localStorage do projeto.
+- `src/pages/ModoAtendimento.tsx` — rota `/app/projeto/:id/atender`, wizard mobile.
+- `src/components/TecladoNumerico.tsx` — input custom de medidas.
+- `src/components/AssinaturaCanvas.tsx` — canvas touch para assinatura.
+- `src/components/PessoaEscala.tsx` + `CarroEscala.tsx` — primitivas 3D simples.
+- `src/lib/snapshot3d.ts` — captura programática das 4 vistas para PDF.
+- `vite.config.ts` + `public/manifest.webmanifest` — PWA via `vite-plugin-pwa`.
 
-Top bar empilhada, ações em scroll-x, sidebar em accordion abaixo de `lg`, canvas 280 px com `touch-none`, controles 3D roláveis, `TabsList` rolável, tabelas em `overflow-x-auto`, swatches de cor 40 px, header `/app` com hambúrguer + drawer abaixo de `md`. Validado em 375 px sem scroll horizontal.
+### Arquivos a editar
+- `src/components/Visualizador3D.tsx` — pessoa/carro, dia/noite, ambiente, animação de abertura via `useFrame` + estado.
+- `src/lib/pdfProducao.ts` — redesenhar para fonte grande, etiquetas destacáveis (8 por página), checkboxes 8 mm, P&B otimizado, **sem QR**.
+- `src/lib/pdf.ts` — multi-snapshot 4 vistas, condições comerciais, parcelas, assinatura.
+- `src/App.tsx` — adicionar rotas `/op/:id` e `/app/projeto/:id/atender`.
 
-## Persistência local
+### Dependências novas
+`react-signature-canvas`, `vite-plugin-pwa`. (Sem `qrcode`, sem `@google/model-viewer` por enquanto.)
 
-`localStorage` com 3 chaves: `spro:projetos`, `spro:empresa`, `spro:catalogo`. Helpers para CRUD, duplicar, gerar id. (Migração para Lovable Cloud planejada após validação.)
+### Compatibilidade
+Mantém React 18 + `@react-three/fiber@^8.18` + `@react-three/drei@^9.122` + `three@^0.170`.
 
-## Detalhes técnicos (para devs)
+---
 
-- Dependências novas: `three`, `@react-three/fiber@^8.18`, `@react-three/drei@^9.122`, `three-stdlib`, `jspdf`, `jspdf-autotable`. (Lucide e Sonner já no projeto.)
-- Estrutura: `src/lib/{tipologias,catalogo,calculator,producao,storage,pdf,pdfProducao}.ts`, `src/components/Visualizador3D{,Client}.tsx`, `src/components/CollapsiblePanel.tsx`, `src/hooks/useAnimatedNumber.ts`, rotas em `src/pages/`.
-- Tokens em HSL no `index.css` (Lovable padrão); utilitários custom registrados via `@layer utilities`.
-- Sem backend, sem auth.
+## Sugestão de execução em 3 entregas
 
-## Critérios de pronto
+**Entrega 1 — Oficina blindada (resolve a dor principal)**
+Modo TV (`/op/:id`), PDF de OS redesenhado (fonte grande, etiquetas, checkboxes), botão "Enviar para oficina". **Sem preço em nenhum dos dois.**
 
-- Criar projeto, alterar medidas → 3D atualiza instantaneamente.
-- Trocar iso/frente/lateral/topo move a câmera de fato (rotação manual continua depois).
-- Editar qtd/preço/desconto recalcula o total (animado).
-- Adicionar extra (ex.: Frete R$ 200) aparece no PDF.
-- PDF de orçamento com snapshot 3D, dados da empresa, validade 15 dias.
-- PDF de Ordem de Produção sem preços, com mapa de corte visual.
-- Catálogo customizado reflete nos cálculos.
-- Recarregar mantém os projetos (localStorage).
-- iPhone 375 px: criar projeto, ajustar medidas, ver 3D, editar materiais, exportar PDF — sem scroll horizontal.
+**Entrega 2 — Vendedor mobile**
+Modo Atendimento + teclado numérico + bottom sheet + assinatura + compartilhar + PWA.
+
+**Entrega 3 — 3D vendedor**
+Pessoa/carro de escala + dia/noite + animação de abertura + multi-snapshot no PDF.
+
+---
+
+Confirma que sigo nessa ordem (Entrega 1 primeiro)? Ou quer ajustar alguma coisa do Modo TV — por exemplo, prefere uma tela única rolável em vez dos 4 quadrantes, ou quer que o auto-avanço seja padrão ligado/desligado?

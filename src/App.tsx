@@ -8,6 +8,7 @@ import AppLayout from "./pages/AppLayout";
 import ProjetosLista from "./pages/ProjetosLista";
 import Configurador from "./pages/Configurador";
 import Configuracoes from "./pages/Configuracoes";
+import ModoOficina from "./pages/ModoOficina";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -25,6 +26,7 @@ const App = () => (
             <Route path="projeto/:id" element={<Configurador />} />
             <Route path="configuracoes" element={<Configuracoes />} />
           </Route>
+          <Route path="/op/:id" element={<ModoOficina />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
