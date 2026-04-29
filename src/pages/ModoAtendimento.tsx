@@ -80,7 +80,7 @@ export default function ModoAtendimento() {
   const gerarBlob = (): Blob | null => {
     const snap = canvasRef.current ? canvasRef.current.toDataURL("image/png") : undefined;
     const blob = gerarOrcamentoPDF(projeto, resultado, empresa, snap, assinatura ?? undefined, true);
-    return blob ?? null;
+    return (blob as Blob) ?? null;
   };
 
   const baixarPDF = () => {
