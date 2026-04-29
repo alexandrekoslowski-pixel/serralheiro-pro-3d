@@ -50,33 +50,79 @@ function Tubo({
   );
 }
 
-// ============ Pessoa de escala (silhueta 1,75m) ============
+// ============ Pessoa de escala (silhueta 1,75m) — estilizada ============
 function PessoaEscala({ position }: { position: [number, number, number] }) {
-  const cor = "#2a2a2a";
+  const pele = "#d4a574";
+  const camisa = "#1e3a5f";
+  const calca = "#2a2a35";
+  const sapato = "#0a0a0a";
+  const cabelo = "#2a1810";
   return (
     <group position={position}>
-      {/* corpo */}
-      <mesh position={[0, 0.55, 0]} castShadow>
-        <capsuleGeometry args={[0.18, 0.7, 4, 12]} />
-        <meshStandardMaterial color={cor} roughness={0.9} />
+      {/* sapatos */}
+      <mesh position={[-0.09, 0.025, 0.04]} castShadow>
+        <boxGeometry args={[0.09, 0.05, 0.22]} />
+        <meshStandardMaterial color={sapato} roughness={0.7} />
       </mesh>
-      {/* cabeça */}
-      <mesh position={[0, 1.45, 0]} castShadow>
-        <sphereGeometry args={[0.13, 16, 16]} />
-        <meshStandardMaterial color={cor} roughness={0.9} />
+      <mesh position={[0.09, 0.025, 0.04]} castShadow>
+        <boxGeometry args={[0.09, 0.05, 0.22]} />
+        <meshStandardMaterial color={sapato} roughness={0.7} />
       </mesh>
       {/* pernas */}
-      <mesh position={[-0.07, 0.07, 0]} castShadow>
-        <capsuleGeometry args={[0.07, 0.55, 4, 8]} />
-        <meshStandardMaterial color={cor} roughness={0.9} />
+      <mesh position={[-0.09, 0.4, 0]} castShadow>
+        <capsuleGeometry args={[0.065, 0.6, 6, 12]} />
+        <meshStandardMaterial color={calca} roughness={0.85} />
       </mesh>
-      <mesh position={[0.07, 0.07, 0]} castShadow>
-        <capsuleGeometry args={[0.07, 0.55, 4, 8]} />
-        <meshStandardMaterial color={cor} roughness={0.9} />
+      <mesh position={[0.09, 0.4, 0]} castShadow>
+        <capsuleGeometry args={[0.065, 0.6, 6, 12]} />
+        <meshStandardMaterial color={calca} roughness={0.85} />
+      </mesh>
+      {/* tronco (camisa) */}
+      <mesh position={[0, 1.0, 0]} castShadow>
+        <capsuleGeometry args={[0.2, 0.42, 6, 16]} />
+        <meshStandardMaterial color={camisa} roughness={0.8} />
+      </mesh>
+      {/* ombros */}
+      <mesh position={[0, 1.28, 0]} castShadow>
+        <sphereGeometry args={[0.22, 16, 12]} />
+        <meshStandardMaterial color={camisa} roughness={0.8} />
+      </mesh>
+      {/* braços */}
+      <mesh position={[-0.24, 1.0, 0]} rotation={[0, 0, 0.1]} castShadow>
+        <capsuleGeometry args={[0.06, 0.5, 6, 12]} />
+        <meshStandardMaterial color={camisa} roughness={0.8} />
+      </mesh>
+      <mesh position={[0.24, 1.0, 0]} rotation={[0, 0, -0.1]} castShadow>
+        <capsuleGeometry args={[0.06, 0.5, 6, 12]} />
+        <meshStandardMaterial color={camisa} roughness={0.8} />
+      </mesh>
+      {/* mãos */}
+      <mesh position={[-0.27, 0.72, 0]} castShadow>
+        <sphereGeometry args={[0.055, 12, 12]} />
+        <meshStandardMaterial color={pele} roughness={0.85} />
+      </mesh>
+      <mesh position={[0.27, 0.72, 0]} castShadow>
+        <sphereGeometry args={[0.055, 12, 12]} />
+        <meshStandardMaterial color={pele} roughness={0.85} />
+      </mesh>
+      {/* pescoço */}
+      <mesh position={[0, 1.46, 0]} castShadow>
+        <cylinderGeometry args={[0.05, 0.055, 0.08, 12]} />
+        <meshStandardMaterial color={pele} roughness={0.85} />
+      </mesh>
+      {/* cabeça */}
+      <mesh position={[0, 1.58, 0]} castShadow>
+        <sphereGeometry args={[0.115, 20, 20]} />
+        <meshStandardMaterial color={pele} roughness={0.85} />
+      </mesh>
+      {/* cabelo (calota superior) */}
+      <mesh position={[0, 1.63, -0.01]} castShadow>
+        <sphereGeometry args={[0.118, 20, 20, 0, Math.PI * 2, 0, Math.PI / 2.2]} />
+        <meshStandardMaterial color={cabelo} roughness={0.95} />
       </mesh>
       {/* legenda */}
-      <Html position={[0, 1.85, 0]} center>
-        <div className="px-1.5 py-0.5 rounded bg-zinc-800 text-white text-[9px] font-semibold whitespace-nowrap">
+      <Html position={[0, 1.95, 0]} center>
+        <div className="px-1.5 py-0.5 rounded bg-zinc-800/90 text-white text-[9px] font-semibold whitespace-nowrap shadow">
           1,75 m
         </div>
       </Html>
@@ -84,29 +130,103 @@ function PessoaEscala({ position }: { position: [number, number, number] }) {
   );
 }
 
-// ============ Carro de escala (silhueta 4,5 × 1,5 m) ============
+// ============ Carro de escala (silhueta 4,5 × 1,5 m) — estilizado ============
 function CarroEscala({ position }: { position: [number, number, number] }) {
+  const corpo = "#c0392b";
+  const corpoDark = "#8b2820";
+  const vidro = "#1a2a3a";
+  const farol = "#fff8d8";
+  const lanterna = "#c83020";
+  const roda = "#0a0a0a";
+  const aro = "#888";
   return (
     <group position={position}>
-      {/* corpo */}
-      <mesh position={[0, 0.55, 0]} castShadow>
-        <boxGeometry args={[4.3, 0.5, 1.7]} />
-        <meshStandardMaterial color="#3a4a5a" metalness={0.4} roughness={0.5} />
+      {/* chassis baixo */}
+      <mesh position={[0, 0.32, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4.0, 0.12, 1.65]} />
+        <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
+      </mesh>
+      {/* corpo principal — mais bojudo na frente/traseira */}
+      <mesh position={[0, 0.62, 0]} castShadow receiveShadow>
+        <boxGeometry args={[4.2, 0.45, 1.72]} />
+        <meshStandardMaterial color={corpo} metalness={0.55} roughness={0.35} />
+      </mesh>
+      {/* faixa lateral inferior (acento escuro) */}
+      <mesh position={[0, 0.42, 0.87]} castShadow>
+        <boxGeometry args={[4.0, 0.08, 0.02]} />
+        <meshStandardMaterial color={corpoDark} roughness={0.6} />
+      </mesh>
+      <mesh position={[0, 0.42, -0.87]} castShadow>
+        <boxGeometry args={[4.0, 0.08, 0.02]} />
+        <meshStandardMaterial color={corpoDark} roughness={0.6} />
+      </mesh>
+      {/* capô (frente, baixo) */}
+      <mesh position={[1.45, 0.78, 0]} castShadow>
+        <boxGeometry args={[1.3, 0.12, 1.65]} />
+        <meshStandardMaterial color={corpo} metalness={0.55} roughness={0.35} />
+      </mesh>
+      {/* porta-malas */}
+      <mesh position={[-1.6, 0.78, 0]} castShadow>
+        <boxGeometry args={[1.0, 0.12, 1.65]} />
+        <meshStandardMaterial color={corpo} metalness={0.55} roughness={0.35} />
       </mesh>
       {/* cabine */}
-      <mesh position={[-0.2, 1.0, 0]} castShadow>
-        <boxGeometry args={[2.4, 0.55, 1.55]} />
-        <meshStandardMaterial color="#2a3a4a" metalness={0.3} roughness={0.5} />
+      <mesh position={[-0.15, 1.05, 0]} castShadow>
+        <boxGeometry args={[2.4, 0.5, 1.6]} />
+        <meshStandardMaterial color={corpo} metalness={0.55} roughness={0.35} />
       </mesh>
-      {/* rodas (4) */}
-      {[[-1.5, -0.7], [1.5, -0.7], [-1.5, 0.7], [1.5, 0.7]].map(([x, z], i) => (
-        <mesh key={i} position={[x, 0.32, z]} rotation={[Math.PI / 2, 0, 0]} castShadow>
-          <cylinderGeometry args={[0.32, 0.32, 0.22, 16]} />
-          <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
-        </mesh>
+      {/* vidros — laterais */}
+      <mesh position={[-0.15, 1.08, 0.81]} castShadow>
+        <boxGeometry args={[2.2, 0.42, 0.02]} />
+        <meshPhysicalMaterial color={vidro} transparent opacity={0.55} roughness={0.05} metalness={0.1} transmission={0.5} />
+      </mesh>
+      <mesh position={[-0.15, 1.08, -0.81]} castShadow>
+        <boxGeometry args={[2.2, 0.42, 0.02]} />
+        <meshPhysicalMaterial color={vidro} transparent opacity={0.55} roughness={0.05} metalness={0.1} transmission={0.5} />
+      </mesh>
+      {/* parabrisa (frente) inclinado */}
+      <mesh position={[1.0, 1.05, 0]} rotation={[0, 0, -0.5]} castShadow>
+        <boxGeometry args={[0.15, 0.55, 1.55]} />
+        <meshPhysicalMaterial color={vidro} transparent opacity={0.55} roughness={0.05} metalness={0.1} transmission={0.5} />
+      </mesh>
+      {/* vidro traseiro */}
+      <mesh position={[-1.3, 1.05, 0]} rotation={[0, 0, 0.55]} castShadow>
+        <boxGeometry args={[0.15, 0.5, 1.55]} />
+        <meshPhysicalMaterial color={vidro} transparent opacity={0.55} roughness={0.05} metalness={0.1} transmission={0.5} />
+      </mesh>
+      {/* faróis */}
+      <mesh position={[2.08, 0.7, 0.55]} castShadow>
+        <boxGeometry args={[0.04, 0.12, 0.3]} />
+        <meshStandardMaterial color={farol} emissive={farol} emissiveIntensity={0.4} roughness={0.2} />
+      </mesh>
+      <mesh position={[2.08, 0.7, -0.55]} castShadow>
+        <boxGeometry args={[0.04, 0.12, 0.3]} />
+        <meshStandardMaterial color={farol} emissive={farol} emissiveIntensity={0.4} roughness={0.2} />
+      </mesh>
+      {/* lanternas traseiras */}
+      <mesh position={[-2.08, 0.7, 0.55]} castShadow>
+        <boxGeometry args={[0.04, 0.14, 0.32]} />
+        <meshStandardMaterial color={lanterna} emissive={lanterna} emissiveIntensity={0.3} roughness={0.3} />
+      </mesh>
+      <mesh position={[-2.08, 0.7, -0.55]} castShadow>
+        <boxGeometry args={[0.04, 0.14, 0.32]} />
+        <meshStandardMaterial color={lanterna} emissive={lanterna} emissiveIntensity={0.3} roughness={0.3} />
+      </mesh>
+      {/* rodas + aros */}
+      {[[-1.35, -0.72], [1.35, -0.72], [-1.35, 0.72], [1.35, 0.72]].map(([x, z], i) => (
+        <group key={i} position={[x, 0.34, z]}>
+          <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
+            <cylinderGeometry args={[0.34, 0.34, 0.26, 24]} />
+            <meshStandardMaterial color={roda} roughness={0.95} />
+          </mesh>
+          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, z > 0 ? 0.13 : -0.13]}>
+            <cylinderGeometry args={[0.2, 0.2, 0.02, 16]} />
+            <meshStandardMaterial color={aro} metalness={0.85} roughness={0.25} />
+          </mesh>
+        </group>
       ))}
-      <Html position={[0, 1.6, 0]} center>
-        <div className="px-1.5 py-0.5 rounded bg-zinc-800 text-white text-[9px] font-semibold whitespace-nowrap">
+      <Html position={[0, 1.55, 0]} center>
+        <div className="px-1.5 py-0.5 rounded bg-zinc-800/90 text-white text-[9px] font-semibold whitespace-nowrap shadow">
           carro 4,5 m
         </div>
       </Html>

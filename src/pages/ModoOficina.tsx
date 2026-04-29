@@ -1,17 +1,19 @@
-// Modo TV / Oficina — kiosco em tela cheia, sem preço, sem menu.
-// Pensado para ser exibido em uma TV/monitor na bancada do serralheiro.
-// Lê o projeto do localStorage (mesma fonte do Configurador).
-import { useEffect, useMemo, useState, useCallback } from "react";
+// Modo Oficina — uma TELA SÓ, sem navegação, sem etiquetas.
+// Pensado pro funcionário olhar uma vez e entender tudo:
+// 1) o que é a peça (3D + dimensões),
+// 2) lista de cortes agrupada por perfil (codigo, medida, qtd, folga),
+// 3) sequência de montagem.
+// Sem preço. Sem botão "próxima". Sem QR. Pode imprimir (Ctrl+P).
+import { useEffect, useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight, Pause, Play, Maximize2, ArrowLeft } from "lucide-react";
+import { Maximize2, ArrowLeft, Printer } from "lucide-react";
 import { obterProjeto, obterCatalogo } from "@/lib/storage";
 import { calcular } from "@/lib/calculator";
-import { planejarCorte, planejarProducao, PecaCorte } from "@/lib/producao";
+import { planejarProducao } from "@/lib/producao";
 import { tipologiaPorId } from "@/lib/tipologias";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
-import { cn } from "@/lib/utils";
 
-const AUTO_INTERVAL_MS = 8000;
+const FOLGA_MM = 5; // mesma constante usada no calculator.ts
 
 export default function ModoOficina() {
   const { id = "" } = useParams();
@@ -20,7 +22,6 @@ export default function ModoOficina() {
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
-    // calcular sem expor preço — ignoramos custos, usamos só os cortes
     return calcular({
       tipologia: projeto.tipologia,
       largura_mm: projeto.largura_mm,
@@ -35,51 +36,38 @@ export default function ModoOficina() {
     });
   }, [projeto, catalogo]);
 
-  const planoCorte = useMemo(
-    () => (resultado ? planejarCorte(resultado.cortes, 6000) : null),
-    [resultado],
-  );
   const planoProducao = useMemo(
     () => (projeto && resultado ? planejarProducao(projeto.tipologia, resultado.cortes) : null),
     [projeto, resultado],
   );
 
-  // Lista flat de peças (cada peça única, na ordem do plano de corte)
-  const pecas = useMemo<PecaCorte[]>(() => {
-    if (!planoCorte) return [];
-    const out: PecaCorte[] = [];
-    for (const perfil of planoCorte.perfis) {
-      for (const barra of perfil.barras) {
-        for (const p of barra.pecas) out.push(p);
-      }
+  // Agrupa os cortes por código de perfil, somando peças idênticas.
+  const cortesAgrupados = useMemo(() => {
+    if (!resultado) return [];
+    const map = new Map<string, { codigo: string; descricao: string; comprimento_mm: number; qtd: number }>();
+    for (const c of resultado.cortes) {
+      const key = `${c.codigo}__${c.comprimento_mm}__${c.descricao}`;
+      const existing = map.get(key);
+      if (existing) existing.qtd += c.qtd;
+      else map.set(key, { ...c });
     }
-    return out;
-  }, [planoCorte]);
+    // ordena por código, depois maior comprimento
+    const arr = Array.from(map.values()).sort((a, b) => {
+      if (a.codigo !== b.codigo) return a.codigo.localeCompare(b.codigo);
+      return b.comprimento_mm - a.comprimento_mm;
+    });
+    return arr;
+  }, [resultado]);
 
-  const [idx, setIdx] = useState(0);
-  const [auto, setAuto] = useState(false);
-
-  const next = useCallback(() => setIdx((i) => (pecas.length ? (i + 1) % pecas.length : 0)), [pecas.length]);
-  const prev = useCallback(() => setIdx((i) => (pecas.length ? (i - 1 + pecas.length) % pecas.length : 0)), [pecas.length]);
-
-  // Auto-avanço
-  useEffect(() => {
-    if (!auto || pecas.length === 0) return;
-    const t = setInterval(next, AUTO_INTERVAL_MS);
-    return () => clearInterval(t);
-  }, [auto, next, pecas.length]);
-
-  // Setas do teclado / espaço
+  // Atalhos de teclado
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "ArrowRight" || e.key === "PageDown") { e.preventDefault(); next(); }
-      else if (e.key === "ArrowLeft" || e.key === "PageUp") { e.preventDefault(); prev(); }
-      else if (e.key === " ") { e.preventDefault(); setAuto((a) => !a); }
-      else if (e.key.toLowerCase() === "f") { e.preventDefault(); toggleFullscreen(); }
+      if (e.key.toLowerCase() === "f") { e.preventDefault(); toggleFullscreen(); }
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "p") { /* deixa o navegador imprimir */ }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [next, prev]);
+  }, []);
 
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
@@ -96,52 +84,34 @@ export default function ModoOficina() {
       </div>
     );
   }
-  if (!resultado || !planoCorte || !planoProducao || pecas.length === 0) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-black text-white text-2xl">
-        Carregando ordem de produção…
-      </div>
-    );
+  if (!resultado || !planoProducao) {
+    return <div className="min-h-screen flex items-center justify-center bg-black text-white text-2xl">Carregando…</div>;
   }
 
   const tip = tipologiaPorId(projeto.tipologia);
-  const peca = pecas[idx];
-
-  // Próximos passos: pega 3 da sequência baseado no progresso
-  const totalPecas = pecas.length;
-  const progresso = idx + 1;
-  const etapaAtualIdx = Math.min(
-    Math.floor((progresso / totalPecas) * planoProducao.sequencia.length),
-    planoProducao.sequencia.length - 1,
-  );
-  const proximosPassos = planoProducao.sequencia.slice(etapaAtualIdx, etapaAtualIdx + 3);
-  const totalSoldas = planoProducao.soldas.reduce((s, x) => s + x.qtd, 0);
+  const totalPecas = cortesAgrupados.reduce((s, c) => s + c.qtd, 0);
+  const metragemTotal = cortesAgrupados.reduce((s, c) => s + (c.comprimento_mm * c.qtd) / 1000, 0);
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col overflow-hidden select-none">
-      {/* Topbar fina — discreto, mas dá pra voltar */}
-      <header className="flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-950">
-        <Link to={`/app/projeto/${projeto.id}`} className="flex items-center gap-2 text-zinc-500 hover:text-white text-sm">
-          <ArrowLeft className="h-4 w-4" /> Sair do modo TV
+    <div className="min-h-screen bg-black text-white print:bg-white print:text-black">
+      {/* Topbar (esconde no print) */}
+      <header className="print:hidden flex items-center justify-between px-4 py-2 border-b border-zinc-800 bg-zinc-950 sticky top-0 z-10">
+        <Link to={`/app/projeto/${projeto.id}`} className="flex items-center gap-2 text-zinc-400 hover:text-white text-sm">
+          <ArrowLeft className="h-4 w-4" /> Sair
         </Link>
-        <div className="text-zinc-400 text-sm font-mono uppercase tracking-wider">
-          OP {projeto.id.slice(0, 6)} · {projeto.cliente || "Sem cliente"} · {tip.nome}
+        <div className="text-zinc-400 text-sm font-mono uppercase tracking-wider truncate">
+          OS {projeto.id.slice(0, 6)} · {projeto.cliente || "Sem cliente"} · {tip.nome}
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setAuto((a) => !a)}
-            className={cn(
-              "px-3 py-1.5 rounded text-sm font-semibold flex items-center gap-1.5",
-              auto ? "bg-orange-500 text-black" : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700",
-            )}
-            title="Espaço"
+            onClick={() => window.print()}
+            className="px-3 py-1.5 rounded text-sm bg-zinc-800 text-zinc-200 hover:bg-zinc-700 flex items-center gap-1.5"
           >
-            {auto ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
-            {auto ? "Auto" : "Pausado"}
+            <Printer className="h-4 w-4" /> Imprimir
           </button>
           <button
             onClick={toggleFullscreen}
-            className="px-3 py-1.5 rounded text-sm bg-zinc-800 text-zinc-300 hover:bg-zinc-700 flex items-center gap-1.5"
+            className="px-3 py-1.5 rounded text-sm bg-zinc-800 text-zinc-200 hover:bg-zinc-700 flex items-center gap-1.5"
             title="F"
           >
             <Maximize2 className="h-4 w-4" /> Tela cheia
@@ -149,12 +119,20 @@ export default function ModoOficina() {
         </div>
       </header>
 
-      {/* 4 quadrantes */}
-      <main className="flex-1 grid grid-cols-2 grid-rows-2 gap-1 bg-zinc-800 p-1 min-h-0">
-        {/* Q1: 3D + dimensões */}
-        <section className="bg-black p-4 flex flex-col min-h-0">
-          <h2 className="text-zinc-500 text-xl font-semibold uppercase tracking-wider mb-2">Peça</h2>
-          <div className="flex-1 min-h-0 rounded overflow-hidden border border-zinc-900">
+      {/* Cabeçalho da OS (visível na tela e no print) */}
+      <div className="px-6 py-4 border-b border-zinc-800 print:border-black grid grid-cols-4 gap-4">
+        <Big label="Largura" value={`${projeto.largura_mm} mm`} />
+        <Big label="Altura" value={`${projeto.altura_mm} mm`} />
+        <Big label="Cor / acabamento" value={projeto.cor.toUpperCase()} />
+        <Big label="Total de peças" value={String(totalPecas)} />
+      </div>
+
+      {/* Conteúdo principal: 3D à esquerda + Lista de cortes à direita */}
+      <main className="grid grid-cols-1 lg:grid-cols-[420px_1fr] gap-0">
+        {/* 3D */}
+        <section className="bg-zinc-950 print:bg-white p-4 border-r border-zinc-800 print:border-black">
+          <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Como fica a peça</h2>
+          <div className="aspect-square w-full rounded overflow-hidden border border-zinc-900 print:border-zinc-400 bg-black print:bg-white">
             <Visualizador3DClient
               tipologia={projeto.tipologia}
               largura_mm={projeto.largura_mm}
@@ -168,120 +146,119 @@ export default function ModoOficina() {
               preset="iso"
             />
           </div>
-          <div className="mt-3 grid grid-cols-2 gap-3">
-            <Stat label="Largura" value={`${projeto.largura_mm} mm`} />
-            <Stat label="Altura" value={`${projeto.altura_mm} mm`} />
+          <div className="mt-3 text-zinc-400 print:text-black text-sm space-y-1">
+            <div>Metragem total de perfil: <span className="text-white print:text-black font-bold">{metragemTotal.toFixed(2)} m</span></div>
+            <div>Folga padrão de corte: <span className="text-orange-400 print:text-black font-bold">+{FOLGA_MM} mm</span> em cada peça</div>
           </div>
         </section>
 
-        {/* Q2: peça atual GIGANTE */}
-        <section className="bg-black p-6 flex flex-col justify-between min-h-0">
-          <div>
-            <h2 className="text-zinc-500 text-xl font-semibold uppercase tracking-wider mb-2">Peça atual</h2>
-            <div className="text-orange-400 font-black tabular-nums leading-none" style={{ fontSize: "clamp(4rem, 12vw, 11rem)" }}>
-              {peca.id}
-            </div>
-            <div className="mt-3 text-white text-3xl xl:text-4xl font-bold">{peca.codigo}</div>
-            <div className="text-zinc-400 text-xl mt-1">{peca.descricao}</div>
+        {/* Lista de cortes — a estrela do show */}
+        <section className="p-4 print:p-2">
+          <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Lista de cortes</h2>
+          <div className="rounded border border-zinc-800 print:border-black overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-zinc-900 print:bg-zinc-200 text-zinc-300 print:text-black text-left">
+                <tr className="text-sm uppercase tracking-wider">
+                  <th className="px-3 py-2 w-16 text-center">Qtd</th>
+                  <th className="px-3 py-2">Perfil</th>
+                  <th className="px-3 py-2">Função</th>
+                  <th className="px-3 py-2 text-right">Cortar em</th>
+                  <th className="px-3 py-2 text-right hidden md:table-cell print:table-cell">c/ folga</th>
+                </tr>
+              </thead>
+              <tbody className="text-white print:text-black">
+                {cortesAgrupados.map((c, i) => (
+                  <tr key={i} className="border-t border-zinc-800 print:border-zinc-400 even:bg-zinc-950 print:even:bg-zinc-50">
+                    <td className="px-3 py-3 text-center">
+                      <span className="inline-flex items-center justify-center bg-orange-500 text-black rounded font-black tabular-nums text-2xl md:text-3xl h-12 w-12 print:bg-black print:text-white">
+                        {c.qtd}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <div className="font-bold text-lg md:text-xl font-mono">{c.codigo}</div>
+                    </td>
+                    <td className="px-3 py-3 text-zinc-300 print:text-black text-base md:text-lg">{c.descricao}</td>
+                    <td className="px-3 py-3 text-right">
+                      <span className="font-black tabular-nums text-3xl md:text-5xl">
+                        {c.comprimento_mm}
+                      </span>
+                      <span className="text-zinc-500 print:text-black ml-1 text-base">mm</span>
+                    </td>
+                    <td className="px-3 py-3 text-right hidden md:table-cell print:table-cell">
+                      <span className="font-bold tabular-nums text-xl text-orange-400 print:text-black">
+                        {c.comprimento_mm + FOLGA_MM}
+                      </span>
+                      <span className="text-zinc-500 print:text-black ml-1 text-sm">mm</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <div className="space-y-2">
-            <div className="text-zinc-500 text-lg uppercase tracking-wide">Cortar</div>
-            <div className="text-white font-black tabular-nums leading-none" style={{ fontSize: "clamp(3rem, 10vw, 9rem)" }}>
-              {peca.comprimento_mm}<span className="text-zinc-500 text-4xl xl:text-5xl ml-3">mm</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Q3: próximos passos */}
-        <section className="bg-black p-6 flex flex-col min-h-0">
-          <h2 className="text-zinc-500 text-xl font-semibold uppercase tracking-wider mb-3">Próximos passos</h2>
-          <ol className="space-y-3 flex-1">
-            {proximosPassos.map((passo, i) => (
-              <li key={i} className={cn(
-                "flex gap-3 items-start",
-                i === 0 ? "text-white" : "text-zinc-500",
-              )}>
-                <span className={cn(
-                  "shrink-0 inline-flex items-center justify-center rounded-full font-black tabular-nums",
-                  i === 0 ? "bg-orange-500 text-black h-12 w-12 text-2xl" : "bg-zinc-800 text-zinc-400 h-10 w-10 text-xl",
-                )}>
-                  {etapaAtualIdx + i + 1}
-                </span>
-                <span className={cn(
-                  "leading-tight pt-1",
-                  i === 0 ? "text-2xl xl:text-3xl font-semibold" : "text-xl",
-                )}>{passo}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-
-        {/* Q4: progresso */}
-        <section className="bg-black p-6 flex flex-col justify-between min-h-0">
-          <div>
-            <h2 className="text-zinc-500 text-xl font-semibold uppercase tracking-wider mb-3">Progresso</h2>
-            <ProgressBar label="Peça" current={progresso} total={totalPecas} />
-            <div className="mt-4">
-              <ProgressBar label="Barras" current={Math.ceil((progresso / totalPecas) * planoCorte.totalBarras)} total={planoCorte.totalBarras} />
-            </div>
-            <div className="mt-4">
-              <ProgressBar label="Soldas previstas" current={0} total={totalSoldas} muted />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <Stat label="Cor" value={projeto.cor.toUpperCase()} />
-            <Stat label="Aprov. corte" value={`${planoCorte.aproveitamentoMedioPct}%`} />
-          </div>
+          <p className="mt-2 text-zinc-500 print:text-black text-sm">
+            * "c/ folga" já inclui +{FOLGA_MM} mm pra ajuste/lixamento. Use essa medida na régua.
+          </p>
         </section>
       </main>
 
-      {/* Controles inferiores — botões grandes pra mouse/presenter */}
-      <footer className="flex items-stretch border-t border-zinc-800 bg-zinc-950">
-        <button
-          onClick={prev}
-          className="flex-1 flex items-center justify-center gap-3 py-5 text-2xl font-bold text-zinc-300 hover:bg-zinc-900 active:bg-zinc-800 border-r border-zinc-800"
-        >
-          <ChevronLeft className="h-8 w-8" /> Anterior
-        </button>
-        <div className="flex items-center justify-center px-8 py-5 text-zinc-400 font-mono text-xl tabular-nums">
-          {progresso} / {totalPecas}
+      {/* Sequência de montagem — abaixo, em tela inteira */}
+      <section className="px-6 py-5 border-t border-zinc-800 print:border-black">
+        <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-3">Sequência de montagem</h2>
+        <ol className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+          {planoProducao.sequencia.map((passo, i) => (
+            <li key={i} className="flex gap-3 items-start">
+              <span className="shrink-0 inline-flex items-center justify-center rounded-full bg-zinc-800 text-orange-400 print:bg-black print:text-white h-9 w-9 font-black tabular-nums text-lg">
+                {i + 1}
+              </span>
+              <span className="text-white print:text-black text-lg leading-snug pt-1">{passo}</span>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      {/* Soldas + ferramentas + observações */}
+      <section className="px-6 py-5 border-t border-zinc-800 print:border-black grid grid-cols-1 md:grid-cols-3 gap-6 pb-10">
+        <div>
+          <h3 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Soldas</h3>
+          <ul className="space-y-1.5">
+            {planoProducao.soldas.map((s, i) => (
+              <li key={i} className="flex items-baseline gap-2 text-white print:text-black">
+                <span className="font-black tabular-nums text-orange-400 print:text-black w-8">{s.qtd}×</span>
+                <span className="flex-1">
+                  <span className="font-semibold">{s.descricao}</span>
+                  <span className="text-zinc-500 print:text-black ml-1 text-sm">({s.tipo})</span>
+                  {s.observacao && <div className="text-zinc-500 print:text-black text-xs italic">{s.observacao}</div>}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
-        <button
-          onClick={next}
-          className="flex-1 flex items-center justify-center gap-3 py-5 text-2xl font-bold bg-orange-500 text-black hover:bg-orange-400 active:bg-orange-600"
-        >
-          Próxima <ChevronRight className="h-8 w-8" />
-        </button>
-      </footer>
+        <div>
+          <h3 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Ferramentas</h3>
+          <ul className="space-y-1 text-white print:text-black text-sm">
+            {planoProducao.ferramentas.map((f, i) => (
+              <li key={i} className="flex gap-2"><span className="text-orange-400 print:text-black">•</span> {f}</li>
+            ))}
+          </ul>
+        </div>
+        <div>
+          <h3 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">Observações</h3>
+          <ul className="space-y-1.5 text-white print:text-black text-sm">
+            {planoProducao.observacoes.map((o, i) => (
+              <li key={i} className="flex gap-2"><span className="text-orange-400 print:text-black">!</span> {o}</li>
+            ))}
+          </ul>
+        </div>
+      </section>
     </div>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Big({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-zinc-900 bg-zinc-950 px-3 py-2">
-      <div className="text-zinc-500 text-sm uppercase tracking-wider">{label}</div>
-      <div className="text-white text-2xl font-bold tabular-nums">{value}</div>
-    </div>
-  );
-}
-
-function ProgressBar({ label, current, total, muted = false }: { label: string; current: number; total: number; muted?: boolean }) {
-  const pct = total > 0 ? Math.min(100, Math.round((current / total) * 100)) : 0;
-  return (
-    <div>
-      <div className="flex justify-between text-lg mb-1">
-        <span className="text-zinc-400 uppercase tracking-wider text-sm">{label}</span>
-        <span className={cn("font-black tabular-nums", muted ? "text-zinc-500" : "text-white")}>
-          {current} / {total}
-        </span>
-      </div>
-      <div className="h-3 bg-zinc-900 rounded-full overflow-hidden">
-        <div
-          className={cn("h-full transition-all duration-500", muted ? "bg-zinc-600" : "bg-orange-500")}
-          style={{ width: `${pct}%` }}
-        />
-      </div>
+    <div className="rounded border border-zinc-800 print:border-black bg-zinc-950 print:bg-white px-4 py-3">
+      <div className="text-zinc-500 print:text-black text-xs uppercase tracking-widest font-bold">{label}</div>
+      <div className="text-white print:text-black text-3xl md:text-4xl font-black tabular-nums leading-tight mt-1">{value}</div>
     </div>
   );
 }
