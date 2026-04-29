@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Save, Copy, Download, Settings2, DollarSign,
   RotateCw, Box as BoxIcon, Grid3x3, Ruler, Plus, Trash2, RefreshCw, EyeOff, Eye,
-  Wrench, FileText, FileSpreadsheet,
+  Wrench, FileText, FileSpreadsheet, Smartphone,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -189,6 +189,9 @@ export default function Configurador() {
           </Button>
           <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); toast.success("Salvo"); }}>
             <Save className="mr-1 h-4 w-4" /> Salvar
+          </Button>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); navigate(`/app/projeto/${projeto.id}/atender`); }} title="Modo cliente: tela cheia, 3 passos">
+            <Smartphone className="mr-1 h-4 w-4" /> Atendimento
           </Button>
           <Button variant="outline" size="sm" className="shrink-0" onClick={exportarOP} title="PDF para a oficina, sem preços">
             <FileSpreadsheet className="mr-1 h-4 w-4" /> Imprimir OS
