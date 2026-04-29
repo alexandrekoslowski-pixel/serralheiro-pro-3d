@@ -54,6 +54,10 @@ export default function Configurador() {
   const [showGrid, setShowGrid] = useState(true);
   const [showCotas, setShowCotas] = useState(true);
   const [bgColor, setBgColor] = useState("#1a1614");
+  const [ambiente, setAmbiente] = useState<"dia" | "noite">("dia");
+  const [showPessoa, setShowPessoa] = useState(false);
+  const [showCarro, setShowCarro] = useState(false);
+  const [aberto, setAberto] = useState(false);
 
   // Carrega projeto
   useEffect(() => {
