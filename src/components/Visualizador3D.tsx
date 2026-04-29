@@ -281,7 +281,7 @@ export default function Visualizador3D({
         </>
       )}
       <OrbitControls
-        ref={controlsRef as React.Ref<OrbitControlsImpl>}
+        ref={controlsRef as any}
         enablePan
         autoRotate={autoRotate}
         autoRotateSpeed={1.2}
