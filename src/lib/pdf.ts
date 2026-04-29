@@ -21,12 +21,19 @@ function rotuloCategoria(c: ItemCusto["categoria"]): string {
   }[c];
 }
 
+export interface AssinaturaInfo {
+  dataUrl: string;
+  nome: string;
+}
+
 export function gerarOrcamentoPDF(
   projeto: ProjetoLocal,
   resultado: ResultadoCalculo,
   empresa: DadosEmpresa,
   snapshot3D?: string,
-): void {
+  assinatura?: AssinaturaInfo,
+  retornarBlob = false,
+): Blob | void {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const margin = 14;
@@ -173,5 +180,31 @@ export function gerarOrcamentoPDF(
   ];
   condicoes.forEach((c, i) => doc.text(c, margin, yTot + i * 4));
 
+  // ===== Assinatura =====
+  if (assinatura?.dataUrl) {
+    try {
+      const sigW = 70;
+      const sigH = 25;
+      const sigX = pageW - margin - sigW;
+      const sigY = yTot + condicoes.length * 4 + 8;
+      doc.addImage(assinatura.dataUrl, "PNG", sigX, sigY, sigW, sigH);
+      doc.setDrawColor(...DARK);
+      doc.setLineWidth(0.3);
+      doc.line(sigX, sigY + sigH + 1, sigX + sigW, sigY + sigH + 1);
+      doc.setTextColor(...DARK);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+      doc.text(assinatura.nome || "Cliente", sigX + sigW / 2, sigY + sigH + 5, { align: "center" });
+      doc.setTextColor(...GRAY);
+      doc.setFontSize(7);
+      doc.text(`Assinado em ${new Date().toLocaleString("pt-BR")}`, sigX + sigW / 2, sigY + sigH + 9, { align: "center" });
+    } catch {
+      // ignora
+    }
+  }
+
+  if (retornarBlob) {
+    return doc.output("blob");
+  }
   doc.save(`orcamento-${projeto.id}.pdf`);
 }
