@@ -190,8 +190,14 @@ export default function Configurador() {
           <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); toast.success("Salvo"); }}>
             <Save className="mr-1 h-4 w-4" /> Salvar
           </Button>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={exportarOP} title="PDF para a oficina, sem preços">
+            <FileSpreadsheet className="mr-1 h-4 w-4" /> Imprimir OS
+          </Button>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); window.open(`/op/${projeto.id}`, "_blank"); }} title="Abrir modo TV (oficina, sem preços)">
+            <Wrench className="mr-1 h-4 w-4" /> Modo TV
+          </Button>
           <Button size="sm" className="shrink-0 bg-gradient-orange text-primary-foreground shadow-orange" onClick={exportarOrcamento}>
-            <Download className="mr-1 h-4 w-4" /> Exportar PDF
+            <Download className="mr-1 h-4 w-4" /> Orçamento
           </Button>
         </div>
       </div>
