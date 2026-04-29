@@ -1,6 +1,6 @@
 // Visualizador 3D principal — geometria por tipologia.
 // Carregar via Visualizador3DClient (lazy) para evitar problemas de SSR/init.
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { OrbitControls, Environment, Grid, Html } from "@react-three/drei";
 import { OrbitControls as OrbitControlsImpl } from "three-stdlib";
