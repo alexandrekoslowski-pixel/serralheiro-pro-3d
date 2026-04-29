@@ -307,10 +307,12 @@ function GeometriaTipologia({
       const Hvis = H_m * visivel;
       const nLam = Math.max(2, Math.ceil((Hvis * 1000) / 80));
       const lamH = Hvis / nLam;
+      // Ancorada no topo: a base sobe à medida que abertura aumenta (enrola pra cima)
+      const baseY = H_m - Hvis;
       const lams = Array.from({ length: nLam }, (_, i) => (
         <Tubo
           key={`l${i}`}
-          position={[0, lamH / 2 + i * lamH, 0]}
+          position={[0, baseY + lamH / 2 + i * lamH, 0]}
           size={[L_m, lamH * 0.92, 0.02]}
           color={cor}
           wireframe={wireframe}
