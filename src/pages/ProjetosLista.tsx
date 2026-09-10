@@ -23,14 +23,13 @@ import { TIPOLOGIAS, TipologiaId, tipologiaPorId } from "@/lib/tipologias";
 
 export default function ProjetosLista() {
   const navigate = useNavigate();
-  const [projetos, setProjetos] = useState<ProjetoLocal[]>([]);
+  useDados();
+  const projetos = listarProjetos();
   const [busca, setBusca] = useState("");
   const [novoNome, setNovoNome] = useState("");
   const [novoCliente, setNovoCliente] = useState("");
   const [novoTipo, setNovoTipo] = useState<TipologiaId>("portao_correr");
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  useEffect(() => { setProjetos(listarProjetos()); }, []);
 
   const filtrados = useMemo(() => {
     const q = busca.toLowerCase().trim();
