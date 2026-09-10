@@ -481,7 +481,12 @@ export default function Configurador() {
                     {resultado.custos.filter((i) => !["mao_obra", "margem", "desconto", "extra"].includes(i.categoria)).map((it) => (
                       <tr key={it.key} className={cn("border-b border-border/40", it.oculto && "opacity-40")}>
                         <td className="py-1.5 pr-2">
-                          <div className="font-medium">{it.descricao}</div>
+                          <div className="font-medium">
+                            {it.peca && projeto.pecas.length > 1 && (
+                              <span className="mr-1 text-[10px] uppercase text-muted-foreground">{it.peca} ·</span>
+                            )}
+                            {it.descricao}
+                          </div>
                           {it.codigo && <div className="text-[10px] text-muted-foreground">{it.codigo}</div>}
                         </td>
                         <td className="py-1.5 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={it.qtd} onChange={(e) => setOverride(it.key, { qtd: Number(e.target.value) })} /></td>

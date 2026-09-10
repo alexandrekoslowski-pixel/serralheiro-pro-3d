@@ -193,11 +193,17 @@ export default function ModoAtendimento() {
                 value={projeto.tipologia}
                 onChange={(e) => {
                   const novo = tipologiaPorId(e.target.value as TipologiaId);
+                  const tipo = e.target.value as TipologiaId;
+                  const larg = Math.min(Math.max(projeto.largura_mm, novo.larguraMin), novo.larguraMax);
+                  const alt = Math.min(Math.max(projeto.altura_mm, novo.alturaMin), novo.alturaMax);
                   setProjeto({
                     ...projeto,
-                    tipologia: e.target.value as TipologiaId,
-                    largura_mm: Math.min(Math.max(projeto.largura_mm, novo.larguraMin), novo.larguraMax),
-                    altura_mm: Math.min(Math.max(projeto.altura_mm, novo.alturaMin), novo.alturaMax),
+                    tipologia: tipo,
+                    largura_mm: larg,
+                    altura_mm: alt,
+                    pecas: projeto.pecas.map((pc, i) =>
+                      i === 0 ? { ...pc, tipologia: tipo, largura_mm: larg, altura_mm: alt } : pc,
+                    ),
                   });
                 }}
                 className="w-full h-14 px-4 rounded-xl border-2 border-border bg-card text-lg"
