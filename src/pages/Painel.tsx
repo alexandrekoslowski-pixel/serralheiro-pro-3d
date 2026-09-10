@@ -31,6 +31,7 @@ export default function Painel() {
   const empresa = obterEmpresa();
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<"todos" | OrdemStatus | "abertos">("abertos");
+  const [vendedora, setVendedora] = useState("todas");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
 
   const pagamentos = listarPagamentos();
@@ -80,6 +81,12 @@ export default function Painel() {
     return { atrasadas, urgentes };
   }, [projetos, empresa]);
 
+  const nomesVendedoras = useMemo(() => {
+    const set = new Set<string>((empresa.vendedoras ?? []).filter(Boolean));
+    projetos.forEach((p) => { if (p.vendedora) set.add(p.vendedora); });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [projetos, empresa]);
+
   const lista = useMemo(() => {
     const q = busca.toLowerCase().trim();
     const filtrados = projetos.filter((p) => {
@@ -88,7 +95,11 @@ export default function Painel() {
         filtro === "todos" ? true :
         filtro === "abertos" ? p.status !== "faturado" && p.status !== "entregue" :
         p.status === filtro;
-      return okBusca && okStatus;
+      const okVend =
+        vendedora === "todas" ? true :
+        vendedora === "__sem__" ? !p.vendedora :
+        p.vendedora === vendedora;
+      return okBusca && okStatus && okVend;
     });
     const peso = (p: ProjetoLocal) => {
       if (p.status === "entregue" || p.status === "faturado") return 9999;
