@@ -7,9 +7,10 @@ Hoje o PDF do orçamento traz só cabeçalho, cliente, peças, tabela de itens e
 Passa a ter 2 páginas:
 
 **Página 1 — Orçamento** (como hoje, com ajustes)
-- Cabeçalho da empresa, número, emissão e validade (5 dias corridos).
-- Dados do cliente: nome e sobrenome, RG/CPF, endereço completo, telefone.
-- Peças, desenho 3D e tabela de valores com o total.
+- Cabeçalho da empresa, número do orçamento, data de emissão e validade (5 dias corridos).
+- Bloco do cliente logo abaixo do cabeçalho, em destaque: nome e sobrenome, RG ou CPF, endereço completo (rua, número, complemento, bairro, cidade/UF, CEP), telefone/WhatsApp e e-mail.
+- Local de instalação, quando for diferente do endereço do cliente.
+- Peças com medidas, cor e sistema de fixação, e a tabela de valores com o total. Sem o desenho 3D.
 - Linha de destaque: "Prazo de entrega: aproximadamente X dias úteis após a confirmação do pagamento da entrada" — X vem do campo do orçamento (padrão 22).
 
 **Página 2 — Condições**
