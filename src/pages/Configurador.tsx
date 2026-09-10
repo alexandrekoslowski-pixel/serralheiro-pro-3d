@@ -588,7 +588,7 @@ export default function Configurador() {
                 <input type="color" value={bgColor} onChange={(e) => setBgColor(e.target.value)} className="h-7 w-7 shrink-0 cursor-pointer rounded border border-border bg-transparent" title="Cor de fundo" disabled={ambiente === "noite"} />
               </div>
             </div>
-            <div className="h-[280px] sm:h-[360px] lg:h-[420px] touch-none">
+            <div className="h-[320px] sm:h-[420px] lg:h-[520px] touch-none">
               <Visualizador3DClient
                 pecas={projeto.pecas}
                 tipologia={pecaSel.tipologia}
