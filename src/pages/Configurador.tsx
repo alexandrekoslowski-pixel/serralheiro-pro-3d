@@ -80,6 +80,7 @@ export default function Configurador() {
 
   const empresa = useMemo(() => obterEmpresa(), []);
   const catalogo = useMemo(() => obterCatalogo(), []);
+  const vendedoras = empresa.vendedoras ?? [];
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
