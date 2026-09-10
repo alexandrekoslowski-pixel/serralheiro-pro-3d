@@ -209,6 +209,27 @@ export default function Configurador() {
         </div>
       </div>
 
+      {/* Ordem de serviço */}
+      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-3">
+        <div className="w-44">
+          <label className="text-[10px] uppercase text-muted-foreground">Situação</label>
+          <Select value={projeto.status} onValueChange={(v) => upd("status", v as OrdemStatus)}>
+            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-44">
+          <label className="text-[10px] uppercase text-muted-foreground">Prazo de entrega</label>
+          <Input className="h-9" type="date" value={projeto.prazo_entrega ?? ""} onChange={(e) => upd("prazo_entrega", e.target.value || null)} />
+        </div>
+        <div className="w-40">
+          <label className="text-[10px] uppercase text-muted-foreground">Valor faturado</label>
+          <Input className="h-9" type="number" step="0.01" value={projeto.valor_faturado || 0} onChange={(e) => upd("valor_faturado", Number(e.target.value))} />
+        </div>
+      </div>
+
       {/* Layout: sidebar + central */}
       <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
         {/* Sidebar */}
