@@ -198,8 +198,7 @@ export default function Configurador() {
 
   const exportarOrcamento = () => {
     salvarProjeto({ ...projeto, total: resultado.totalGeral });
-    const snap = canvasRef.current ? canvasRef.current.toDataURL("image/png") : undefined;
-    gerarOrcamentoPDF(projeto, resultado, empresa, snap);
+    gerarOrcamentoPDF(projeto, resultado, empresa);
     toast.success("Orçamento gerado");
   };
 

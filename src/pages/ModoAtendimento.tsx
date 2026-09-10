@@ -83,14 +83,12 @@ export default function ModoAtendimento() {
   const anterior = () => setPasso((p) => Math.max(0, (p - 1)) as Passo);
 
   const gerarBlob = (): Blob | null => {
-    const snap = canvasRef.current ? canvasRef.current.toDataURL("image/png") : undefined;
-    const blob = gerarOrcamentoPDF(projeto, resultado, empresa, snap, assinatura ?? undefined, true);
+    const blob = gerarOrcamentoPDF(projeto, resultado, empresa, assinatura ?? undefined, true);
     return (blob as Blob) ?? null;
   };
 
   const baixarPDF = () => {
-    const snap = canvasRef.current ? canvasRef.current.toDataURL("image/png") : undefined;
-    gerarOrcamentoPDF(projeto, resultado, empresa, snap, assinatura ?? undefined, false);
+    gerarOrcamentoPDF(projeto, resultado, empresa, assinatura ?? undefined, false);
     toast.success("Orçamento baixado");
   };
 
