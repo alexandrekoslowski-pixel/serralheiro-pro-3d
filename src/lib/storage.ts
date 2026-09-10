@@ -74,6 +74,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   prazoPadraoDias: 15,
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
+  codigoOficina: "",
 };
 
 // ---------- estado em memória ----------
@@ -92,6 +93,8 @@ const notificar = () => listeners.forEach((f) => f());
 
 const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => ({
   status: "orcamento",
+  etapa: "fila",
+  etapa_em: new Date().toISOString(),
   prazo_entrega: null,
   valor_faturado: 0,
   aprovado_em: null,
