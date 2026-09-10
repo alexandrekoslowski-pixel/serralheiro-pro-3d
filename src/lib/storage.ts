@@ -191,12 +191,22 @@ export async function hidratarNuvem(uid: string): Promise<void> {
       prazoPadraoDias: emp.data.prazo_padrao_dias ?? 15,
       limiteVermelhoDias: emp.data.limite_vermelho_dias ?? 3,
       limiteAmareloDias: emp.data.limite_amarelo_dias ?? 7,
+      codigoOficina: (emp.data as { codigo_oficina?: string }).codigo_oficina ?? "",
     };
   } else {
     empresa = safe(() => {
       const raw = localStorage.getItem(K_EMPRESA);
       return raw ? { ...EMPRESA_PADRAO, ...JSON.parse(raw) } : { ...EMPRESA_PADRAO };
     }, { ...EMPRESA_PADRAO });
+    // cria a linha da empresa já com o código da oficina
+    const criada = await supabase
+      .from("empresa")
+      .upsert({ user_id: uid } as never)
+      .select()
+      .maybeSingle();
+    if (criada.data) {
+      empresa.codigoOficina = (criada.data as { codigo_oficina?: string }).codigo_oficina ?? "";
+    }
   }
 
   if (cat.data) {
