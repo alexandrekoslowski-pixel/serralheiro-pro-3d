@@ -32,13 +32,52 @@ export default function Painel() {
   const [filtro, setFiltro] = useState<"todos" | OrdemStatus | "abertos">("abertos");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
 
-  const totais = useMemo(() => {
-    const orcado = projetos.reduce((s, p) => s + p.total, 0);
-    const aprovado = projetos.filter((p) => p.status !== "orcamento").reduce((s, p) => s + p.total, 0);
-    const faturado = projetos.reduce((s, p) => s + (p.valor_faturado || 0), 0);
-    const recebido = listarPagamentos().reduce((s, p) => s + p.valor, 0);
-    return { orcado, aprovado, faturado, recebido, saldo: faturado - recebido };
+  const pagamentos = listarPagamentos();
+
+  // Resumo do mês (e do mês anterior, para comparar).
+  const resumo = useMemo(() => {
+    const chave = (iso: string | null) => (iso ? iso.slice(0, 7) : "");
+    const agora = new Date();
+    const mesAtual = `${agora.getFullYear()}-${String(agora.getMonth() + 1).padStart(2, "0")}`;
+    const ant = new Date(agora.getFullYear(), agora.getMonth() - 1, 1);
+    const mesAnterior = `${ant.getFullYear()}-${String(ant.getMonth() + 1).padStart(2, "0")}`;
+
+    const calc = (mes: string) => {
+      const criados = projetos.filter((p) => chave(p.created_at) === mes);
+      const orcado = criados.reduce((s, p) => s + p.total, 0);
+      const aprovado = projetos
+        .filter((p) => chave(p.aprovado_em) === mes)
+        .reduce((s, p) => s + p.total, 0);
+      const faturado = projetos
+        .filter((p) => chave(p.faturado_em) === mes)
+        .reduce((s, p) => s + (p.valor_faturado || 0), 0);
+      const recebido = pagamentos.filter((p) => p.data.slice(0, 7) === mes).reduce((s, p) => s + p.valor, 0);
+      const ticket = criados.length ? orcado / criados.length : 0;
+      return { orcado, aprovado, faturado, recebido, ticket, qtd: criados.length };
+    };
+
+    const aReceber = projetos.reduce(
+      (s, p) => s + Math.max(0, (p.valor_faturado || 0) - totalRecebido(p.id)),
+      0,
+    );
+    return { atual: calc(mesAtual), anterior: calc(mesAnterior), aReceber };
+  }, [projetos, pagamentos]);
+
+  const contagem = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const p of projetos) c[p.status] = (c[p.status] ?? 0) + 1;
+    return c;
   }, [projetos]);
+
+  const alertas = useMemo(() => {
+    const abertos = projetos.filter((p) => p.status !== "entregue" && p.status !== "faturado");
+    const atrasadas = abertos.filter((p) => (diasRestantes(p.prazo_entrega) ?? 99) < 0).length;
+    const urgentes = abertos.filter((p) => {
+      const d = diasRestantes(p.prazo_entrega);
+      return d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
+    }).length;
+    return { atrasadas, urgentes };
+  }, [projetos, empresa]);
 
   const lista = useMemo(() => {
     const q = busca.toLowerCase().trim();
