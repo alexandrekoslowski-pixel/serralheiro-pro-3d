@@ -271,7 +271,10 @@ export function salvarProjeto(p: ProjetoLocal): void {
   else projetos = [atualizado, ...projetos];
   notificar();
   if (userId) {
-    void supabase.from("projetos").upsert(projetoParaLinha(atualizado) as never);
+    void supabase
+      .from("projetos")
+      .upsert(projetoParaLinha(atualizado) as never)
+      .then(({ error }) => { if (error) console.error("Falha ao salvar projeto", error); });
   }
 }
 
@@ -279,7 +282,10 @@ export function deletarProjeto(id: string): void {
   projetos = projetos.filter((p) => p.id !== id);
   pagamentos = pagamentos.filter((x) => x.projeto_id !== id);
   notificar();
-  if (userId) void supabase.from("projetos").delete().eq("id", id);
+  if (userId) {
+    void supabase.from("projetos").delete().eq("id", id)
+      .then(({ error }) => { if (error) console.error("Falha ao excluir projeto", error); });
+  }
 }
 
 export function duplicarProjeto(id: string): ProjetoLocal | undefined {
@@ -347,7 +353,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
       limite_vermelho_dias: empresa.limiteVermelhoDias,
       limite_amarelo_dias: empresa.limiteAmareloDias,
       updated_at: new Date().toISOString(),
-    } as never);
+    } as never).then(({ error }) => { if (error) console.error("Falha ao salvar empresa", error); });
   }
 }
 
@@ -363,7 +369,7 @@ export function salvarCatalogo(c: Catalogo): void {
     void supabase.from("catalogo").upsert({
       user_id: userId, dados: c as unknown as Record<string, unknown>,
       updated_at: new Date().toISOString(),
-    } as never);
+    } as never).then(({ error }) => { if (error) console.error("Falha ao salvar catálogo", error); });
   }
 }
 
