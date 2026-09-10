@@ -1,19 +1,31 @@
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
-import { useState } from "react";
-import { Wrench, Menu, X, Building2, FolderKanban, ExternalLink } from "lucide-react";
+import { Link, NavLink, Outlet } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useSessao } from "@/lib/sessao";
+import { projetosLocaisPendentes, importarLocaisParaNuvem } from "@/lib/storage";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
-  const loc = useLocation();
-  // fecha drawer ao mudar de rota
-  if (open && loc.pathname) {
-    // não em useEffect: queremos sempre fechar quando o path muda, sem flicker
-  }
+  const [pendentes, setPendentes] = useState(0);
+  const { sair } = useSessao();
+
+  useEffect(() => { setPendentes(projetosLocaisPendentes()); }, []);
+
+  const importar = async () => {
+    try {
+      const n = await importarLocaisParaNuvem();
+      setPendentes(0);
+      toast.success(`${n} projeto(s) enviados para a sua conta`);
+    } catch { toast.error("Não foi possível enviar os projetos"); }
+  };
 
   const navItems = [
-    { to: "/app", end: true, label: "Projetos", icon: FolderKanban },
+    { to: "/app", end: true, label: "Painel", icon: LayoutDashboard },
+    { to: "/app/projetos", end: false, label: "Projetos", icon: FolderKanban },
+    { to: "/app/financeiro", end: false, label: "Financeiro", icon: Wallet },
     { to: "/app/configuracoes", end: false, label: "Empresa", icon: Building2 },
   ];
 
@@ -56,15 +68,12 @@ export default function AppLayout() {
             ))}
           </nav>
 
-          <Button asChild variant="outline" size="sm">
-            <Link to="/">
-              <ExternalLink className="mr-2 h-3.5 w-3.5" />
-              Sair do app
-            </Link>
+          <Button variant="outline" size="sm" onClick={sair}>
+            <LogOut className="mr-2 h-3.5 w-3.5" />
+            Sair
           </Button>
         </div>
 
-        {/* drawer mobile */}
         {open && (
           <div className="border-t border-border bg-background md:hidden">
             <nav className="container flex flex-col gap-1 py-2">
@@ -75,10 +84,7 @@ export default function AppLayout() {
                   end={it.end}
                   onClick={() => setOpen(false)}
                   className={({ isActive }) =>
-                    cn(
-                      "flex items-center gap-2 rounded px-3 py-2 text-sm",
-                      isActive ? "bg-card" : "hover:bg-card",
-                    )
+                    cn("flex items-center gap-2 rounded px-3 py-2 text-sm", isActive ? "bg-card" : "hover:bg-card")
                   }
                 >
                   <it.icon className="h-4 w-4" />
@@ -89,6 +95,18 @@ export default function AppLayout() {
           </div>
         )}
       </header>
+
+      {pendentes > 0 && (
+        <div className="border-b border-border bg-card">
+          <div className="container flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
+            <span>{pendentes} projeto(s) antigos estão salvos só neste aparelho.</span>
+            <div className="flex gap-2">
+              <Button size="sm" onClick={importar} className="bg-gradient-orange text-primary-foreground">Enviar para minha conta</Button>
+              <Button size="sm" variant="ghost" onClick={() => setPendentes(0)}>Agora não</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <main className="flex-1">
         <Outlet />
