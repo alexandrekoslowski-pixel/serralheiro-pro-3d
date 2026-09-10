@@ -4,6 +4,7 @@
 // O funcionário olha o diagrama, mede a barra, corta nas medidas indicadas. Pronto.
 import type { PlanoCorte, PlanoCortePerfil } from "@/lib/producao";
 import { FOLGA_CORTE_MM } from "@/lib/producao";
+import { cm } from "@/lib/medidas";
 
 const PALETA = [
   "#ea580c", // orange-600

@@ -16,6 +16,7 @@ import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao"
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import { DiagramaBarras } from "@/components/DiagramaBarras";
+import { cm } from "@/lib/medidas";
 
 export default function ModoOficina() {
   const { id = "", codigo } = useParams();

@@ -33,6 +33,7 @@ import { calcular, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
+import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 
 const PALETA_BARRAS = [
   "hsl(18 78% 52%)", "hsl(210 60% 55%)", "hsl(140 50% 50%)",
