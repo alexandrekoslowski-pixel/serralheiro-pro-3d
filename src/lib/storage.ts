@@ -5,6 +5,7 @@ import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
 
 export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
+export type EtapaOficina = "fila" | "producao" | "pintura" | "acabamento" | "pos_venda" | "pronto";
 
 export interface ProjetoLocal {
   id: string;
@@ -21,6 +22,8 @@ export interface ProjetoLocal {
   extras: ItemExtra[];
   total: number;
   status: OrdemStatus;
+  etapa: EtapaOficina;
+  etapa_em: string;
   prazo_entrega: string | null; // YYYY-MM-DD
   valor_faturado: number;
   aprovado_em: string | null;
@@ -48,6 +51,7 @@ export interface DadosEmpresa {
   prazoPadraoDias: number;
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
+  codigoOficina: string;
 }
 
 const K_PROJETOS = "spro:projetos";
