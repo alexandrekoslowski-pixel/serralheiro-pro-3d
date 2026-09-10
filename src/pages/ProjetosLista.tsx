@@ -20,6 +20,8 @@ import {
   listarProjetos, salvarProjeto, formatarBRL,
 } from "@/lib/storage";
 import { TIPOLOGIAS, TipologiaId, tipologiaPorId } from "@/lib/tipologias";
+import { STATUS_LABEL } from "@/lib/ordens";
+import { useDados } from "@/hooks/useDados";
 
 export default function ProjetosLista() {
   const navigate = useNavigate();
