@@ -5,6 +5,7 @@ import autoTable from "jspdf-autotable";
 import { ProjetoLocal } from "./storage";
 import { tipologiaPorId } from "./tipologias";
 import { PlanoCorte, PlanoProducao } from "./producao";
+import { cm } from "@/lib/medidas";
 
 const BLACK: [number, number, number] = [0, 0, 0];
 const GRAY: [number, number, number] = [110, 110, 110];
@@ -81,8 +82,8 @@ export function gerarOrdemProducaoPDF(
   const boxW = (pageW - margin * 2 - 6) / 3;
   const boxH = 38;
   const boxes: Array<[string, string]> = [
-    ["LARGURA", `${projeto.largura_mm} mm`],
-    ["ALTURA", `${projeto.altura_mm} mm`],
+    ["LARGURA", `${cm(projeto.largura_mm)} cm`],
+    ["ALTURA", `${cm(projeto.altura_mm)} cm`],
     ["COR", projeto.cor.toUpperCase()],
   ];
   boxes.forEach(([label, value], i) => {
@@ -197,7 +198,7 @@ export function gerarOrdemProducaoPDF(
           doc.text(p.id, cursor + 1.5, y + 5);
           doc.setFont("helvetica", "normal");
           doc.setFontSize(8);
-          doc.text(`${p.comprimento_mm}`, cursor + 1.5, y + 9);
+          doc.text(`${cm(p.comprimento_mm)}`, cursor + 1.5, y + 9);
         }
         cursor += w;
       });
@@ -205,7 +206,7 @@ export function gerarOrdemProducaoPDF(
       doc.setTextColor(...GRAY);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text(`Barra ${b.numero} — sobra ${b.sobra_mm} mm`, margin, y + barH + 4);
+      doc.text(`Barra ${b.numero} — sobra ${cm(b.sobra_mm)} cm`, margin, y + barH + 4);
       y += barH + 7;
       doc.setTextColor(...BLACK);
     });
@@ -257,7 +258,7 @@ export function gerarOrdemProducaoPDF(
 
       // Comprimento gigante (à direita)
       doc.setFontSize(36);
-      doc.text(`${peca.comprimento_mm}`, x + cw - 6, yy + 22, { align: "right" });
+      doc.text(`${cm(peca.comprimento_mm)}`, x + cw - 6, yy + 22, { align: "right" });
       doc.setFont("helvetica", "normal");
       doc.setFontSize(12);
       doc.setTextColor(...GRAY);
