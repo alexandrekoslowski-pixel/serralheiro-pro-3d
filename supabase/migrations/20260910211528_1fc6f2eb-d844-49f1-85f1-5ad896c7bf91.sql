@@ -1,0 +1,1 @@
+DROP FUNCTION private.importar_material_catalogo(jsonb,text);

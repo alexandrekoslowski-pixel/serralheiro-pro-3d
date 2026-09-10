@@ -52,6 +52,34 @@ export interface Material {
   custo: number;
   fornecedor: string;
   observacoes: string;
+  codigo_fornecedor: string;
+  categoria: string;
+  subtipo: string;
+  descricao_original: string;
+  largura_mm: number | null;
+  altura_mm: number | null;
+  espessura_mm: number | null;
+  comprimento_comercial_mm: number | null;
+  acabamento: string;
+  unidade_compra: string;
+  ativo: boolean;
+  codigo_calculo: string;
+  preco_atual?: number;
+  preco_referencia?: string;
+  preco_unidade?: string;
+}
+
+export interface MaterialPreco {
+  id: string;
+  material_id: string;
+  fornecedor: string;
+  valor: number;
+  unidade: string;
+  referencia: string;
+  origem: string;
+  promocional: boolean;
+  observacoes: string;
+  created_at: string;
 }
 
 export interface MembroEquipe {
@@ -147,15 +175,41 @@ export async function excluirServico(id: string): Promise<void> {
 
 // ---------- materiais ----------
 export async function listarMateriais(): Promise<Material[]> {
-  const { data, error } = await supabase.from("materiais").select("*").order("nome");
+  const [{ data, error }, precos] = await Promise.all([
+    supabase.from("materiais").select("*").order("nome"),
+    supabase.from("materiais_precos_atuais").select("*"),
+  ]);
   if (error) throw error;
-  return (data ?? []) as Material[];
+  const porMaterial = new Map((precos.data ?? []).map((p) => [p.material_id, p]));
+  return (data ?? []).map((m) => {
+    const p = porMaterial.get(m.id);
+    return { ...m, preco_atual: Number(p?.valor ?? m.custo), preco_referencia: p?.referencia, preco_unidade: p?.unidade };
+  }) as Material[];
 }
 
 export async function salvarMaterial(m: Partial<Material>): Promise<void> {
-  const payload = { ...m, user_id: m.user_id ?? (await dono()) };
-  const { error } = await supabase.from("materiais").upsert(payload as never);
+  const { preco_atual, preco_referencia, preco_unidade, ...campos } = m;
+  const payload = { ...campos, user_id: m.user_id ?? (await dono()) };
+  const { data, error } = await supabase.from("materiais").upsert(payload as never).select("id,user_id,fornecedor").single();
   if (error) throw error;
+  if (preco_atual != null && data) {
+    const { error: precoError } = await supabase.from("material_precos").upsert({
+      user_id: data.user_id,
+      material_id: data.id,
+      fornecedor: data.fornecedor,
+      valor: Number(preco_atual),
+      unidade: preco_unidade || m.unidade_compra || m.unidade || "un",
+      referencia: preco_referencia || new Date().toISOString().slice(0, 10),
+      origem: "Cadastro manual",
+    } as never, { onConflict: "material_id,fornecedor,referencia" });
+    if (precoError) throw precoError;
+  }
+}
+
+export async function listarHistoricoMaterial(materialId: string): Promise<MaterialPreco[]> {
+  const { data, error } = await supabase.from("material_precos").select("*").eq("material_id", materialId).order("referencia", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as MaterialPreco[];
 }
 
 export async function excluirMaterial(id: string): Promise<void> {
