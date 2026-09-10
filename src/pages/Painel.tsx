@@ -107,7 +107,7 @@ export default function Painel() {
       return d === null ? 9000 : d;
     };
     return [...filtrados].sort((a, b) => peso(a) - peso(b));
-  }, [projetos, busca, filtro]);
+  }, [projetos, busca, filtro, vendedora]);
 
   const avancar = (p: ProjetoLocal) => {
     const prox = proximoStatus(p.status);
