@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import { ResultadoCalculo, ItemCusto } from "./calculator";
 import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
 import { tipologiaPorId } from "./tipologias";
+import { cm } from "@/lib/medidas";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -91,7 +92,7 @@ export function gerarOrcamentoPDF(
   doc.text("Tipologia", margin, y + 10);
   doc.setFont("helvetica", "normal");
   const tip = tipologiaPorId(projeto.tipologia);
-  doc.text(`${tip.nome} — ${projeto.largura_mm} × ${projeto.altura_mm} mm — Cor: ${projeto.cor}`, margin + 22, y + 10);
+  doc.text(`${tip.nome} — ${cm(projeto.largura_mm)} × ${cm(projeto.altura_mm)} cm — Cor: ${projeto.cor}`, margin + 22, y + 10);
 
   // ===== Snapshot 3D =====
   let nextY = y + 18;

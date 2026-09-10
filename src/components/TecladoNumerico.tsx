@@ -1,4 +1,4 @@
-// Teclado numérico custom para medidas (mm) — botões grandes, mobile-first.
+// Teclado numérico custom para medidas (cm) — botões grandes, mobile-first.
 // Funciona com luva, sem precisar do teclado do iOS.
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -49,7 +49,7 @@ export function TecladoNumerico({ open, label, initial, min, max, onConfirm, onC
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-            <div className="text-[10px] text-muted-foreground">min {min} · max {max} mm</div>
+            <div className="text-[10px] text-muted-foreground">min {min} · max {max} cm</div>
           </div>
           <Button variant="ghost" size="icon" onClick={onCancel}><X className="h-5 w-5" /></Button>
         </div>
@@ -61,7 +61,7 @@ export function TecladoNumerico({ open, label, initial, min, max, onConfirm, onC
         )}>
           <div className="font-display tabular-nums text-5xl sm:text-6xl font-bold">
             {Number(valor).toLocaleString("pt-BR")}
-            <span className="text-2xl text-muted-foreground ml-2">mm</span>
+            <span className="text-2xl text-muted-foreground ml-2">cm</span>
           </div>
           {!valido && (
             <div className="text-xs text-destructive mt-1">Valor fora do intervalo</div>

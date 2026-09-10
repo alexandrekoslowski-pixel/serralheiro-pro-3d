@@ -16,6 +16,7 @@ import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao"
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import { DiagramaBarras } from "@/components/DiagramaBarras";
+import { cm } from "@/lib/medidas";
 
 export default function ModoOficina() {
   const { id = "", codigo } = useParams();
@@ -160,10 +161,10 @@ export default function ModoOficina() {
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <BigStat label="Largura" value={`${projeto.largura_mm}`} unit="mm" />
-          <BigStat label="Altura" value={`${projeto.altura_mm}`} unit="mm" />
+          <BigStat label="Largura" value={cm(projeto.largura_mm)} unit="cm" />
+          <BigStat label="Altura" value={cm(projeto.altura_mm)} unit="cm" />
           <BigStat label="Total de peças" value={`${totalPecas}`} unit="cortes" />
-          <BigStat label="Folga p/ corte" value={`+${FOLGA_CORTE_MM}`} unit="mm" highlight />
+          <BigStat label="Folga p/ corte" value={`+${cm(FOLGA_CORTE_MM)}`} unit="cm" highlight />
         </div>
         {projeto.cliente && (
           <p className="mt-3 text-zinc-400 print:text-black text-sm">
@@ -204,13 +205,13 @@ export default function ModoOficina() {
                       {/* MEDIDA PRA SERRA (já com folga) — gigante */}
                       <div className="leading-none">
                         <span className="font-black tabular-nums text-3xl md:text-5xl text-white print:text-black">
-                          {c.comprimento_mm + FOLGA_CORTE_MM}
+                          {cm(c.comprimento_mm + FOLGA_CORTE_MM)}
                         </span>
-                        <span className="text-orange-400 print:text-black ml-1 text-base font-bold">mm</span>
+                        <span className="text-orange-400 print:text-black ml-1 text-base font-bold">cm</span>
                       </div>
                       {/* medida útil — pequena, só pra conferência */}
                       <div className="text-zinc-500 print:text-black text-xs mt-1 tabular-nums">
-                        útil {c.comprimento_mm} mm
+                        útil {cm(c.comprimento_mm)} cm
                       </div>
                     </td>
                   </tr>
@@ -219,7 +220,7 @@ export default function ModoOficina() {
             </table>
           </div>
           <p className="mt-2 text-zinc-500 print:text-black text-xs">
-            A medida grande já inclui +{FOLGA_CORTE_MM} mm de folga. <strong>Use essa medida na régua.</strong>
+            A medida grande já inclui +{cm(FOLGA_CORTE_MM)} cm de folga. <strong>Use essa medida na régua.</strong>
           </p>
         </section>
 

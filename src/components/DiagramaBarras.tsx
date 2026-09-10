@@ -4,6 +4,7 @@
 // O funcionário olha o diagrama, mede a barra, corta nas medidas indicadas. Pronto.
 import type { PlanoCorte, PlanoCortePerfil } from "@/lib/producao";
 import { FOLGA_CORTE_MM } from "@/lib/producao";
+import { cm } from "@/lib/medidas";
 
 const PALETA = [
   "#ea580c", // orange-600
@@ -50,7 +51,7 @@ function PerfilBlock({ perfil }: { perfil: PlanoCortePerfil }) {
             {perfil.totalBarras}
           </span>{" "}
           {perfil.totalBarras === 1 ? "barra" : "barras"} de{" "}
-          <span className="font-mono">{perfil.barraMm} mm</span> · sobra{" "}
+          <span className="font-mono">{cm(perfil.barraMm)} cm</span> · sobra{" "}
           <span className="text-orange-400 print:text-black font-semibold">
             {perfil.perda_m.toFixed(2)} m
           </span>
@@ -127,7 +128,7 @@ function BarraSVG({
                   fontFamily="ui-monospace, SFMono-Regular, monospace"
                   style={{ paintOrder: "stroke", stroke: "#000", strokeWidth: 3 }}
                 >
-                  {cortar}
+                  {cm(cortar)}
                 </text>
               )}
             </g>
@@ -155,7 +156,7 @@ function BarraSVG({
       <div className="shrink-0 w-20 text-right text-zinc-500 print:text-black text-xs tabular-nums">
         sobra
         <div className="text-orange-400 print:text-black font-bold text-sm">
-          {sobraMm} mm
+          {cm(sobraMm)} cm
         </div>
       </div>
     </div>
