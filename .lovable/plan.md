@@ -1,38 +1,39 @@
-# O que melhorar (e o que enxugar) no sistema
+# Painel do gestor + Kanban da oficina
 
-Foco: o dono acompanha orçado x faturado mês a mês e o status de cada ordem; as atendentes precisam de telas simples.
+Dois mundos separados: o gestor vê dinheiro e prazos; a oficina vê só o trabalho.
 
-## 1. Painel mais direto para o dono
-- Cartão de resumo do mês atual em destaque: orçado no mês, faturado no mês, recebido no mês e a receber (hoje os números são de todo o histórico).
-- Comparação com o mês anterior (seta para cima/baixo em porcentagem).
-- Contador rápido por situação (ex.: 3 em orçamento, 2 em produção), clicável para filtrar.
-- Aviso de ordens vencidas separado das vermelhas, no topo.
+## 1. Painel do gestor (`/app`)
+- Resumo do mês em destaque: orçado, aprovado (efetivado), faturado, recebido e a receber — com comparação com o mês anterior.
+- Ticket médio do mês e contadores por situação (ex.: 3 em orçamento, 2 em produção), clicáveis para filtrar a lista.
+- Faixa de alerta no topo: ordens atrasadas e ordens vermelhas (prazo apertado).
+- Lista de ordens como hoje (cores por prazo), abaixo do resumo.
 
-## 2. Atendimento mais intuitivo
-- Botão único "Novo orçamento" que já abre pedindo cliente, telefone e tipo de portão, sem passar pela lista.
-- Cadastro de clientes reaproveitável: ao digitar o nome, sugerir clientes já atendidos e preencher telefone/endereço.
-- Na ordem, campo de telefone e botão de WhatsApp para enviar o orçamento em PDF.
-- Anotações rápidas por ordem (observações do cliente), visíveis no painel.
+## 2. Calendário de entregas
+- Nova aba "Calendário" no menu do gestor.
+- Visão de mês com cada ordem no dia do prazo de entrega, colorida pela urgência (vermelho/amarelo/verde) e cinza quando já entregue.
+- Clicar no dia abre a lista daquele dia; clicar na ordem abre o projeto.
+- Navegação mês anterior / próximo mês e botão "Hoje".
 
-## 3. Financeiro
-- Gráfico simples de barras por mês (orçado x faturado x recebido) na página Financeiro.
-- Taxa de conversão: quanto do que foi orçado virou aprovado no mês.
-- Recebimentos atrasados destacados (faturado há mais de X dias sem pagamento total).
+## 3. Kanban da oficina (tela aberta, sem senha)
+- Nova tela em `/oficina`, pensada para TV/tablet: letras grandes, sem preços, sem valores, sem menu do gestor.
+- Colunas: **Fila · Produção · Pintura · Acabamento · Pós-venda · Pronto**.
+- Cada cartão mostra: cliente, tipo de portão, medidas, cor e prazo (com a cor de urgência). Nada financeiro.
+- Botões grandes no cartão: "Iniciar", "Avançar" e "Abrir OS" (leva à tela de execução `/op/:id` já existente, com cortes e medidas).
+- Arrastar entre colunas também funciona no toque; o horário de entrada em cada etapa fica registrado para depois medir o tempo por etapa.
+- A ordem entra na Fila automaticamente quando o gestor marca como Aprovado.
 
-## 4. O que enxugar
-- Modo Atendimento em wizard (`/app/projeto/:id/atender`) duplica o configurador; manter só um caminho de criação — proposta: aposentar o wizard e deixar o configurador responsivo no celular, mantendo apenas a assinatura e o envio do PDF.
-- Página inicial de Projetos vira redundante com o Painel: transformar em apenas "todas as ordens" (mesma lista, sem cartões financeiros) ou remover do menu.
-- Campos técnicos avançados do configurador podem ficar recolhidos por padrão, deixando só medidas, cor e acabamento à vista.
+## 4. O que o gestor ganha com isso
+- No painel e na ordem, mostrar em que etapa da oficina a ordem está e há quanto tempo.
 
 ## 5. Detalhes técnicos
-- Novos campos em `projetos`: `telefone`, `observacoes` (dentro de `dados` ou colunas próprias).
-- Nova tabela `clientes` (nome, telefone, endereço) com RLS por usuário, usada para autocompletar.
-- Agregações por mês calculadas no cliente a partir de `projetos.created_at`, `faturado_em` e `pagamentos.data`.
-- Gráfico com Recharts (já disponível no projeto).
-- Nenhuma alteração no Modo Oficina: continua sem preços.
+- Nova coluna em `projetos`: `etapa_oficina` (enum: fila, producao, pintura, acabamento, pos_venda, pronto) + `etapa_em` (timestamp) e histórico de etapas em `dados.historico_etapas` (etapa + entrada).
+- A tela `/oficina` é pública (sem `ExigirLogin`) e lê os dados por um identificador da oficina; para manter simples nesta etapa, ela usa o mesmo carregamento do `/op/:id` atual, listando as ordens da conta a partir de um link com o código da serralheria.
+- Regras de acesso no banco continuam por usuário; a leitura pública da oficina é limitada aos campos sem valores (sem total, sem faturado, sem pagamentos), via consulta dedicada.
+- Calendário construído com componentes já existentes (date-fns + grade própria), sem nova biblioteca.
+- Kanban com arrastar-e-soltar via HTML5 drag + fallback de botões, sem nova dependência.
 
-## Ordem sugerida
-1. Resumo mensal + contadores no Painel.
-2. Gráfico e conversão no Financeiro.
-3. Clientes reaproveitáveis + telefone/WhatsApp.
-4. Enxugar wizard e a lista de projetos.
+## Ordem de execução
+1. Campos de etapa no banco.
+2. Painel do gestor com resumo mensal e alertas.
+3. Calendário de entregas.
+4. Kanban da oficina em tela aberta.
