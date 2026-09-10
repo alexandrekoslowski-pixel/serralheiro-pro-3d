@@ -11,7 +11,7 @@ import { Maximize2, ArrowLeft, Printer } from "lucide-react";
 import { obterProjeto, obterCatalogo, ProjetoLocal } from "@/lib/storage";
 import { CATALOGO_PADRAO } from "@/lib/catalogo";
 import { supabase } from "@/integrations/supabase/client";
-import { calcular } from "@/lib/calculator";
+import { calcularProjeto } from "@/lib/calculator";
 import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
@@ -45,11 +45,8 @@ export default function ModoOficina() {
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
-    return calcular({
-      tipologia: projeto.tipologia,
-      largura_mm: projeto.largura_mm,
-      altura_mm: projeto.altura_mm,
-      cor: projeto.cor,
+    return calcularProjeto({
+      pecas: projeto.pecas,
       maoObraPct: 0,
       margemPct: 0,
       descontoGeralPct: 0,
@@ -60,7 +57,7 @@ export default function ModoOficina() {
   }, [projeto, catalogo]);
 
   const planoProducao = useMemo(
-    () => (projeto && resultado ? planejarProducao(projeto.tipologia, resultado.cortes) : null),
+    () => (projeto && resultado ? planejarProducao(projeto.pecas[0].tipologia, resultado.cortes) : null),
     [projeto, resultado],
   );
 
@@ -113,7 +110,7 @@ export default function ModoOficina() {
     return <div className="min-h-screen flex items-center justify-center bg-black text-white text-2xl">Carregando…</div>;
   }
 
-  const tip = tipologiaPorId(projeto.tipologia);
+  const tip = tipologiaPorId(projeto.pecas[0].tipologia);
   const acab = acabamentoPorId(projeto.cor);
   const totalPecas = cortesAgrupados.reduce((s, c) => s + c.qtd, 0);
   const metragemTotal = cortesAgrupados.reduce((s, c) => s + (c.comprimento_mm * c.qtd) / 1000, 0);
@@ -161,11 +158,22 @@ export default function ModoOficina() {
           </div>
         </div>
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-          <BigStat label="Largura" value={cm(projeto.largura_mm)} unit="cm" />
-          <BigStat label="Altura" value={cm(projeto.altura_mm)} unit="cm" />
+          <BigStat label="Largura" value={cm(projeto.pecas[0].largura_mm)} unit="cm" />
+          <BigStat label="Altura" value={cm(projeto.pecas[0].altura_mm)} unit="cm" />
           <BigStat label="Total de peças" value={`${totalPecas}`} unit="cortes" />
           <BigStat label="Folga p/ corte" value={`+${cm(FOLGA_CORTE_MM)}`} unit="cm" highlight />
         </div>
+        {projeto.pecas.length > 1 && (
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-2">
+            {projeto.pecas.map((pc, i) => (
+              <div key={pc.id} className="flex items-center gap-3 rounded border border-zinc-700 print:border-black px-3 py-2">
+                <span className="text-orange-400 print:text-black font-black">{i + 1}</span>
+                <span className="font-bold uppercase flex-1 truncate">{pc.nome} · {tipologiaPorId(pc.tipologia).nome}</span>
+                <span className="text-2xl font-black tabular-nums">{cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm</span>
+              </div>
+            ))}
+          </div>
+        )}
         {projeto.cliente && (
           <p className="mt-3 text-zinc-400 print:text-black text-sm">
             Cliente: <span className="text-white print:text-black font-semibold">{projeto.cliente}</span>
@@ -277,8 +285,9 @@ export default function ModoOficina() {
           </h2>
           <div className="aspect-square w-full rounded overflow-hidden border border-zinc-800 print:border-black bg-black print:bg-white">
             <Visualizador3DClient
-              tipologia={projeto.tipologia}
-              largura_mm={projeto.largura_mm}
+              pecas={projeto.pecas}
+              tipologia={projeto.pecas[0].tipologia}
+              largura_mm={projeto.pecas[0].largura_mm}
               altura_mm={projeto.altura_mm}
               cor={projeto.cor}
               autoRotate={false}
