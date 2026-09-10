@@ -23,6 +23,7 @@ export interface ItemCusto {
   total: number;
   oculto?: boolean;
   override?: boolean;
+  peca?: string;
 }
 
 export interface ItemExtra {
@@ -372,6 +373,143 @@ export function calcular(input: CalcInput): ResultadoCalculo {
     custos,
     totalMateriais: Number(totalMateriais.toFixed(2)),
     totalGeral,
+    resumo: {
+      metragemPerfil: Number(metragemTotal.toFixed(2)),
+      pesoEstimado: Number(pesoTotal.toFixed(2)),
+    },
+  };
+}
+
+// ============ Orçamento com várias peças ============
+
+export interface PecaCalc {
+  id: string;
+  nome: string;
+  tipologia: TipologiaId;
+  largura_mm: number;
+  altura_mm: number;
+  cor: AcabamentoId;
+}
+
+export interface CalcProjetoInput {
+  pecas: PecaCalc[];
+  maoObraPct: number;
+  margemPct: number;
+  descontoGeralPct: number;
+  catalogo: Catalogo;
+  overrides?: Record<string, ItemOverride>;
+  extras?: ItemExtra[];
+}
+
+export interface ResultadoProjeto extends ResultadoCalculo {
+  porPeca: { peca: PecaCalc; cortes: Corte[]; custos: ItemCusto[] }[];
+}
+
+/**
+ * Calcula o orçamento inteiro: materiais de cada peça somados, mais extras,
+ * mão de obra, margem e desconto aplicados uma vez sobre o total.
+ */
+export function calcularProjeto(input: CalcProjetoInput): ResultadoProjeto {
+  const { pecas, catalogo, overrides = {}, extras = [] } = input;
+  const varias = pecas.length > 1;
+
+  const porPeca: ResultadoProjeto["porPeca"] = [];
+  const cortes: Corte[] = [];
+  const custos: ItemCusto[] = [];
+  let metragemTotal = 0;
+  let pesoTotal = 0;
+
+  pecas.forEach((peca, idx) => {
+    const nome = peca.nome || `Peça ${idx + 1}`;
+    const r = calcular({
+      tipologia: peca.tipologia,
+      largura_mm: peca.largura_mm,
+      altura_mm: peca.altura_mm,
+      cor: peca.cor,
+      maoObraPct: 0,
+      margemPct: 0,
+      descontoGeralPct: 0,
+      catalogo,
+      // overrides já vêm com o prefixo da peça
+      overrides: Object.fromEntries(
+        Object.entries(overrides)
+          .filter(([k]) => k.startsWith(`${peca.id}::`))
+          .map(([k, v]) => [k.slice(peca.id.length + 2), v]),
+      ),
+      extras: [],
+    });
+
+    const cortesPeca = r.cortes.map((c) => ({
+      ...c,
+      descricao: varias ? `${nome} — ${c.descricao}` : c.descricao,
+    }));
+    const custosPeca = r.custos
+      .filter((i) => !["mao_obra", "margem", "desconto"].includes(i.categoria))
+      .map((i) => ({ ...i, key: `${peca.id}::${i.key}`, peca: nome }));
+
+    cortes.push(...cortesPeca);
+    custos.push(...custosPeca);
+    metragemTotal += r.resumo.metragemPerfil;
+    pesoTotal += r.resumo.pesoEstimado;
+    porPeca.push({ peca, cortes: cortesPeca, custos: custosPeca });
+  });
+
+  // Extras do orçamento (frete, instalação…)
+  for (const ex of extras) {
+    const key = `extra:${ex.id}`;
+    custos.push(aplicarOverride({
+      key,
+      categoria: "extra",
+      descricao: ex.descricao || "Item extra",
+      qtd: ex.qtd,
+      unidade: ex.unidade || "un",
+      precoUnit: ex.precoUnit,
+      descontoPct: 0,
+      total: Number((ex.qtd * ex.precoUnit).toFixed(2)),
+    }, overrides[key]));
+  }
+
+  const totalMateriais = custos.reduce((s, i) => s + (i.oculto ? 0 : i.total), 0);
+
+  const moKey = "mao_obra:padrao";
+  const mo = aplicarOverride({
+    key: moKey, categoria: "mao_obra", descricao: `Mão de obra (${input.maoObraPct}%)`,
+    qtd: 1, unidade: "vb",
+    precoUnit: Number((totalMateriais * input.maoObraPct / 100).toFixed(2)),
+    descontoPct: 0,
+    total: Number((totalMateriais * input.maoObraPct / 100).toFixed(2)),
+  }, overrides[moKey]);
+  custos.push(mo);
+
+  const subtotal = totalMateriais + (mo.oculto ? 0 : mo.total);
+
+  const mgKey = "margem:padrao";
+  const mg = aplicarOverride({
+    key: mgKey, categoria: "margem", descricao: `Margem (${input.margemPct}%)`,
+    qtd: 1, unidade: "vb",
+    precoUnit: Number((subtotal * input.margemPct / 100).toFixed(2)),
+    descontoPct: 0,
+    total: Number((subtotal * input.margemPct / 100).toFixed(2)),
+  }, overrides[mgKey]);
+  custos.push(mg);
+
+  const comMargem = subtotal + (mg.oculto ? 0 : mg.total);
+  const desc = comMargem * input.descontoGeralPct / 100;
+  if (input.descontoGeralPct > 0) {
+    custos.push({
+      key: "desconto:geral", categoria: "desconto",
+      descricao: `Desconto geral (${input.descontoGeralPct}%)`,
+      qtd: 1, unidade: "vb",
+      precoUnit: -Number(desc.toFixed(2)), descontoPct: 0, total: -Number(desc.toFixed(2)),
+    });
+  }
+
+  return {
+    porPeca,
+    cortes,
+    custos,
+    totalMateriais: Number(totalMateriais.toFixed(2)),
+    totalGeral: Number((comMargem - desc).toFixed(2)),
     resumo: {
       metragemPerfil: Number(metragemTotal.toFixed(2)),
       pesoEstimado: Number(pesoTotal.toFixed(2)),
