@@ -104,6 +104,8 @@ export default function Painel() {
     const patch: Partial<ProjetoLocal> = { status: prox };
     if (prox === "aprovado") {
       patch.aprovado_em = agora;
+      patch.etapa = "fila";
+      patch.etapa_em = agora;
       if (!p.prazo_entrega) patch.prazo_entrega = somarDias(empresa.prazoPadraoDias);
     }
     if (prox === "entregue") patch.entregue_em = agora;
@@ -127,18 +129,62 @@ export default function Painel() {
         </Button>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      {(alertas.atrasadas > 0 || alertas.urgentes > 0) && (
+        <div className="mt-4 flex flex-wrap gap-2 text-sm">
+          {alertas.atrasadas > 0 && (
+            <button
+              onClick={() => setFiltro("abertos")}
+              className="rounded-md bg-destructive/15 px-3 py-2 font-medium text-destructive"
+            >
+              {alertas.atrasadas} ordem(ns) atrasada(s)
+            </button>
+          )}
+          {alertas.urgentes > 0 && (
+            <button
+              onClick={() => setFiltro("abertos")}
+              className="rounded-md bg-amber-500/15 px-3 py-2 font-medium text-amber-500"
+            >
+              {alertas.urgentes} com prazo apertado
+            </button>
+          )}
+        </div>
+      )}
+
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
         {[
-          { l: "Orçado", v: totais.orcado },
-          { l: "Aprovado", v: totais.aprovado },
-          { l: "Faturado", v: totais.faturado },
-          { l: "Recebido", v: totais.recebido },
-          { l: "A receber", v: totais.saldo },
-        ].map((c) => (
-          <div key={c.l} className="surface-card rounded-lg border border-border p-4">
-            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{c.l}</div>
-            <div className="font-display text-lg md:text-xl">{formatarBRL(c.v)}</div>
-          </div>
+          { l: "Orçado no mês", v: resumo.atual.orcado, ant: resumo.anterior.orcado },
+          { l: "Aprovado no mês", v: resumo.atual.aprovado, ant: resumo.anterior.aprovado },
+          { l: "Faturado no mês", v: resumo.atual.faturado, ant: resumo.anterior.faturado },
+          { l: "Recebido no mês", v: resumo.atual.recebido, ant: resumo.anterior.recebido },
+          { l: "Ticket médio", v: resumo.atual.ticket, ant: resumo.anterior.ticket },
+          { l: "A receber (total)", v: resumo.aReceber, ant: null as number | null },
+        ].map((c) => {
+          const varia = c.ant && c.ant > 0 ? ((c.v - c.ant) / c.ant) * 100 : null;
+          return (
+            <div key={c.l} className="surface-card rounded-lg border border-border p-4">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{c.l}</div>
+              <div className="font-display text-lg md:text-xl">{formatarBRL(c.v)}</div>
+              {varia !== null && (
+                <div className={`mt-1 text-[11px] ${varia >= 0 ? "text-emerald-500" : "text-destructive"}`}>
+                  {varia >= 0 ? "▲" : "▼"} {Math.abs(varia).toFixed(0)}% vs mês anterior
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-2">
+        {STATUS_ORDEM.map((s) => (
+          <button
+            key={s}
+            onClick={() => setFiltro(s)}
+            className={`rounded-md border px-3 py-1.5 text-xs transition ${
+              filtro === s ? "border-primary bg-card" : "border-border text-muted-foreground hover:bg-card"
+            }`}
+          >
+            {STATUS_LABEL[s]} <strong className="ml-1 text-foreground">{contagem[s] ?? 0}</strong>
+          </button>
         ))}
       </div>
 
