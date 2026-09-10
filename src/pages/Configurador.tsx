@@ -664,14 +664,20 @@ function CardResumo({ label, valor, highlight }: { label: string; valor: string;
 function SliderMm({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
   const [texto, setTexto] = useState<string | null>(null);
   const exibido = texto ?? String(mmParaCm(value));
+  const maxCm = mmParaCm(max);
 
   const confirmar = () => {
     const n = Number(String(exibido).replace(",", "."));
-    if (Number.isFinite(n) && exibido.trim() !== "") {
-      onChange(Math.min(max, Math.max(min, cmParaMm(n))));
+    if (Number.isFinite(n) && n > 0 && exibido.trim() !== "") {
+      // Digitou um número grande demais para centímetros? Interpreta como milímetros.
+      const mm = n > maxCm ? Math.round(n) : cmParaMm(n);
+      onChange(mm);
     }
     setTexto(null);
   };
+
+  const sliderMax = Math.max(max, value);
+  const sliderMin = Math.min(min, value);
 
   return (
     <div>
@@ -681,7 +687,7 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
           <Input
             type="text"
             inputMode="decimal"
-            className="h-7 w-20 text-right text-xs"
+            className="h-7 w-24 text-right text-xs"
             value={exibido}
             onChange={(e) => setTexto(e.target.value)}
             onFocus={(e) => e.currentTarget.select()}
@@ -691,9 +697,9 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
           <span className="text-[10px] text-muted-foreground">cm</span>
         </div>
       </div>
-      <Slider min={min} max={max} step={10} value={[value]} onValueChange={([v]) => { setTexto(null); onChange(v); }} />
+      <Slider min={sliderMin} max={sliderMax} step={10} value={[value]} onValueChange={([v]) => { setTexto(null); onChange(v); }} />
       <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-        <span>{cm(min)} cm</span><span>{cm(max)} cm</span>
+        <span>{cm(sliderMin)} cm</span><span>{cm(sliderMax)} cm</span>
       </div>
     </div>
   );
