@@ -131,6 +131,21 @@ export default function Financeiro() {
       </div>
 
       <div className="surface-card rounded-lg border border-border p-5">
+        <h2 className="font-display text-lg mb-4">Por vendedora</h2>
+        {porVendedora.length === 0 && <p className="text-sm text-muted-foreground">Ainda não há orçamentos.</p>}
+        <div className="space-y-2">
+          {porVendedora.map(([nome, v]) => (
+            <div key={nome} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border px-3 py-2 text-sm">
+              <span className="font-medium">{nome} <span className="text-xs text-muted-foreground">· {v.qtd} orçamento(s)</span></span>
+              <span className="text-xs text-muted-foreground">
+                Orçado {formatarBRL(v.orcado)} · Faturado {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="surface-card rounded-lg border border-border p-5">
         <h2 className="font-display text-lg mb-4">Mês a mês</h2>
         {meses.length === 0 && <p className="text-sm text-muted-foreground">Ainda não há movimento.</p>}
         <div className="space-y-4">
