@@ -25,9 +25,17 @@ Passa a ter 2 páginas:
 No orçamento (tela do projeto, bloco "Cliente"):
 - Nome e sobrenome (já existe o campo cliente)
 - RG ou CPF
-- Endereço completo
+- Endereço completo: rua e número, complemento, bairro, cidade/UF, CEP
 - Telefone / WhatsApp
+- E-mail
+- Local de instalação (opcional, quando a obra é em outro endereço)
 - Prazo de entrega em dias úteis (vazio = 22)
+
+Faltavam também, e entram junto porque a proposta precisa deles:
+- E-mail do cliente, para envio e contato.
+- Local de instalação separado do endereço de cadastro.
+- Campos de "Serviços" e "Frete" no orçamento — o texto padrão diz que, se não estiverem preenchidos, não entram no valor; assim o PDF mostra "não incluso" ou o valor lançado.
+- Observações da proposta: um campo livre por orçamento, impresso antes das condições.
 
 Em Configurações > Empresa (valem para todos os PDFs, editáveis):
 - Prazo padrão em dias úteis (22)
