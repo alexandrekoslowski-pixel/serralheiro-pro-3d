@@ -25,9 +25,10 @@ import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
 } from "@/lib/tipologias";
 import {
-  ProjetoLocal, obterProjeto, salvarProjeto, duplicarProjeto,
+  ProjetoLocal, OrdemStatus, obterProjeto, salvarProjeto, duplicarProjeto,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId,
 } from "@/lib/storage";
+import { STATUS_ORDEM, STATUS_LABEL } from "@/lib/ordens";
 import { calcular, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
