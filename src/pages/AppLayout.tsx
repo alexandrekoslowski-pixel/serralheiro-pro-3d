@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut } from "lucide-react";
+import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,7 @@ export default function AppLayout() {
   const navItems = [
     { to: "/app", end: true, label: "Painel", icon: LayoutDashboard },
     { to: "/app/projetos", end: false, label: "Projetos", icon: FolderKanban },
+    { to: "/app/calendario", end: false, label: "Calendário", icon: CalendarDays },
     { to: "/app/financeiro", end: false, label: "Financeiro", icon: Wallet },
     { to: "/app/configuracoes", end: false, label: "Empresa", icon: Building2 },
   ];

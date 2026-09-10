@@ -14,6 +14,8 @@ import Configurador from "./pages/Configurador";
 import Configuracoes from "./pages/Configuracoes";
 import ModoOficina from "./pages/ModoOficina";
 import ModoAtendimento from "./pages/ModoAtendimento";
+import Calendario from "./pages/Calendario";
+import KanbanOficina from "./pages/KanbanOficina";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -32,10 +34,12 @@ const App = () => (
               <Route index element={<Painel />} />
               <Route path="projetos" element={<ProjetosLista />} />
               <Route path="financeiro" element={<Financeiro />} />
+              <Route path="calendario" element={<Calendario />} />
               <Route path="projeto/:id" element={<Configurador />} />
               <Route path="configuracoes" element={<Configuracoes />} />
             </Route>
             <Route path="/app/projeto/:id/atender" element={<ExigirLogin><ModoAtendimento /></ExigirLogin>} />
+            <Route path="/oficina/:codigo" element={<KanbanOficina />} />
             <Route path="/op/:id" element={<ExigirLogin><ModoOficina /></ExigirLogin>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
