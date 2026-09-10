@@ -3,8 +3,12 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { SessaoProvider, ExigirLogin } from "@/lib/sessao";
 import Landing from "./pages/Landing";
+import Auth from "./pages/Auth";
 import AppLayout from "./pages/AppLayout";
+import Painel from "./pages/Painel";
+import Financeiro from "./pages/Financeiro";
 import ProjetosLista from "./pages/ProjetosLista";
 import Configurador from "./pages/Configurador";
 import Configuracoes from "./pages/Configuracoes";
@@ -20,17 +24,22 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Landing />} />
-          <Route path="/app" element={<AppLayout />}>
-            <Route index element={<ProjetosLista />} />
-            <Route path="projeto/:id" element={<Configurador />} />
-            <Route path="configuracoes" element={<Configuracoes />} />
-          </Route>
-          <Route path="/app/projeto/:id/atender" element={<ModoAtendimento />} />
-          <Route path="/op/:id" element={<ModoOficina />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <SessaoProvider>
+          <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/app" element={<ExigirLogin><AppLayout /></ExigirLogin>}>
+              <Route index element={<Painel />} />
+              <Route path="projetos" element={<ProjetosLista />} />
+              <Route path="financeiro" element={<Financeiro />} />
+              <Route path="projeto/:id" element={<Configurador />} />
+              <Route path="configuracoes" element={<Configuracoes />} />
+            </Route>
+            <Route path="/app/projeto/:id/atender" element={<ExigirLogin><ModoAtendimento /></ExigirLogin>} />
+            <Route path="/op/:id" element={<ExigirLogin><ModoOficina /></ExigirLogin>} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </SessaoProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
