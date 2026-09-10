@@ -457,9 +457,9 @@ export default function Configurador() {
                     <tr className="border-b border-border text-xs uppercase text-muted-foreground">
                       <th className="text-left py-2 pr-2">Cód.</th>
                       <th className="text-left py-2 pr-2">Descrição</th>
-                      <th className="text-right py-2 pr-2">Comp. (mm)</th>
+                      <th className="text-right py-2 pr-2">Comp. (cm)</th>
                       <th className="text-right py-2 pr-2">Qtd</th>
-                      <th className="text-right py-2 pr-2">Total (mm)</th>
+                      <th className="text-right py-2 pr-2">Total (cm)</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -467,9 +467,9 @@ export default function Configurador() {
                       <tr key={i} className="border-b border-border/40">
                         <td className="py-1.5 pr-2 font-mono text-xs">{c.codigo}</td>
                         <td className="py-1.5 pr-2">{c.descricao}</td>
-                        <td className="py-1.5 pr-2 text-right">{c.comprimento_mm}</td>
+                        <td className="py-1.5 pr-2 text-right">{cm(c.comprimento_mm)}</td>
                         <td className="py-1.5 pr-2 text-right">{c.qtd}</td>
-                        <td className="py-1.5 pr-2 text-right font-medium">{(c.comprimento_mm * c.qtd).toLocaleString("pt-BR")}</td>
+                        <td className="py-1.5 pr-2 text-right font-medium">{cm(c.comprimento_mm * c.qtd)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -491,7 +491,7 @@ export default function Configurador() {
                 <Select value={String(barraMm)} onValueChange={(v) => setBarraMm(Number(v))}>
                   <SelectTrigger className="w-32"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[3000, 5000, 6000, 12000].map((n) => <SelectItem key={n} value={String(n)}>{n} mm</SelectItem>)}
+                    {[3000, 5000, 6000, 12000].map((n) => <SelectItem key={n} value={String(n)}>{cm(n)} cm</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Button size="sm" variant="outline" className="ml-auto" onClick={exportarOP}>
@@ -519,15 +519,15 @@ export default function Configurador() {
                                   key={p.id}
                                   className="flex items-center justify-center text-[9px] text-white font-medium border-r border-background/30"
                                   style={{ width: `${w}%`, backgroundColor: PALETA_BARRAS[i % PALETA_BARRAS.length] }}
-                                  title={`${p.id} · ${p.descricao} · ${p.comprimento_mm}mm`}
+                                  title={`${p.id} · ${p.descricao} · ${cm(p.comprimento_mm)} cm`}
                                 >
                                   {w > 6 ? p.id : ""}
                                 </div>
                               );
                             })}
-                            <div className="bg-muted flex-1" title={`Sobra ${b.sobra_mm}mm`} />
+                            <div className="bg-muted flex-1" title={`Sobra ${cm(b.sobra_mm)} cm`} />
                           </div>
-                          <span className="text-[10px] text-muted-foreground w-16 text-right shrink-0">↳ {b.sobra_mm}mm</span>
+                          <span className="text-[10px] text-muted-foreground w-16 text-right shrink-0">↳ {cm(b.sobra_mm)} cm</span>
                         </div>
                       ))}
                     </div>
