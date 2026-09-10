@@ -21,6 +21,7 @@ import {
   diasRestantes, somarDias, dataISO,
 } from "@/lib/ordens";
 import { tipologiaPorId } from "@/lib/tipologias";
+import CalendarioEntregas from "@/components/CalendarioEntregas";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
@@ -253,6 +254,10 @@ export default function Painel() {
             </div>
           );
         })}
+      </div>
+
+      <div className="mt-8">
+        <CalendarioEntregas />
       </div>
 
       <DialogOrdem projeto={detalhe} onClose={() => setDetalhe(null)} />
