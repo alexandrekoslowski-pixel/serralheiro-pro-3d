@@ -40,6 +40,7 @@ const App = () => (
             </Route>
             <Route path="/app/projeto/:id/atender" element={<ExigirLogin><ModoAtendimento /></ExigirLogin>} />
             <Route path="/oficina/:codigo" element={<KanbanOficina />} />
+            <Route path="/oficina/:codigo/os/:id" element={<ModoOficina />} />
             <Route path="/op/:id" element={<ExigirLogin><ModoOficina /></ExigirLogin>} />
             <Route path="*" element={<NotFound />} />
           </Routes>

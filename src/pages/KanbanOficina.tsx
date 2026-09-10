@@ -127,7 +127,7 @@ export default function KanbanOficina() {
                             </Button>
                           )}
                           <Button size="sm" variant="outline" asChild>
-                            <Link to={`/op/${o.id}`} target="_blank">
+                            <Link to={`/oficina/${codigo}/os/${o.id}`} target="_blank">
                               <FileText className="mr-1 h-4 w-4" /> OS
                             </Link>
                           </Button>
