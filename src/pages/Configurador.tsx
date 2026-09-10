@@ -618,6 +618,20 @@ export default function Configurador() {
             <CardResumo label="Peso estimado" valor={`${resultado.resumo.pesoEstimado.toFixed(1)} kg`} />
           </div>
 
+          {/* Percentuais */}
+          <div className="surface-card rounded-lg border border-border p-4">
+            <div className="mb-3 flex items-center gap-2 font-display text-sm">
+              <DollarSign className="h-4 w-4 text-primary" /> Composição do preço
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <SliderPct label="Mão de obra" value={projeto.maoObraPct} onChange={(v) => upd("maoObraPct", v)} />
+              <SliderPct label="Margem" value={projeto.margemPct} onChange={(v) => upd("margemPct", v)} />
+              <SliderPct label="Desconto geral" value={projeto.descontoGeralPct} onChange={(v) => upd("descontoGeralPct", v)} max={50} />
+            </div>
+          </div>
+
+
+
           {/* Tabs */}
           <Tabs defaultValue="materiais">
             <TabsList className="overflow-x-auto w-max min-w-full justify-start">
