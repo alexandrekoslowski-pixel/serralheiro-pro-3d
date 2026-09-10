@@ -190,6 +190,18 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   pecas: [],
+  cliente_documento: "",
+  cliente_endereco: "",
+  cliente_bairro: "",
+  cliente_cidade: "",
+  cliente_cep: "",
+  cliente_telefone: "",
+  cliente_email: "",
+  local_instalacao: "",
+  prazo_dias_uteis: null,
+  servicos_valor: null,
+  frete_valor: null,
+  observacoes_proposta: "",
   ...(p as ProjetoLocal),
   } as ProjetoLocal;
 
