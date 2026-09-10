@@ -146,6 +146,43 @@ function cortesVeneziana(L: number, H: number): Corte[] {
   ];
 }
 
+// Grades fixas: moldura + preenchimento conforme o modelo.
+function cortesGradeBalaozinho(L: number, H: number): Corte[] {
+  // Tubos verticais balãozinho a cada ~150mm
+  const nVert = Math.max(2, Math.ceil(L / 150) - 1);
+  return [
+    { codigo: "TUB-30x30", descricao: "Moldura horizontal", comprimento_mm: L, qtd: 2 },
+    { codigo: "TUB-30x30", descricao: "Moldura vertical", comprimento_mm: H, qtd: 2 },
+    { codigo: "TUB-20x20", descricao: "Tubo balãozinho vertical", comprimento_mm: H - 60, qtd: nVert },
+  ];
+}
+
+function cortesGradeTijolinho(L: number, H: number): Corte[] {
+  // Padrão tijolinho: barras horizontais a cada ~150mm + verticais a cada ~300mm
+  const nHoriz = Math.max(2, Math.ceil(H / 150) - 1);
+  const nVert = Math.max(2, Math.ceil(L / 300) - 1);
+  return [
+    { codigo: "TUB-30x30", descricao: "Moldura horizontal", comprimento_mm: L, qtd: 2 },
+    { codigo: "TUB-30x30", descricao: "Moldura vertical", comprimento_mm: H, qtd: 2 },
+    { codigo: "TUB-20x20", descricao: "Barra horizontal tijolinho", comprimento_mm: L - 60, qtd: nHoriz },
+    { codigo: "TUB-20x20", descricao: "Barra vertical tijolinho", comprimento_mm: H - 60, qtd: nVert },
+  ];
+}
+
+function cortesGradeTrabalhada(L: number, H: number): Corte[] {
+  // Verticais a cada ~200mm + diagonais trabalhadas (barra chata) em cada vão
+  const nVert = Math.max(2, Math.ceil(L / 200) - 1);
+  const nVaos = nVert + 1;
+  const w = L / nVaos;
+  const diag = Math.round(Math.sqrt(w * w + (H - 60) * (H - 60)));
+  return [
+    { codigo: "TUB-30x30", descricao: "Moldura horizontal", comprimento_mm: L, qtd: 2 },
+    { codigo: "TUB-30x30", descricao: "Moldura vertical", comprimento_mm: H, qtd: 2 },
+    { codigo: "TUB-20x20", descricao: "Tubo vertical", comprimento_mm: H - 60, qtd: nVert },
+    { codigo: "CHATA-3/16", descricao: "Diagonal trabalhada", comprimento_mm: diag, qtd: nVaos * 2 },
+  ];
+}
+
 function gerarCortes(tipo: TipologiaId, L: number, H: number): Corte[] {
   switch (tipo) {
     case "portao_correr": return cortesPortaoCorrer(L, H);
@@ -156,6 +193,9 @@ function gerarCortes(tipo: TipologiaId, L: number, H: number): Corte[] {
     case "janela_correr_2f": return cortesJanelaCorrer2f(L, H);
     case "estrutura_metalica": return cortesEstrutura(L, H);
     case "veneziana_metalica": return cortesVeneziana(L, H);
+    case "grade_fixa_balaozinho": return cortesGradeBalaozinho(L, H);
+    case "grade_fixa_tijolinho": return cortesGradeTijolinho(L, H);
+    case "grade_fixa_trabalhada": return cortesGradeTrabalhada(L, H);
   }
 }
 
@@ -198,6 +238,11 @@ function acessoriosPorTipologia(tipo: TipologiaId): { codigo: string; qtd: numbe
     ];
     case "veneziana_metalica": return [
       { codigo: "PARAFUSO-AUTO", qtd: 20 },
+    ];
+    case "grade_fixa_balaozinho":
+    case "grade_fixa_tijolinho":
+    case "grade_fixa_trabalhada": return [
+      { codigo: "PARAFUSO-AUTO", qtd: 12 },
     ];
   }
 }
