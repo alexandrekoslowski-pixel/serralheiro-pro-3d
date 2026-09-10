@@ -3,7 +3,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ResultadoCalculo, ItemCusto } from "./calculator";
 import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
-import { tipologiaPorId } from "./tipologias";
+import { acabamentoPorId, tipologiaPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
 import { fixacaoTipo, fixacaoLados } from "./fixacao";
 
@@ -148,7 +148,7 @@ export function gerarOrcamentoPDF(
       pc.nome,
       tipologiaPorId(pc.tipologia).nome,
       `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`,
-      pc.cor,
+      acabamentoPorId(pc.cor).nome,
       `${fixacaoTipo(pc.fixacao).curto} · ${fixacaoLados(pc.fixacaoLados).curto}`,
     ]),
     styles: { fontSize: 8.5, cellPadding: 2 },
