@@ -254,113 +254,118 @@ export default function Configurador() {
         </div>
       </div>
 
-      {/* Ordem de serviço */}
-      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-3">
-        <div className="w-44">
-          <label className="text-[10px] uppercase text-muted-foreground">Situação</label>
-          <Select value={projeto.status} onValueChange={(v) => upd("status", v as OrdemStatus)}>
-            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="w-44">
-          <label className="text-[10px] uppercase text-muted-foreground">Prazo de entrega</label>
-          <Input className="h-9" type="date" value={projeto.prazo_entrega ?? ""} onChange={(e) => upd("prazo_entrega", e.target.value || null)} />
-        </div>
-        <div className="w-40">
-          <label className="text-[10px] uppercase text-muted-foreground">Valor faturado</label>
-          <Input className="h-9" type="number" step="0.01" value={projeto.valor_faturado || 0} onChange={(e) => upd("valor_faturado", Number(e.target.value))} />
-        </div>
-      </div>
+      {/* Cadastro do orçamento */}
+      <div className="surface-card rounded-lg border border-border">
+        <Tabs defaultValue="cliente">
+          <TabsList className="w-full justify-start overflow-x-auto rounded-b-none border-b border-border bg-transparent p-0">
+            <TabsTrigger value="cliente">1 · Cliente</TabsTrigger>
+            <TabsTrigger value="proposta">2 · Proposta</TabsTrigger>
+            <TabsTrigger value="ordem">3 · Ordem de serviço</TabsTrigger>
+          </TabsList>
 
-      {/* Layout: sidebar + central */}
-      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
-        {/* Sidebar */}
-        <aside className="space-y-3">
-          <CollapsiblePanel icon={<Settings2 className="h-4 w-4 text-primary" />} title="Configuração">
-            <div className="space-y-3">
-              <div>
-                <Label>Nome do projeto</Label>
-                <Input value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} />
+          <TabsContent value="cliente" className="mt-0 p-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Cliente (nome e sobrenome)</Label>
+                <Input className="h-9" value={projeto.cliente} onChange={(e) => upd("cliente", e.target.value)} placeholder="Maria Silva" />
               </div>
               <div>
-                <Label>Cliente (nome e sobrenome)</Label>
-                <Input value={projeto.cliente} onChange={(e) => upd("cliente", e.target.value)} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div>
-                  <Label className="text-xs">RG ou CPF</Label>
-                  <Input className="h-9" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs">Telefone / WhatsApp</Label>
-                  <Input className="h-9" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} />
-                </div>
+                <Label className="text-xs">RG ou CPF</Label>
+                <Input className="h-9" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} />
               </div>
               <div>
+                <Label className="text-xs">Telefone / WhatsApp</Label>
+                <Input className="h-9" inputMode="tel" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
+              </div>
+              <div className="sm:col-span-2">
                 <Label className="text-xs">E-mail</Label>
                 <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} />
               </div>
-              <div>
+              <div className="sm:col-span-2">
                 <Label className="text-xs">Endereço (rua, número, complemento)</Label>
                 <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} />
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label className="text-xs">Bairro</Label>
-                  <Input className="h-9" value={projeto.cliente_bairro ?? ""} onChange={(e) => upd("cliente_bairro", e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs">Cidade/UF</Label>
-                  <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} />
-                </div>
-                <div>
-                  <Label className="text-xs">CEP</Label>
-                  <Input className="h-9" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} />
-                </div>
+              <div>
+                <Label className="text-xs">Bairro</Label>
+                <Input className="h-9" value={projeto.cliente_bairro ?? ""} onChange={(e) => upd("cliente_bairro", e.target.value)} />
               </div>
               <div>
-                <Label className="text-xs">Local de instalação (se for outro endereço)</Label>
-                <Input className="h-9" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} />
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div>
-                  <Label className="text-xs">Prazo (dias úteis)</Label>
-                  <Input
-                    className="h-9"
-                    type="number"
-                    min={1}
-                    placeholder={String(empresa.prazoDiasUteis ?? 22)}
-                    value={projeto.prazo_dias_uteis ?? ""}
-                    onChange={(e) => upd("prazo_dias_uteis", e.target.value === "" ? null : Number(e.target.value))}
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Serviços (R$)</Label>
-                  <Input
-                    className="h-9"
-                    type="number"
-                    step="0.01"
-                    placeholder="não incluso"
-                    value={projeto.servicos_valor ?? ""}
-                    onChange={(e) => upd("servicos_valor", e.target.value === "" ? null : Number(e.target.value))}
-                  />
-                </div>
-                <div>
-                  <Label className="text-xs">Frete (R$)</Label>
-                  <Input
-                    className="h-9"
-                    type="number"
-                    step="0.01"
-                    placeholder="não incluso"
-                    value={projeto.frete_valor ?? ""}
-                    onChange={(e) => upd("frete_valor", e.target.value === "" ? null : Number(e.target.value))}
-                  />
-                </div>
+                <Label className="text-xs">Cidade/UF</Label>
+                <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} />
               </div>
               <div>
+                <Label className="text-xs">CEP</Label>
+                <Input className="h-9" inputMode="numeric" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Local de instalação</Label>
+                <Input className="h-9" placeholder="se for outro endereço" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} />
+              </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="proposta" className="mt-0 p-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Nome do projeto</Label>
+                <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Vendedora responsável</Label>
+                {vendedoras.length > 0 ? (
+                  <Select
+                    value={projeto.vendedora || "__nenhuma__"}
+                    onValueChange={(v) => upd("vendedora", v === "__nenhuma__" ? "" : v)}
+                  >
+                    <SelectTrigger className="h-9"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__nenhuma__">Sem vendedora</SelectItem>
+                      {vendedoras.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    className="h-9"
+                    placeholder="Cadastre a equipe em Empresa & Catálogo"
+                    value={projeto.vendedora ?? ""}
+                    onChange={(e) => upd("vendedora", e.target.value)}
+                  />
+                )}
+              </div>
+              <div>
+                <Label className="text-xs">Prazo (dias úteis)</Label>
+                <Input
+                  className="h-9"
+                  type="number"
+                  min={1}
+                  placeholder={String(empresa.prazoDiasUteis ?? 22)}
+                  value={projeto.prazo_dias_uteis ?? ""}
+                  onChange={(e) => upd("prazo_dias_uteis", e.target.value === "" ? null : Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Serviços (R$)</Label>
+                <Input
+                  className="h-9"
+                  type="number"
+                  step="0.01"
+                  placeholder="não incluso"
+                  value={projeto.servicos_valor ?? ""}
+                  onChange={(e) => upd("servicos_valor", e.target.value === "" ? null : Number(e.target.value))}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Frete (R$)</Label>
+                <Input
+                  className="h-9"
+                  type="number"
+                  step="0.01"
+                  placeholder="não incluso"
+                  value={projeto.frete_valor ?? ""}
+                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : Number(e.target.value))}
+                />
+              </div>
+              <div className="sm:col-span-2 lg:col-span-4">
                 <Label className="text-xs">Observações da proposta</Label>
                 <Textarea
                   rows={3}
@@ -368,6 +373,43 @@ export default function Configurador() {
                   onChange={(e) => upd("observacoes_proposta", e.target.value)}
                 />
               </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="ordem" className="mt-0 p-4">
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div>
+                <Label className="text-xs">Situação</Label>
+                <Select value={projeto.status} onValueChange={(v) => upd("status", v as OrdemStatus)}>
+                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs">Prazo de entrega</Label>
+                <Input className="h-9" type="date" value={projeto.prazo_entrega ?? ""} onChange={(e) => upd("prazo_entrega", e.target.value || null)} />
+              </div>
+              <div>
+                <Label className="text-xs">Valor faturado (R$)</Label>
+                <Input className="h-9" type="number" step="0.01" value={projeto.valor_faturado || 0} onChange={(e) => upd("valor_faturado", Number(e.target.value))} />
+              </div>
+              <div>
+                <Label className="text-xs">Total orçado</Label>
+                <Input className="h-9" readOnly value={formatarBRL(resultado.totalGeral)} />
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+      </div>
+
+      {/* Layout: sidebar + central */}
+      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
+        {/* Sidebar */}
+        <aside className="space-y-3">
+          <CollapsiblePanel icon={<Settings2 className="h-4 w-4 text-primary" />} title="Peças e medidas">
+            <div className="space-y-3">
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <Label>Peças do orçamento ({projeto.pecas.length})</Label>
