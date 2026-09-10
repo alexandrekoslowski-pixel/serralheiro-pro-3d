@@ -24,6 +24,7 @@ export interface Peca {
 export interface ProjetoLocal {
   id: string;
   nome: string;
+  vendedora: string;
   cliente: string;
   cliente_documento: string;
   cliente_endereco: string;
@@ -79,6 +80,8 @@ export interface DadosEmpresa {
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
   codigoOficina: string;
+  /** Equipe de vendas */
+  vendedoras: string[];
   /** Proposta comercial */
   prazoDiasUteis: number;
   validadeDias: number;
@@ -147,6 +150,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
   codigoOficina: "",
+  vendedoras: [],
   prazoDiasUteis: 22,
   validadeDias: 5,
   garantiaDias: 90,
@@ -190,6 +194,7 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   pecas: [],
+  vendedora: "",
   cliente_documento: "",
   cliente_endereco: "",
   cliente_bairro: "",
@@ -278,6 +283,7 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     overrides: p.overrides,
     extras: p.extras,
     pecas: p.pecas,
+    vendedora: p.vendedora,
     cliente_documento: p.cliente_documento,
     cliente_endereco: p.cliente_endereco,
     cliente_bairro: p.cliente_bairro,
@@ -486,6 +492,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
       dados: {
         nome: empresa.nome, cnpj: empresa.cnpj, telefone: empresa.telefone,
         email: empresa.email, endereco: empresa.endereco,
+        vendedoras: empresa.vendedoras,
         prazoDiasUteis: empresa.prazoDiasUteis,
         validadeDias: empresa.validadeDias,
         garantiaDias: empresa.garantiaDias,

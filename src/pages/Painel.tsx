@@ -31,6 +31,7 @@ export default function Painel() {
   const empresa = obterEmpresa();
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<"todos" | OrdemStatus | "abertos">("abertos");
+  const [vendedora, setVendedora] = useState("todas");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
 
   const pagamentos = listarPagamentos();
@@ -80,6 +81,12 @@ export default function Painel() {
     return { atrasadas, urgentes };
   }, [projetos, empresa]);
 
+  const nomesVendedoras = useMemo(() => {
+    const set = new Set<string>((empresa.vendedoras ?? []).filter(Boolean));
+    projetos.forEach((p) => { if (p.vendedora) set.add(p.vendedora); });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [projetos, empresa]);
+
   const lista = useMemo(() => {
     const q = busca.toLowerCase().trim();
     const filtrados = projetos.filter((p) => {
@@ -88,7 +95,11 @@ export default function Painel() {
         filtro === "todos" ? true :
         filtro === "abertos" ? p.status !== "faturado" && p.status !== "entregue" :
         p.status === filtro;
-      return okBusca && okStatus;
+      const okVend =
+        vendedora === "todas" ? true :
+        vendedora === "__sem__" ? !p.vendedora :
+        p.vendedora === vendedora;
+      return okBusca && okStatus && okVend;
     });
     const peso = (p: ProjetoLocal) => {
       if (p.status === "entregue" || p.status === "faturado") return 9999;
@@ -96,7 +107,7 @@ export default function Painel() {
       return d === null ? 9000 : d;
     };
     return [...filtrados].sort((a, b) => peso(a) - peso(b));
-  }, [projetos, busca, filtro]);
+  }, [projetos, busca, filtro, vendedora]);
 
   const avancar = (p: ProjetoLocal) => {
     const prox = proximoStatus(p.status);
@@ -202,6 +213,14 @@ export default function Painel() {
             {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={vendedora} onValueChange={setVendedora}>
+          <SelectTrigger className="sm:w-56"><SelectValue placeholder="Vendedora" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas as vendedoras</SelectItem>
+            <SelectItem value="__sem__">Sem vendedora</SelectItem>
+            {nomesVendedoras.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -223,6 +242,7 @@ export default function Painel() {
                   <div className="min-w-0">
                     <Link to={`/app/projeto/${p.id}`} className="font-display text-sm hover:underline">{p.nome}</Link>
                     <p className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {tipologiaPorId(p.tipologia).nome}</p>
+                    {p.vendedora && <p className="truncate text-[11px] text-muted-foreground">Venda: {p.vendedora}</p>}
                   </div>
                   <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-medium uppercase ${cls.badge}`}>
                     {STATUS_LABEL[p.status]}

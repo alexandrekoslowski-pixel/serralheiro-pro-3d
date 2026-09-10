@@ -1,7 +1,10 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from "@/components/ui/select";
 import { useDados } from "@/hooks/useDados";
 import { listarProjetos, listarPagamentos, formatarBRL, obterEmpresa } from "@/lib/storage";
 import { STATUS_LABEL, corPrazo, CLASSES_PRAZO, textoPrazo } from "@/lib/ordens";
@@ -14,9 +17,38 @@ const rotuloMes = (m: string) => {
 
 export default function Financeiro() {
   useDados();
-  const projetos = listarProjetos();
-  const pagamentos = listarPagamentos();
+  const todosProjetos = listarProjetos();
   const empresa = obterEmpresa();
+  const [vendFiltro, setVendFiltro] = useState("todas");
+
+  const nomesVendedoras = useMemo(() => {
+    const set = new Set<string>((empresa.vendedoras ?? []).filter(Boolean));
+    todosProjetos.forEach((p) => { if (p.vendedora) set.add(p.vendedora); });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [todosProjetos, empresa]);
+
+  const projetos = useMemo(() => todosProjetos.filter((p) =>
+    vendFiltro === "todas" ? true :
+    vendFiltro === "__sem__" ? !p.vendedora :
+    p.vendedora === vendFiltro
+  ), [todosProjetos, vendFiltro]);
+
+  const idsFiltro = useMemo(() => new Set(projetos.map((p) => p.id)), [projetos]);
+  const pagamentos = listarPagamentos().filter((x) => idsFiltro.has(x.projeto_id));
+
+  const porVendedora = useMemo(() => {
+    const mapa = new Map<string, { orcado: number; faturado: number; recebido: number; qtd: number }>();
+    todosProjetos.forEach((p) => {
+      const k = p.vendedora || "Sem vendedora";
+      if (!mapa.has(k)) mapa.set(k, { orcado: 0, faturado: 0, recebido: 0, qtd: 0 });
+      const v = mapa.get(k)!;
+      v.orcado += p.total;
+      v.faturado += p.valor_faturado || 0;
+      v.recebido += listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
+      v.qtd += 1;
+    });
+    return [...mapa.entries()].sort((a, b) => b[1].faturado - a[1].faturado);
+  }, [todosProjetos]);
 
   const meses = useMemo(() => {
     const mapa = new Map<string, { orcado: number; faturado: number; recebido: number }>();
@@ -48,11 +80,11 @@ export default function Financeiro() {
 
   const exportarCSV = () => {
     const linhas = [
-      ["Projeto", "Cliente", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
+      ["Projeto", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
       ...projetos.map((p) => {
         const rec = listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
         return [
-          p.nome, p.cliente, STATUS_LABEL[p.status], p.prazo_entrega ?? "",
+          p.nome, p.cliente, p.vendedora || "", STATUS_LABEL[p.status], p.prazo_entrega ?? "",
           p.total.toFixed(2), (p.valor_faturado || 0).toFixed(2), rec.toFixed(2),
           ((p.valor_faturado || 0) - rec).toFixed(2),
         ].join(";");
@@ -71,7 +103,17 @@ export default function Financeiro() {
           <h1 className="font-display text-2xl md:text-3xl">Financeiro</h1>
           <p className="text-sm text-muted-foreground">Quanto foi orçado, quanto foi faturado e quanto entrou.</p>
         </div>
-        <Button variant="outline" onClick={exportarCSV}><Download className="mr-2 h-4 w-4" /> Exportar CSV</Button>
+        <div className="flex gap-2">
+          <Select value={vendFiltro} onValueChange={setVendFiltro}>
+            <SelectTrigger className="w-52"><SelectValue placeholder="Vendedora" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as vendedoras</SelectItem>
+              <SelectItem value="__sem__">Sem vendedora</SelectItem>
+              {nomesVendedoras.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={exportarCSV}><Download className="mr-2 h-4 w-4" /> Exportar CSV</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
@@ -86,6 +128,21 @@ export default function Financeiro() {
             <div className="font-display text-lg md:text-xl">{formatarBRL(c.v)}</div>
           </div>
         ))}
+      </div>
+
+      <div className="surface-card rounded-lg border border-border p-5">
+        <h2 className="font-display text-lg mb-4">Por vendedora</h2>
+        {porVendedora.length === 0 && <p className="text-sm text-muted-foreground">Ainda não há orçamentos.</p>}
+        <div className="space-y-2">
+          {porVendedora.map(([nome, v]) => (
+            <div key={nome} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border px-3 py-2 text-sm">
+              <span className="font-medium">{nome} <span className="text-xs text-muted-foreground">· {v.qtd} orçamento(s)</span></span>
+              <span className="text-xs text-muted-foreground">
+                Orçado {formatarBRL(v.orcado)} · Faturado {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
       <div className="surface-card rounded-lg border border-border p-5">
