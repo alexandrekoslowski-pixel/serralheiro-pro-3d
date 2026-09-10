@@ -25,6 +25,18 @@ export interface ProjetoLocal {
   id: string;
   nome: string;
   cliente: string;
+  cliente_documento: string;
+  cliente_endereco: string;
+  cliente_bairro: string;
+  cliente_cidade: string;
+  cliente_cep: string;
+  cliente_telefone: string;
+  cliente_email: string;
+  local_instalacao: string;
+  prazo_dias_uteis: number | null;
+  servicos_valor: number | null;
+  frete_valor: number | null;
+  observacoes_proposta: string;
   tipologia: TipologiaId;
   largura_mm: number;
   altura_mm: number;
