@@ -80,11 +80,11 @@ export default function Financeiro() {
 
   const exportarCSV = () => {
     const linhas = [
-      ["Projeto", "Cliente", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
+      ["Projeto", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
       ...projetos.map((p) => {
         const rec = listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
         return [
-          p.nome, p.cliente, STATUS_LABEL[p.status], p.prazo_entrega ?? "",
+          p.nome, p.cliente, p.vendedora || "", STATUS_LABEL[p.status], p.prazo_entrega ?? "",
           p.total.toFixed(2), (p.valor_faturado || 0).toFixed(2), rec.toFixed(2),
           ((p.valor_faturado || 0) - rec).toFixed(2),
         ].join(";");
@@ -103,7 +103,17 @@ export default function Financeiro() {
           <h1 className="font-display text-2xl md:text-3xl">Financeiro</h1>
           <p className="text-sm text-muted-foreground">Quanto foi orçado, quanto foi faturado e quanto entrou.</p>
         </div>
-        <Button variant="outline" onClick={exportarCSV}><Download className="mr-2 h-4 w-4" /> Exportar CSV</Button>
+        <div className="flex gap-2">
+          <Select value={vendFiltro} onValueChange={setVendFiltro}>
+            <SelectTrigger className="w-52"><SelectValue placeholder="Vendedora" /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="todas">Todas as vendedoras</SelectItem>
+              <SelectItem value="__sem__">Sem vendedora</SelectItem>
+              {nomesVendedoras.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" onClick={exportarCSV}><Download className="mr-2 h-4 w-4" /> Exportar CSV</Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
