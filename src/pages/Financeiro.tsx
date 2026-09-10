@@ -17,9 +17,38 @@ const rotuloMes = (m: string) => {
 
 export default function Financeiro() {
   useDados();
-  const projetos = listarProjetos();
-  const pagamentos = listarPagamentos();
+  const todosProjetos = listarProjetos();
   const empresa = obterEmpresa();
+  const [vendFiltro, setVendFiltro] = useState("todas");
+
+  const nomesVendedoras = useMemo(() => {
+    const set = new Set<string>((empresa.vendedoras ?? []).filter(Boolean));
+    todosProjetos.forEach((p) => { if (p.vendedora) set.add(p.vendedora); });
+    return [...set].sort((a, b) => a.localeCompare(b));
+  }, [todosProjetos, empresa]);
+
+  const projetos = useMemo(() => todosProjetos.filter((p) =>
+    vendFiltro === "todas" ? true :
+    vendFiltro === "__sem__" ? !p.vendedora :
+    p.vendedora === vendFiltro
+  ), [todosProjetos, vendFiltro]);
+
+  const idsFiltro = useMemo(() => new Set(projetos.map((p) => p.id)), [projetos]);
+  const pagamentos = listarPagamentos().filter((x) => idsFiltro.has(x.projeto_id));
+
+  const porVendedora = useMemo(() => {
+    const mapa = new Map<string, { orcado: number; faturado: number; recebido: number; qtd: number }>();
+    todosProjetos.forEach((p) => {
+      const k = p.vendedora || "Sem vendedora";
+      if (!mapa.has(k)) mapa.set(k, { orcado: 0, faturado: 0, recebido: 0, qtd: 0 });
+      const v = mapa.get(k)!;
+      v.orcado += p.total;
+      v.faturado += p.valor_faturado || 0;
+      v.recebido += listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
+      v.qtd += 1;
+    });
+    return [...mapa.entries()].sort((a, b) => b[1].faturado - a[1].faturado);
+  }, [todosProjetos]);
 
   const meses = useMemo(() => {
     const mapa = new Map<string, { orcado: number; faturado: number; recebido: number }>();
