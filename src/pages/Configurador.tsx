@@ -25,9 +25,10 @@ import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
 } from "@/lib/tipologias";
 import {
-  ProjetoLocal, obterProjeto, salvarProjeto, duplicarProjeto,
+  ProjetoLocal, OrdemStatus, obterProjeto, salvarProjeto, duplicarProjeto,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId,
 } from "@/lib/storage";
+import { STATUS_ORDEM, STATUS_LABEL } from "@/lib/ordens";
 import { calcular, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
@@ -206,6 +207,27 @@ export default function Configurador() {
           <Button size="sm" className="shrink-0 bg-gradient-orange text-primary-foreground shadow-orange" onClick={exportarOrcamento}>
             <Download className="mr-1 h-4 w-4" /> Orçamento
           </Button>
+        </div>
+      </div>
+
+      {/* Ordem de serviço */}
+      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-border bg-card p-3">
+        <div className="w-44">
+          <label className="text-[10px] uppercase text-muted-foreground">Situação</label>
+          <Select value={projeto.status} onValueChange={(v) => upd("status", v as OrdemStatus)}>
+            <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="w-44">
+          <label className="text-[10px] uppercase text-muted-foreground">Prazo de entrega</label>
+          <Input className="h-9" type="date" value={projeto.prazo_entrega ?? ""} onChange={(e) => upd("prazo_entrega", e.target.value || null)} />
+        </div>
+        <div className="w-40">
+          <label className="text-[10px] uppercase text-muted-foreground">Valor faturado</label>
+          <Input className="h-9" type="number" step="0.01" value={projeto.valor_faturado || 0} onChange={(e) => upd("valor_faturado", Number(e.target.value))} />
         </div>
       </div>
 

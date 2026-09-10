@@ -1,7 +1,10 @@
-// Persistência local: projetos, empresa e catálogo customizado.
+// Camada de dados: cache em memória (leitura síncrona) sincronizado com a nuvem.
+import { supabase } from "@/integrations/supabase/client";
 import { TipologiaId, AcabamentoId } from "./tipologias";
 import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
+
+export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
 
 export interface ProjetoLocal {
   id: string;
@@ -17,8 +20,23 @@ export interface ProjetoLocal {
   overrides: Record<string, ItemOverride>;
   extras: ItemExtra[];
   total: number;
+  status: OrdemStatus;
+  prazo_entrega: string | null; // YYYY-MM-DD
+  valor_faturado: number;
+  aprovado_em: string | null;
+  entregue_em: string | null;
+  faturado_em: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface Pagamento {
+  id: string;
+  projeto_id: string;
+  data: string; // YYYY-MM-DD
+  valor: number;
+  forma: string;
+  observacao: string;
 }
 
 export interface DadosEmpresa {
@@ -27,6 +45,9 @@ export interface DadosEmpresa {
   telefone: string;
   email: string;
   endereco: string;
+  prazoPadraoDias: number;
+  limiteVermelhoDias: number;
+  limiteAmareloDias: number;
 }
 
 const K_PROJETOS = "spro:projetos";
@@ -40,30 +61,204 @@ const safe = <T,>(fn: () => T, fallback: T): T => {
 export const gerarId = (): string =>
   Math.random().toString(36).slice(2, 7) + Date.now().toString(36).slice(-4);
 
+export const EMPRESA_PADRAO: DadosEmpresa = {
+  nome: "Sua Serralheria",
+  cnpj: "",
+  telefone: "",
+  email: "",
+  endereco: "",
+  prazoPadraoDias: 15,
+  limiteVermelhoDias: 3,
+  limiteAmareloDias: 7,
+};
+
+// ---------- estado em memória ----------
+let userId: string | null = null;
+let projetos: ProjetoLocal[] = [];
+let pagamentos: Pagamento[] = [];
+let empresa: DadosEmpresa = { ...EMPRESA_PADRAO };
+let catalogo: Catalogo = CATALOGO_PADRAO;
+
+const listeners = new Set<() => void>();
+export function assinarDados(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+const notificar = () => listeners.forEach((f) => f());
+
+const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => ({
+  status: "orcamento",
+  prazo_entrega: null,
+  valor_faturado: 0,
+  aprovado_em: null,
+  entregue_em: null,
+  faturado_em: null,
+  overrides: {},
+  extras: [],
+  total: 0,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  ...(p as ProjetoLocal),
+});
+
+// ---------- sincronização ----------
+const linhaParaProjeto = (row: Record<string, unknown>): ProjetoLocal =>
+  normalizarProjeto({
+    ...(row.dados as Record<string, unknown>),
+    id: row.id as string,
+    nome: row.nome as string,
+    cliente: (row.cliente as string) ?? "",
+    status: row.status as OrdemStatus,
+    prazo_entrega: (row.prazo_entrega as string) ?? null,
+    total: Number(row.total ?? 0),
+    valor_faturado: Number(row.valor_faturado ?? 0),
+    aprovado_em: (row.aprovado_em as string) ?? null,
+    entregue_em: (row.entregue_em as string) ?? null,
+    faturado_em: (row.faturado_em as string) ?? null,
+    created_at: row.created_at as string,
+    updated_at: row.updated_at as string,
+  } as Partial<ProjetoLocal>);
+
+const projetoParaLinha = (p: ProjetoLocal) => ({
+  id: p.id,
+  user_id: userId,
+  nome: p.nome,
+  cliente: p.cliente,
+  status: p.status,
+  prazo_entrega: p.prazo_entrega,
+  total: p.total,
+  valor_faturado: p.valor_faturado,
+  aprovado_em: p.aprovado_em,
+  entregue_em: p.entregue_em,
+  faturado_em: p.faturado_em,
+  dados: {
+    tipologia: p.tipologia,
+    largura_mm: p.largura_mm,
+    altura_mm: p.altura_mm,
+    cor: p.cor,
+    maoObraPct: p.maoObraPct,
+    margemPct: p.margemPct,
+    descontoGeralPct: p.descontoGeralPct,
+    overrides: p.overrides,
+    extras: p.extras,
+  },
+  updated_at: p.updated_at,
+});
+
+const lerLocais = (): ProjetoLocal[] =>
+  safe(() => {
+    const raw = localStorage.getItem(K_PROJETOS);
+    return raw ? (JSON.parse(raw) as ProjetoLocal[]).map(normalizarProjeto) : [];
+  }, []);
+
+/** Carrega tudo da nuvem para a memória. Deve rodar antes de exibir o app. */
+export async function hidratarNuvem(uid: string): Promise<void> {
+  userId = uid;
+
+  const [proj, pag, emp, cat] = await Promise.all([
+    supabase.from("projetos").select("*").order("updated_at", { ascending: false }),
+    supabase.from("pagamentos").select("*").order("data", { ascending: false }),
+    supabase.from("empresa").select("*").maybeSingle(),
+    supabase.from("catalogo").select("*").maybeSingle(),
+  ]);
+
+  projetos = (proj.data ?? []).map((r) => linhaParaProjeto(r as Record<string, unknown>));
+  pagamentos = (pag.data ?? []).map((r) => ({
+    id: r.id as string,
+    projeto_id: r.projeto_id as string,
+    data: r.data as string,
+    valor: Number(r.valor ?? 0),
+    forma: r.forma as string,
+    observacao: (r.observacao as string) ?? "",
+  }));
+
+  if (emp.data) {
+    const d = (emp.data.dados ?? {}) as Partial<DadosEmpresa>;
+    empresa = {
+      ...EMPRESA_PADRAO,
+      ...d,
+      prazoPadraoDias: emp.data.prazo_padrao_dias ?? 15,
+      limiteVermelhoDias: emp.data.limite_vermelho_dias ?? 3,
+      limiteAmareloDias: emp.data.limite_amarelo_dias ?? 7,
+    };
+  } else {
+    empresa = safe(() => {
+      const raw = localStorage.getItem(K_EMPRESA);
+      return raw ? { ...EMPRESA_PADRAO, ...JSON.parse(raw) } : { ...EMPRESA_PADRAO };
+    }, { ...EMPRESA_PADRAO });
+  }
+
+  if (cat.data) {
+    const d = (cat.data.dados ?? {}) as Partial<Catalogo>;
+    catalogo = {
+      perfis: d.perfis ?? CATALOGO_PADRAO.perfis,
+      acessorios: d.acessorios ?? CATALOGO_PADRAO.acessorios,
+      vidroPorM2: d.vidroPorM2 ?? CATALOGO_PADRAO.vidroPorM2,
+      multiplicadoresCor: d.multiplicadoresCor ?? CATALOGO_PADRAO.multiplicadoresCor,
+    };
+  } else {
+    catalogo = CATALOGO_PADRAO;
+  }
+
+  notificar();
+}
+
+/** Quantos projetos antigos ainda estão só neste navegador. */
+export function projetosLocaisPendentes(): number {
+  if (!userId) return 0;
+  const locais = lerLocais();
+  const idsNuvem = new Set(projetos.map((p) => p.id));
+  return locais.filter((p) => !idsNuvem.has(p.id)).length;
+}
+
+/** Envia os projetos antigos deste navegador para a conta na nuvem. */
+export async function importarLocaisParaNuvem(): Promise<number> {
+  if (!userId) return 0;
+  const idsNuvem = new Set(projetos.map((p) => p.id));
+  const pendentes = lerLocais().filter((p) => !idsNuvem.has(p.id));
+  if (!pendentes.length) return 0;
+  const { error } = await supabase.from("projetos").upsert(pendentes.map(projetoParaLinha) as never);
+  if (error) throw error;
+  projetos = [...pendentes, ...projetos];
+  localStorage.removeItem(K_PROJETOS);
+  notificar();
+  return pendentes.length;
+}
+
+export function limparMemoria(): void {
+  userId = null;
+  projetos = [];
+  pagamentos = [];
+  empresa = { ...EMPRESA_PADRAO };
+  catalogo = CATALOGO_PADRAO;
+  notificar();
+}
+
 // ----- Projetos -----
 export function listarProjetos(): ProjetoLocal[] {
-  return safe(() => {
-    const raw = localStorage.getItem(K_PROJETOS);
-    return raw ? (JSON.parse(raw) as ProjetoLocal[]) : [];
-  }, []);
+  return projetos;
 }
 
 export function obterProjeto(id: string): ProjetoLocal | undefined {
-  return listarProjetos().find((p) => p.id === id);
+  return projetos.find((p) => p.id === id);
 }
 
 export function salvarProjeto(p: ProjetoLocal): void {
-  const todos = listarProjetos();
-  const idx = todos.findIndex((x) => x.id === p.id);
-  const atualizado = { ...p, updated_at: new Date().toISOString() };
-  if (idx >= 0) todos[idx] = atualizado;
-  else todos.unshift(atualizado);
-  localStorage.setItem(K_PROJETOS, JSON.stringify(todos));
+  const atualizado = normalizarProjeto({ ...p, updated_at: new Date().toISOString() });
+  const idx = projetos.findIndex((x) => x.id === p.id);
+  if (idx >= 0) projetos[idx] = atualizado;
+  else projetos = [atualizado, ...projetos];
+  notificar();
+  if (userId) {
+    void supabase.from("projetos").upsert(projetoParaLinha(atualizado) as never);
+  }
 }
 
 export function deletarProjeto(id: string): void {
-  const todos = listarProjetos().filter((p) => p.id !== id);
-  localStorage.setItem(K_PROJETOS, JSON.stringify(todos));
+  projetos = projetos.filter((p) => p.id !== id);
+  pagamentos = pagamentos.filter((x) => x.projeto_id !== id);
+  notificar();
+  if (userId) void supabase.from("projetos").delete().eq("id", id);
 }
 
 export function duplicarProjeto(id: string): ProjetoLocal | undefined {
@@ -73,6 +268,11 @@ export function duplicarProjeto(id: string): ProjetoLocal | undefined {
     ...orig,
     id: gerarId(),
     nome: orig.nome + " (cópia)",
+    status: "orcamento",
+    valor_faturado: 0,
+    aprovado_em: null,
+    entregue_em: null,
+    faturado_em: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -80,47 +280,75 @@ export function duplicarProjeto(id: string): ProjetoLocal | undefined {
   return novo;
 }
 
-// ----- Empresa -----
-const EMPRESA_PADRAO: DadosEmpresa = {
-  nome: "Sua Serralheria",
-  cnpj: "",
-  telefone: "",
-  email: "",
-  endereco: "",
-};
+// ----- Pagamentos -----
+export function listarPagamentos(projetoId?: string): Pagamento[] {
+  return projetoId ? pagamentos.filter((p) => p.projeto_id === projetoId) : pagamentos;
+}
 
+export function totalRecebido(projetoId: string): number {
+  return listarPagamentos(projetoId).reduce((s, p) => s + p.valor, 0);
+}
+
+export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<void> {
+  if (!userId) return;
+  const { data, error } = await supabase
+    .from("pagamentos")
+    .insert({ ...p, user_id: userId } as never)
+    .select()
+    .single();
+  if (error) throw error;
+  pagamentos = [{ ...p, id: (data as { id: string }).id }, ...pagamentos];
+  notificar();
+}
+
+export async function removerPagamento(id: string): Promise<void> {
+  pagamentos = pagamentos.filter((p) => p.id !== id);
+  notificar();
+  await supabase.from("pagamentos").delete().eq("id", id);
+}
+
+// ----- Empresa -----
 export function obterEmpresa(): DadosEmpresa {
-  return safe(() => {
-    const raw = localStorage.getItem(K_EMPRESA);
-    return raw ? { ...EMPRESA_PADRAO, ...JSON.parse(raw) } : EMPRESA_PADRAO;
-  }, EMPRESA_PADRAO);
+  return empresa;
 }
 
 export function salvarEmpresa(e: DadosEmpresa): void {
-  localStorage.setItem(K_EMPRESA, JSON.stringify(e));
+  empresa = { ...EMPRESA_PADRAO, ...e };
+  notificar();
+  if (userId) {
+    void supabase.from("empresa").upsert({
+      user_id: userId,
+      dados: {
+        nome: empresa.nome, cnpj: empresa.cnpj, telefone: empresa.telefone,
+        email: empresa.email, endereco: empresa.endereco,
+      },
+      prazo_padrao_dias: empresa.prazoPadraoDias,
+      limite_vermelho_dias: empresa.limiteVermelhoDias,
+      limite_amarelo_dias: empresa.limiteAmareloDias,
+      updated_at: new Date().toISOString(),
+    } as never);
+  }
 }
 
 // ----- Catálogo -----
 export function obterCatalogo(): Catalogo {
-  return safe(() => {
-    const raw = localStorage.getItem(K_CATALOGO);
-    if (!raw) return CATALOGO_PADRAO;
-    const parsed = JSON.parse(raw);
-    return {
-      perfis: parsed.perfis ?? CATALOGO_PADRAO.perfis,
-      acessorios: parsed.acessorios ?? CATALOGO_PADRAO.acessorios,
-      vidroPorM2: parsed.vidroPorM2 ?? CATALOGO_PADRAO.vidroPorM2,
-      multiplicadoresCor: parsed.multiplicadoresCor ?? CATALOGO_PADRAO.multiplicadoresCor,
-    };
-  }, CATALOGO_PADRAO);
+  return catalogo;
 }
 
 export function salvarCatalogo(c: Catalogo): void {
-  localStorage.setItem(K_CATALOGO, JSON.stringify(c));
+  catalogo = c;
+  notificar();
+  if (userId) {
+    void supabase.from("catalogo").upsert({
+      user_id: userId, dados: c as unknown as Record<string, unknown>,
+      updated_at: new Date().toISOString(),
+    } as never);
+  }
 }
 
 export function restaurarCatalogoPadrao(): Catalogo {
   localStorage.removeItem(K_CATALOGO);
+  salvarCatalogo(CATALOGO_PADRAO);
   return CATALOGO_PADRAO;
 }
 

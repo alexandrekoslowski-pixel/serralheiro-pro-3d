@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Copy, Trash2, FolderOpen, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,17 +20,18 @@ import {
   listarProjetos, salvarProjeto, formatarBRL,
 } from "@/lib/storage";
 import { TIPOLOGIAS, TipologiaId, tipologiaPorId } from "@/lib/tipologias";
+import { STATUS_LABEL } from "@/lib/ordens";
+import { useDados } from "@/hooks/useDados";
 
 export default function ProjetosLista() {
   const navigate = useNavigate();
-  const [projetos, setProjetos] = useState<ProjetoLocal[]>([]);
+  useDados();
+  const projetos = listarProjetos();
   const [busca, setBusca] = useState("");
   const [novoNome, setNovoNome] = useState("");
   const [novoCliente, setNovoCliente] = useState("");
   const [novoTipo, setNovoTipo] = useState<TipologiaId>("portao_correr");
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  useEffect(() => { setProjetos(listarProjetos()); }, []);
 
   const filtrados = useMemo(() => {
     const q = busca.toLowerCase().trim();
@@ -55,6 +56,12 @@ export default function ProjetosLista() {
       overrides: {},
       extras: [],
       total: 0,
+      status: "orcamento",
+      prazo_entrega: null,
+      valor_faturado: 0,
+      aprovado_em: null,
+      entregue_em: null,
+      faturado_em: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -65,16 +72,11 @@ export default function ProjetosLista() {
   };
 
   const duplicar = (id: string) => {
-    const novo = duplicarProjeto(id);
-    if (novo) {
-      setProjetos(listarProjetos());
-      toast.success("Projeto duplicado");
-    }
+    if (duplicarProjeto(id)) toast.success("Projeto duplicado");
   };
 
   const remover = (id: string) => {
     deletarProjeto(id);
-    setProjetos(listarProjetos());
     toast.success("Projeto excluído");
   };
 
@@ -152,7 +154,7 @@ export default function ProjetosLista() {
                   </span>
                 </div>
                 <div className="mt-3 text-xs text-muted-foreground">
-                  {p.largura_mm} × {p.altura_mm} mm · {p.cor}
+                  {p.largura_mm} × {p.altura_mm} mm · {p.cor} · {STATUS_LABEL[p.status]}
                 </div>
                 <div className="mt-3 flex items-end justify-between">
                   <div>
