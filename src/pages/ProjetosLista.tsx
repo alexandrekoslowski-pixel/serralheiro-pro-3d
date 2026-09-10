@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO } from "@/lib/fixacao";
 import { Link, useNavigate } from "react-router-dom";
 import { Plus, Copy, Trash2, FolderOpen, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -61,6 +62,8 @@ export default function ProjetosLista() {
         largura_mm: tip.larguraDefault,
         altura_mm: tip.alturaDefault,
         cor: "branco",
+        fixacao: FIXACAO_PADRAO,
+        fixacaoLados: FIXACAO_LADOS_PADRAO,
       }],
       overrides: {},
       extras: [],
