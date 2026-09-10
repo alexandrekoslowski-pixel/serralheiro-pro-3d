@@ -34,6 +34,7 @@ export type Database = {
       }
       empresa: {
         Row: {
+          codigo_oficina: string
           dados: Json
           limite_amarelo_dias: number
           limite_vermelho_dias: number
@@ -42,6 +43,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          codigo_oficina?: string
           dados?: Json
           limite_amarelo_dias?: number
           limite_vermelho_dias?: number
@@ -50,6 +52,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          codigo_oficina?: string
           dados?: Json
           limite_amarelo_dias?: number
           limite_vermelho_dias?: number
@@ -125,6 +128,8 @@ export type Database = {
           created_at: string
           dados: Json
           entregue_em: string | null
+          etapa: Database["public"]["Enums"]["etapa_oficina"]
+          etapa_em: string
           faturado_em: string | null
           id: string
           nome: string
@@ -141,6 +146,8 @@ export type Database = {
           created_at?: string
           dados?: Json
           entregue_em?: string | null
+          etapa?: Database["public"]["Enums"]["etapa_oficina"]
+          etapa_em?: string
           faturado_em?: string | null
           id: string
           nome?: string
@@ -157,6 +164,8 @@ export type Database = {
           created_at?: string
           dados?: Json
           entregue_em?: string | null
+          etapa?: Database["public"]["Enums"]["etapa_oficina"]
+          etapa_em?: string
           faturado_em?: string | null
           id?: string
           nome?: string
@@ -174,9 +183,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      mover_etapa_oficina: {
+        Args: {
+          _codigo: string
+          _etapa: Database["public"]["Enums"]["etapa_oficina"]
+          _projeto_id: string
+        }
+        Returns: undefined
+      }
+      ordens_oficina: {
+        Args: { _codigo: string }
+        Returns: {
+          cliente: string
+          dados: Json
+          etapa: Database["public"]["Enums"]["etapa_oficina"]
+          etapa_em: string
+          id: string
+          nome: string
+          prazo_entrega: string
+          status: Database["public"]["Enums"]["ordem_status"]
+        }[]
+      }
     }
     Enums: {
+      etapa_oficina:
+        | "fila"
+        | "producao"
+        | "pintura"
+        | "acabamento"
+        | "pos_venda"
+        | "pronto"
       ordem_status:
         | "orcamento"
         | "aprovado"
@@ -310,6 +346,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      etapa_oficina: [
+        "fila",
+        "producao",
+        "pintura",
+        "acabamento",
+        "pos_venda",
+        "pronto",
+      ],
       ordem_status: [
         "orcamento",
         "aprovado",
