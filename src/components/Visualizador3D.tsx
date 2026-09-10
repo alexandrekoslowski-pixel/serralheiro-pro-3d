@@ -10,11 +10,22 @@ import { TipologiaId, AcabamentoId, acabamentoPorId } from "@/lib/tipologias";
 export type CameraPreset = "iso" | "frente" | "lateral" | "topo";
 export type Ambiente = "dia" | "noite";
 
+export interface PecaVisual {
+  id?: string;
+  nome?: string;
+  tipologia: TipologiaId;
+  largura_mm: number;
+  altura_mm: number;
+  cor: AcabamentoId;
+}
+
 export interface Visualizador3DProps {
   tipologia: TipologiaId;
   largura_mm: number;
   altura_mm: number;
   cor: AcabamentoId;
+  /** Quando informado, desenha todas as peças lado a lado. */
+  pecas?: PecaVisual[];
   autoRotate?: boolean;
   wireframe?: boolean;
   showGrid?: boolean;
@@ -490,6 +501,7 @@ export default function Visualizador3D({
   largura_mm,
   altura_mm,
   cor,
+  pecas,
   autoRotate = false,
   wireframe = false,
   showGrid = true,
@@ -503,9 +515,40 @@ export default function Visualizador3D({
   onCanvasReady,
 }: Visualizador3DProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
-  const L_m = largura_mm / 1000;
-  const H_m = altura_mm / 1000;
-  const acab = useMemo(() => acabamentoPorId(cor), [cor]);
+
+  const lista: PecaVisual[] = useMemo(
+    () => (pecas && pecas.length ? pecas : [{ tipologia, largura_mm, altura_mm, cor }]),
+    [pecas, tipologia, largura_mm, altura_mm, cor],
+  );
+
+  // Distribui as peças lado a lado no eixo X, centralizadas.
+  const layout = useMemo(() => {
+    const GAP = 0.5;
+    const larguras = lista.map((p) => p.largura_mm / 1000);
+    const total = larguras.reduce((s, l) => s + l, 0) + GAP * (lista.length - 1);
+    let x = -total / 2;
+    return lista.map((p, i) => {
+      const L = larguras[i];
+      const centro = x + L / 2;
+      x += L + GAP;
+      return {
+        peca: p,
+        x: centro,
+        L_m: L,
+        H_m: p.altura_mm / 1000,
+        hex: acabamentoPorId(p.cor).hex,
+      };
+    });
+  }, [lista]);
+
+  const larguraTotal = useMemo(() => {
+    const GAP = 0.5;
+    return lista.reduce((s, p) => s + p.largura_mm / 1000, 0) + GAP * (lista.length - 1);
+  }, [lista]);
+  const alturaMax = useMemo(() => Math.max(...lista.map((p) => p.altura_mm / 1000)), [lista]);
+
+  const L_m = larguraTotal;
+  const H_m = alturaMax;
 
   // Iluminação por ambiente
   const isNoite = ambiente === "noite";
@@ -516,17 +559,15 @@ export default function Visualizador3D({
       shadows
       dpr={[1, 2]}
       gl={{ preserveDrawingBuffer: true, antialias: true }}
-      camera={{ position: [4, 3, 4], fov: 45, near: 0.1, far: 100 }}
+      camera={{ position: [4, 3, 4], fov: 45, near: 0.1, far: 200 }}
       style={{ background: fundoFinal }}
     >
       <CanvasReadyHook onReady={onCanvasReady} />
 
-      {/* Iluminação dia/noite */}
       {isNoite ? (
         <>
           <ambientLight intensity={0.15} color="#3a4a6a" />
           <directionalLight position={[3, 5, 2]} intensity={0.25} color="#6a7aa0" />
-          {/* Spot frontal cor quente — efeito vitrine */}
           <spotLight
             position={[0, H_m * 1.5 + 1, 3]}
             angle={0.6}
@@ -552,42 +593,57 @@ export default function Visualizador3D({
           args={[20, 20]}
           cellColor={isNoite ? "#1a1a25" : "#3a3530"}
           sectionColor={isNoite ? "#2a2a40" : "#5a4a3a"}
-          fadeDistance={25}
+          fadeDistance={40}
           fadeStrength={1.5}
           infiniteGrid
           position={[0, 0, 0]}
         />
       )}
 
-      <AnimatedGeometria
-        tipologia={tipologia} L_m={L_m} H_m={H_m} cor={acab.hex} wireframe={wireframe} aberturaAlvo={abertura}
-      />
+      {layout.map((item, i) => (
+        <group key={item.peca.id ?? i} position={[item.x, 0, 0]}>
+          <AnimatedGeometria
+            tipologia={item.peca.tipologia}
+            L_m={item.L_m}
+            H_m={item.H_m}
+            cor={item.hex}
+            wireframe={wireframe}
+            aberturaAlvo={abertura}
+          />
+          {showCotas && (
+            <>
+              <Html position={[0, -0.25, 0]} center>
+                <div className="px-2 py-1 rounded bg-primary text-primary-foreground text-[10px] font-semibold whitespace-nowrap shadow-orange">
+                  {(item.peca.largura_mm / 10).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} cm
+                </div>
+              </Html>
+              <Html position={[item.L_m / 2 + 0.2, item.H_m / 2, 0]} center>
+                <div className="px-2 py-1 rounded bg-primary text-primary-foreground text-[10px] font-semibold whitespace-nowrap shadow-orange">
+                  {(item.peca.altura_mm / 10).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} cm
+                </div>
+              </Html>
+            </>
+          )}
+          {lista.length > 1 && item.peca.nome && (
+            <Html position={[0, item.H_m + 0.25, 0]} center>
+              <div className="px-2 py-0.5 rounded bg-background/85 border border-border text-[10px] font-semibold whitespace-nowrap">
+                {item.peca.nome}
+              </div>
+            </Html>
+          )}
+        </group>
+      ))}
 
-      {/* Escala humana e carro */}
       {showPessoa && <PessoaEscala position={[L_m / 2 + 0.6, 0, 0]} />}
-      {showCarro && <CarroEscala position={[0, 0, -L_m / 2 - 1.2]} />}
+      {showCarro && <CarroEscala position={[0, 0, -H_m / 2 - 2.2]} />}
 
-      {showCotas && (
-        <>
-          <Html position={[0, -0.25, 0]} center>
-            <div className="px-2 py-1 rounded bg-primary text-primary-foreground text-[10px] font-semibold whitespace-nowrap shadow-orange">
-              {largura_mm} mm
-            </div>
-          </Html>
-          <Html position={[L_m / 2 + 0.25, H_m / 2, 0]} center>
-            <div className="px-2 py-1 rounded bg-primary text-primary-foreground text-[10px] font-semibold whitespace-nowrap shadow-orange">
-              {altura_mm} mm
-            </div>
-          </Html>
-        </>
-      )}
       <OrbitControls
         ref={controlsRef as any}
         enablePan
         autoRotate={autoRotate}
         autoRotateSpeed={1.2}
-        minDistance={2}
-        maxDistance={30}
+        minDistance={1.5}
+        maxDistance={80}
         target={[0, H_m / 2, 0]}
       />
       <CameraRig preset={preset} L_m={L_m} H_m={H_m} controlsRef={controlsRef} />
