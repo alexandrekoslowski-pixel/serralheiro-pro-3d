@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ETAPAS_OFICINA, ETAPA_LABEL, proximaEtapa, diasRestantes, tempoNaEtapa } from "@/lib/ordens";
 import type { EtapaOficina } from "@/lib/storage";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
+import { cm } from "@/lib/medidas";
 
 interface OrdemOficina {
   id: string;
@@ -110,7 +111,7 @@ export default function KanbanOficina() {
                           {tipologiaPorId(d.tipologia as never)?.nome ?? o.nome}
                         </div>
                         <div className="font-display text-xl">
-                          {d.largura_mm ?? "?"} × {d.altura_mm ?? "?"} mm
+                          {d.largura_mm ? cm(d.largura_mm) : "?"} × {d.altura_mm ? cm(d.altura_mm) : "?"} cm
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {acabamentoPorId(d.cor as never)?.nome ?? ""}

@@ -22,6 +22,7 @@ import {
 import { TIPOLOGIAS, TipologiaId, tipologiaPorId } from "@/lib/tipologias";
 import { STATUS_LABEL } from "@/lib/ordens";
 import { useDados } from "@/hooks/useDados";
+import { cm } from "@/lib/medidas";
 
 export default function ProjetosLista() {
   const navigate = useNavigate();
@@ -156,7 +157,7 @@ export default function ProjetosLista() {
                   </span>
                 </div>
                 <div className="mt-3 text-xs text-muted-foreground">
-                  {p.largura_mm} × {p.altura_mm} mm · {p.cor} · {STATUS_LABEL[p.status]}
+                  {cm(p.largura_mm)} × {cm(p.altura_mm)} cm · {p.cor} · {STATUS_LABEL[p.status]}
                 </div>
                 <div className="mt-3 flex items-end justify-between">
                   <div>

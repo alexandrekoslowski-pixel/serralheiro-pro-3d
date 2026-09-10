@@ -20,6 +20,7 @@ import {
 } from "@/lib/storage";
 import { calcular } from "@/lib/calculator";
 import { gerarOrcamentoPDF, AssinaturaInfo } from "@/lib/pdf";
+import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 
 type Passo = 0 | 1 | 2;
 const PASSOS = ["Medidas", "Acabamento", "Resumo"];
@@ -260,8 +261,8 @@ export default function ModoAtendimento() {
             <div className="grid grid-cols-2 gap-3">
               <ResumoCard label="Cliente" valor={projeto.cliente || "—"} />
               <ResumoCard label="Modelo" valor={tip.nome} />
-              <ResumoCard label="Largura" valor={`${projeto.largura_mm} mm`} />
-              <ResumoCard label="Altura" valor={`${projeto.altura_mm} mm`} />
+              <ResumoCard label="Largura" valor={`${cm(projeto.largura_mm)} cm`} />
+              <ResumoCard label="Altura" valor={`${cm(projeto.altura_mm)} cm`} />
               <ResumoCard label="Cor" valor={projeto.cor.toUpperCase()} />
               <ResumoCard label="Validade" valor="15 dias" />
             </div>
@@ -321,19 +322,19 @@ export default function ModoAtendimento() {
       <TecladoNumerico
         open={tecladoOpen === "largura"}
         label="Largura"
-        initial={projeto.largura_mm}
-        min={tip.larguraMin}
-        max={tip.larguraMax}
-        onConfirm={(v) => { upd("largura_mm", v); setTecladoOpen(null); }}
+        initial={mmParaCm(projeto.largura_mm)}
+        min={mmParaCm(tip.larguraMin)}
+        max={mmParaCm(tip.larguraMax)}
+        onConfirm={(v) => { upd("largura_mm", cmParaMm(v)); setTecladoOpen(null); }}
         onCancel={() => setTecladoOpen(null)}
       />
       <TecladoNumerico
         open={tecladoOpen === "altura"}
         label="Altura"
-        initial={projeto.altura_mm}
-        min={tip.alturaMin}
-        max={tip.alturaMax}
-        onConfirm={(v) => { upd("altura_mm", v); setTecladoOpen(null); }}
+        initial={mmParaCm(projeto.altura_mm)}
+        min={mmParaCm(tip.alturaMin)}
+        max={mmParaCm(tip.alturaMax)}
+        onConfirm={(v) => { upd("altura_mm", cmParaMm(v)); setTecladoOpen(null); }}
         onCancel={() => setTecladoOpen(null)}
       />
       <AssinaturaCanvas
@@ -354,10 +355,10 @@ function BotaoMedida({ label, valor, min, max, onClick }: { label: string; valor
     >
       <div className="text-left">
         <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className="text-[10px] text-muted-foreground">min {min} · max {max}</div>
+        <div className="text-[10px] text-muted-foreground">min {cm(min)} · max {cm(max)} cm</div>
       </div>
       <div className="font-display text-3xl font-bold tabular-nums">
-        {valor.toLocaleString("pt-BR")}<span className="text-base text-muted-foreground ml-1">mm</span>
+        {cm(valor)}<span className="text-base text-muted-foreground ml-1">cm</span>
       </div>
     </button>
   );
