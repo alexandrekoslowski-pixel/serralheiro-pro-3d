@@ -75,6 +75,25 @@ export default function Configuracoes() {
           <div><Label>E-mail</Label><Input type="email" value={empresa.email} onChange={(e) => setEmpresa({ ...empresa, email: e.target.value })} /></div>
           <div className="md:col-span-2"><Label>Endereço</Label><Input value={empresa.endereco} onChange={(e) => setEmpresa({ ...empresa, endereco: e.target.value })} /></div>
         </div>
+
+        <h2 className="font-display text-lg mt-6 mb-4">Prazos das ordens</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <Label>Prazo padrão ao aprovar (dias)</Label>
+            <Input type="number" min={1} value={empresa.prazoPadraoDias}
+              onChange={(e) => setEmpresa({ ...empresa, prazoPadraoDias: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label>Vermelho quando faltar até (dias)</Label>
+            <Input type="number" min={0} value={empresa.limiteVermelhoDias}
+              onChange={(e) => setEmpresa({ ...empresa, limiteVermelhoDias: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label>Amarelo quando faltar até (dias)</Label>
+            <Input type="number" min={0} value={empresa.limiteAmareloDias}
+              onChange={(e) => setEmpresa({ ...empresa, limiteAmareloDias: Number(e.target.value) })} />
+          </div>
+        </div>
       </div>
 
       {/* Perfis */}
