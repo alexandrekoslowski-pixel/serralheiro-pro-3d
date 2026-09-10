@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { calcularProjeto } from "@/lib/calculator";
 import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
+import { resumoFixacao, fixacaoTipo } from "@/lib/fixacao";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import { DiagramaBarras } from "@/components/DiagramaBarras";
 import { cm } from "@/lib/medidas";
@@ -174,6 +175,19 @@ export default function ModoOficina() {
             ))}
           </div>
         )}
+        <div className="mt-4 space-y-2">
+          {projeto.pecas.map((pc, i) => (
+            <div key={pc.id} className="rounded border-2 border-orange-500 print:border-black px-3 py-2">
+              <p className="text-sm uppercase text-zinc-400 print:text-black">
+                Fixação {projeto.pecas.length > 1 ? `— ${pc.nome || `Peça ${i + 1}`}` : ""}
+              </p>
+              <p className="text-2xl font-black uppercase">
+                {resumoFixacao(pc.largura_mm, pc.altura_mm, pc.fixacao, pc.fixacaoLados)}
+              </p>
+              <p className="text-sm text-zinc-300 print:text-black">{fixacaoTipo(pc.fixacao).instrucao}</p>
+            </div>
+          ))}
+        </div>
         {projeto.cliente && (
           <p className="mt-3 text-zinc-400 print:text-black text-sm">
             Cliente: <span className="text-white print:text-black font-semibold">{projeto.cliente}</span>

@@ -43,6 +43,8 @@ export const CATALOGO_PADRAO: Catalogo = {
     { codigo: "PARAFUSO-AUTO",  descricao: "Parafuso autobrocante 4.2x16",      preco: 0.35,   unidade: "un" },
     { codigo: "TRINCO-JANELA",  descricao: "Trinco para janela de correr",      preco: 28.00,  unidade: "un" },
     { codigo: "BATENTE-BORR",   descricao: "Borracha de vedação (m)",           preco: 6.50,   unidade: "m" },
+    { codigo: "GRAPA-CHUMBAR",  descricao: "Grapa chata para chumbar",          preco: 3.20,   unidade: "un" },
+    { codigo: "PARAF-BUCHA",    descricao: "Parafuso 8x60 + bucha S8",          preco: 1.90,   unidade: "un" },
   ],
   vidroPorM2: 280.00,
   multiplicadoresCor: { branco: 1.0, preto: 1.05, natural: 1.0, bronze: 1.15 },

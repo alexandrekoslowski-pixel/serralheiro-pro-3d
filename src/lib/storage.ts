@@ -8,6 +8,8 @@ export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "
 export type EtapaOficina = "fila" | "producao" | "pintura" | "acabamento" | "pos_venda" | "pronto";
 
 /** Uma peça do orçamento (portão, janela, grade…). */
+import { FixacaoTipo, FixacaoLados, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO } from "./fixacao";
+
 export interface Peca {
   id: string;
   nome: string;
@@ -15,6 +17,8 @@ export interface Peca {
   largura_mm: number;
   altura_mm: number;
   cor: AcabamentoId;
+  fixacao: FixacaoTipo;
+  fixacaoLados: FixacaoLados;
 }
 
 export interface ProjetoLocal {
@@ -130,8 +134,16 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
       largura_mm: base.largura_mm,
       altura_mm: base.altura_mm,
       cor: base.cor,
+      fixacao: FIXACAO_PADRAO,
+      fixacaoLados: FIXACAO_LADOS_PADRAO,
     }];
   }
+  // Peças antigas sem sistema de fixação recebem o padrão.
+  base.pecas = base.pecas.map((pc) => ({
+    ...pc,
+    fixacao: pc.fixacao ?? FIXACAO_PADRAO,
+    fixacaoLados: pc.fixacaoLados ?? FIXACAO_LADOS_PADRAO,
+  }));
   // Campos antigos continuam refletindo a primeira peça (compatibilidade).
   const p0 = base.pecas[0];
   base.tipologia = p0.tipologia;

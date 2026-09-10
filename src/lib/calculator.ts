@@ -1,6 +1,7 @@
 // Calculadora central — gera plano de cortes e custos por tipologia.
 import { TipologiaId, AcabamentoId } from "./tipologias";
 import { Catalogo, perfilPorCodigo, acessorioPorCodigo } from "./catalogo";
+import { FixacaoTipo, FixacaoLados, ehChumbado, pontosFixacao } from "./fixacao";
 
 export interface Corte {
   codigo: string;
@@ -46,6 +47,8 @@ export interface CalcInput {
   largura_mm: number;
   altura_mm: number;
   cor: AcabamentoId;
+  fixacao?: FixacaoTipo;
+  fixacaoLados?: FixacaoLados;
   maoObraPct: number;
   margemPct: number;
   descontoGeralPct: number;
@@ -327,6 +330,27 @@ export function calcular(input: CalcInput): ResultadoCalculo {
     custos.push(aplicarOverride(base, overrides[key]));
   }
 
+  // Fixação (grapas para chumbar ou parafuso + bucha)
+  {
+    const pontos = pontosFixacao(L, H, input.fixacaoLados);
+    const codigo = ehChumbado(input.fixacao) ? "GRAPA-CHUMBAR" : "PARAF-BUCHA";
+    const ac = acessorioPorCodigo(catalogo, codigo);
+    if (ac) {
+      const key = `acessorio:${codigo}`;
+      custos.push(aplicarOverride({
+        key,
+        categoria: "acessorio",
+        codigo,
+        descricao: ac.descricao,
+        qtd: pontos,
+        unidade: ac.unidade,
+        precoUnit: ac.preco,
+        descontoPct: 0,
+        total: Number((pontos * ac.preco).toFixed(2)),
+      }, overrides[key]));
+    }
+  }
+
   // Vidro
   const m2v = metragemVidro(tipologia, L, H);
   if (m2v > 0) {
@@ -434,6 +458,8 @@ export interface PecaCalc {
   largura_mm: number;
   altura_mm: number;
   cor: AcabamentoId;
+  fixacao?: FixacaoTipo;
+  fixacaoLados?: FixacaoLados;
 }
 
 export interface CalcProjetoInput {
@@ -471,6 +497,8 @@ export function calcularProjeto(input: CalcProjetoInput): ResultadoProjeto {
       largura_mm: peca.largura_mm,
       altura_mm: peca.altura_mm,
       cor: peca.cor,
+      fixacao: peca.fixacao,
+      fixacaoLados: peca.fixacaoLados,
       maoObraPct: 0,
       margemPct: 0,
       descontoGeralPct: 0,
