@@ -213,6 +213,14 @@ export default function Painel() {
             {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
           </SelectContent>
         </Select>
+        <Select value={vendedora} onValueChange={setVendedora}>
+          <SelectTrigger className="sm:w-56"><SelectValue placeholder="Vendedora" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="todas">Todas as vendedoras</SelectItem>
+            <SelectItem value="__sem__">Sem vendedora</SelectItem>
+            {nomesVendedoras.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -234,6 +242,7 @@ export default function Painel() {
                   <div className="min-w-0">
                     <Link to={`/app/projeto/${p.id}`} className="font-display text-sm hover:underline">{p.nome}</Link>
                     <p className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {tipologiaPorId(p.tipologia).nome}</p>
+                    {p.vendedora && <p className="truncate text-[11px] text-muted-foreground">Venda: {p.vendedora}</p>}
                   </div>
                   <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-medium uppercase ${cls.badge}`}>
                     {STATUS_LABEL[p.status]}
