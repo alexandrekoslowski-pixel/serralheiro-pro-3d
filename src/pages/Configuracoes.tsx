@@ -77,6 +77,34 @@ export default function Configuracoes() {
           <div className="md:col-span-2"><Label>Endereço</Label><Input value={empresa.endereco} onChange={(e) => setEmpresa({ ...empresa, endereco: e.target.value })} /></div>
         </div>
 
+        <h2 className="font-display text-lg mt-6 mb-2">Equipe de vendas</h2>
+        <p className="text-sm text-muted-foreground mb-3">
+          Quem aparece na lista de vendedoras do orçamento e nos filtros do painel.
+        </p>
+        <div className="space-y-2 md:max-w-md">
+          {(empresa.vendedoras ?? []).map((v, i) => (
+            <div key={i} className="flex gap-2">
+              <Input
+                value={v}
+                placeholder="Nome da vendedora"
+                onChange={(e) => {
+                  const next = [...(empresa.vendedoras ?? [])];
+                  next[i] = e.target.value;
+                  setEmpresa({ ...empresa, vendedoras: next });
+                }}
+              />
+              <Button size="icon" variant="ghost"
+                onClick={() => setEmpresa({ ...empresa, vendedoras: (empresa.vendedoras ?? []).filter((_, idx) => idx !== i) })}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
+            </div>
+          ))}
+          <Button size="sm" variant="outline"
+            onClick={() => setEmpresa({ ...empresa, vendedoras: [...(empresa.vendedoras ?? []), ""] })}>
+            <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar vendedora
+          </Button>
+        </div>
+
         <h2 className="font-display text-lg mt-6 mb-4">Prazos das ordens</h2>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
