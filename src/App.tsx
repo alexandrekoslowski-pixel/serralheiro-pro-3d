@@ -12,10 +12,16 @@ import Financeiro from "./pages/Financeiro";
 import ProjetosLista from "./pages/ProjetosLista";
 import Configurador from "./pages/Configurador";
 import Configuracoes from "./pages/Configuracoes";
+import Clientes from "./pages/Clientes";
+import ClienteDetalhe from "./pages/ClienteDetalhe";
+import Catalogo from "./pages/Catalogo";
+import Materiais from "./pages/Materiais";
+import Equipe from "./pages/Equipe";
 import ModoOficina from "./pages/ModoOficina";
 import ModoAtendimento from "./pages/ModoAtendimento";
 import Calendario from "./pages/Calendario";
 import KanbanOficina from "./pages/KanbanOficina";
+
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -33,7 +39,13 @@ const App = () => (
             <Route path="/app" element={<ExigirLogin><AppLayout /></ExigirLogin>}>
               <Route index element={<Painel />} />
               <Route path="projetos" element={<ProjetosLista />} />
+              <Route path="clientes" element={<Clientes />} />
+              <Route path="clientes/:id" element={<ClienteDetalhe />} />
+              <Route path="catalogo" element={<Catalogo />} />
+              <Route path="materiais" element={<Materiais />} />
+              <Route path="equipe" element={<Equipe />} />
               <Route path="financeiro" element={<Financeiro />} />
+
               <Route path="calendario" element={<Calendario />} />
               <Route path="projeto/:id" element={<Configurador />} />
               <Route path="configuracoes" element={<Configuracoes />} />

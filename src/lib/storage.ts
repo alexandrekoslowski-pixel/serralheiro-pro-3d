@@ -49,7 +49,12 @@ export interface ProjetoLocal {
   overrides: Record<string, ItemOverride>;
   extras: ItemExtra[];
   total: number;
+  cliente_id: string | null;
+  briefing_id: string | null;
+  responsavel_id: string | null;
+  prioridade_manual: string | null;
   status: OrdemStatus;
+
   etapa: EtapaOficina;
   etapa_em: string;
   prazo_entrega: string | null; // YYYY-MM-DD
@@ -185,6 +190,10 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   etapa_em: new Date().toISOString(),
   prazo_entrega: null,
   valor_faturado: 0,
+  cliente_id: null,
+  briefing_id: null,
+  responsavel_id: null,
+  prioridade_manual: null,
   aprovado_em: null,
   entregue_em: null,
   faturado_em: null,
@@ -254,6 +263,10 @@ const linhaParaProjeto = (row: Record<string, unknown>): ProjetoLocal =>
     aprovado_em: (row.aprovado_em as string) ?? null,
     entregue_em: (row.entregue_em as string) ?? null,
     faturado_em: (row.faturado_em as string) ?? null,
+    cliente_id: (row.cliente_id as string) ?? null,
+    briefing_id: (row.briefing_id as string) ?? null,
+    responsavel_id: (row.responsavel_id as string) ?? null,
+    prioridade_manual: (row.prioridade_manual as string) ?? null,
     created_at: row.created_at as string,
     updated_at: row.updated_at as string,
   } as Partial<ProjetoLocal>);
@@ -272,6 +285,10 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
   aprovado_em: p.aprovado_em,
   entregue_em: p.entregue_em,
   faturado_em: p.faturado_em,
+  cliente_id: p.cliente_id,
+  briefing_id: p.briefing_id,
+  responsavel_id: p.responsavel_id,
+  prioridade_manual: p.prioridade_manual,
   dados: {
     tipologia: p.tipologia,
     largura_mm: p.largura_mm,
