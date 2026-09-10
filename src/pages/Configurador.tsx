@@ -661,18 +661,19 @@ function CardResumo({ label, valor, highlight }: { label: string; valor: string;
 }
 
 function SliderMm({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
+  const clampCm = (valorCm: number) => Math.min(max, Math.max(min, cmParaMm(valorCm)));
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
         <Label>{label}</Label>
         <div className="flex items-center gap-1">
-          <Input type="number" className="h-7 w-20 text-right text-xs" value={value} min={min} max={max} step={10} onChange={(e) => onChange(Math.min(max, Math.max(min, Number(e.target.value))))} />
-          <span className="text-[10px] text-muted-foreground">mm</span>
+          <Input type="number" className="h-7 w-20 text-right text-xs" value={mmParaCm(value)} min={mmParaCm(min)} max={mmParaCm(max)} step={1} onChange={(e) => onChange(clampCm(Number(e.target.value)))} />
+          <span className="text-[10px] text-muted-foreground">cm</span>
         </div>
       </div>
       <Slider min={min} max={max} step={10} value={[value]} onValueChange={([v]) => onChange(v)} />
       <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-        <span>{min}</span><span>{max}</span>
+        <span>{cm(min)} cm</span><span>{cm(max)} cm</span>
       </div>
     </div>
   );
