@@ -492,6 +492,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
       dados: {
         nome: empresa.nome, cnpj: empresa.cnpj, telefone: empresa.telefone,
         email: empresa.email, endereco: empresa.endereco,
+        vendedoras: empresa.vendedoras,
         prazoDiasUteis: empresa.prazoDiasUteis,
         validadeDias: empresa.validadeDias,
         garantiaDias: empresa.garantiaDias,
