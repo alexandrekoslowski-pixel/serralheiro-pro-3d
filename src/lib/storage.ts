@@ -5,6 +5,7 @@ import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
 
 export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
+export type EtapaOficina = "fila" | "producao" | "pintura" | "acabamento" | "pos_venda" | "pronto";
 
 export interface ProjetoLocal {
   id: string;
@@ -21,6 +22,8 @@ export interface ProjetoLocal {
   extras: ItemExtra[];
   total: number;
   status: OrdemStatus;
+  etapa: EtapaOficina;
+  etapa_em: string;
   prazo_entrega: string | null; // YYYY-MM-DD
   valor_faturado: number;
   aprovado_em: string | null;
@@ -48,6 +51,7 @@ export interface DadosEmpresa {
   prazoPadraoDias: number;
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
+  codigoOficina: string;
 }
 
 const K_PROJETOS = "spro:projetos";
@@ -70,6 +74,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   prazoPadraoDias: 15,
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
+  codigoOficina: "",
 };
 
 // ---------- estado em memória ----------
@@ -88,6 +93,8 @@ const notificar = () => listeners.forEach((f) => f());
 
 const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => ({
   status: "orcamento",
+  etapa: "fila",
+  etapa_em: new Date().toISOString(),
   prazo_entrega: null,
   valor_faturado: 0,
   aprovado_em: null,
@@ -109,6 +116,8 @@ const linhaParaProjeto = (row: Record<string, unknown>): ProjetoLocal =>
     nome: row.nome as string,
     cliente: (row.cliente as string) ?? "",
     status: row.status as OrdemStatus,
+    etapa: ((row.etapa as EtapaOficina) ?? "fila"),
+    etapa_em: (row.etapa_em as string) ?? new Date().toISOString(),
     prazo_entrega: (row.prazo_entrega as string) ?? null,
     total: Number(row.total ?? 0),
     valor_faturado: Number(row.valor_faturado ?? 0),
@@ -125,6 +134,8 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
   nome: p.nome,
   cliente: p.cliente,
   status: p.status,
+  etapa: p.etapa,
+  etapa_em: p.etapa_em,
   prazo_entrega: p.prazo_entrega,
   total: p.total,
   valor_faturado: p.valor_faturado,
@@ -180,12 +191,22 @@ export async function hidratarNuvem(uid: string): Promise<void> {
       prazoPadraoDias: emp.data.prazo_padrao_dias ?? 15,
       limiteVermelhoDias: emp.data.limite_vermelho_dias ?? 3,
       limiteAmareloDias: emp.data.limite_amarelo_dias ?? 7,
+      codigoOficina: (emp.data as { codigo_oficina?: string }).codigo_oficina ?? "",
     };
   } else {
     empresa = safe(() => {
       const raw = localStorage.getItem(K_EMPRESA);
       return raw ? { ...EMPRESA_PADRAO, ...JSON.parse(raw) } : { ...EMPRESA_PADRAO };
     }, { ...EMPRESA_PADRAO });
+    // cria a linha da empresa já com o código da oficina
+    const criada = await supabase
+      .from("empresa")
+      .upsert({ user_id: uid } as never)
+      .select()
+      .maybeSingle();
+    if (criada.data) {
+      empresa.codigoOficina = (criada.data as { codigo_oficina?: string }).codigo_oficina ?? "";
+    }
   }
 
   if (cat.data) {

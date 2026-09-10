@@ -1,5 +1,30 @@
 // Regras de situação e prazo das ordens de serviço.
-import { OrdemStatus, ProjetoLocal, DadosEmpresa } from "./storage";
+import { OrdemStatus, ProjetoLocal, DadosEmpresa, EtapaOficina } from "./storage";
+
+export const ETAPAS_OFICINA: EtapaOficina[] = ["fila", "producao", "pintura", "acabamento", "pos_venda", "pronto"];
+
+export const ETAPA_LABEL: Record<EtapaOficina, string> = {
+  fila: "Fila",
+  producao: "Produção",
+  pintura: "Pintura",
+  acabamento: "Acabamento",
+  pos_venda: "Pós-venda",
+  pronto: "Pronto",
+};
+
+export const proximaEtapa = (e: EtapaOficina): EtapaOficina | null => {
+  const i = ETAPAS_OFICINA.indexOf(e);
+  return i >= 0 && i < ETAPAS_OFICINA.length - 1 ? ETAPAS_OFICINA[i + 1] : null;
+};
+
+/** Ex.: "há 2 d" / "há 5 h" desde que entrou na etapa. */
+export function tempoNaEtapa(iso: string): string {
+  const ms = Date.now() - new Date(iso).getTime();
+  const h = Math.floor(ms / 3600000);
+  if (h < 1) return "agora";
+  if (h < 24) return `há ${h} h`;
+  return `há ${Math.floor(h / 24)} d`;
+}
 
 export const STATUS_ORDEM: OrdemStatus[] = ["orcamento", "aprovado", "producao", "entregue", "faturado"];
 

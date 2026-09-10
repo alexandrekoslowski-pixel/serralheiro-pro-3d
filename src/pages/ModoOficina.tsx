@@ -5,10 +5,12 @@
 // 4) resumo de material (quantas barras comprar);
 // 5) sequência curta de soldas/montagem.
 // Sem preço, sem QR, sem "próxima peça", sem login.
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Maximize2, ArrowLeft, Printer } from "lucide-react";
-import { obterProjeto, obterCatalogo } from "@/lib/storage";
+import { obterProjeto, obterCatalogo, ProjetoLocal } from "@/lib/storage";
+import { CATALOGO_PADRAO } from "@/lib/catalogo";
+import { supabase } from "@/integrations/supabase/client";
 import { calcular } from "@/lib/calculator";
 import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
@@ -16,9 +18,29 @@ import Visualizador3DClient from "@/components/Visualizador3DClient";
 import { DiagramaBarras } from "@/components/DiagramaBarras";
 
 export default function ModoOficina() {
-  const { id = "" } = useParams();
-  const projeto = useMemo(() => obterProjeto(id), [id]);
-  const catalogo = useMemo(() => obterCatalogo(), []);
+  const { id = "", codigo } = useParams();
+  const emMemoria = useMemo(() => obterProjeto(id), [id]);
+  const [remoto, setRemoto] = useState<ProjetoLocal | null>(null);
+
+  // Quando aberto pela tela livre da oficina (sem login), busca a ordem pelo código da serralheria.
+  useEffect(() => {
+    if (emMemoria || !codigo) return;
+    void supabase.rpc("ordens_oficina", { _codigo: codigo }).then(({ data }) => {
+      const linha = (data ?? []).find((o: { id: string }) => o.id === id) as
+        | { id: string; nome: string; cliente: string; dados: Record<string, unknown> }
+        | undefined;
+      if (!linha) return;
+      setRemoto({
+        ...(linha.dados as unknown as ProjetoLocal),
+        id: linha.id,
+        nome: linha.nome,
+        cliente: linha.cliente,
+      } as ProjetoLocal);
+    });
+  }, [emMemoria, codigo, id]);
+
+  const projeto = emMemoria ?? remoto;
+  const catalogo = useMemo(() => (emMemoria ? obterCatalogo() : CATALOGO_PADRAO), [emMemoria]);
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
