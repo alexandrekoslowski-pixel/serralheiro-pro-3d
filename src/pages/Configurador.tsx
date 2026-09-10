@@ -29,6 +29,10 @@ import {
   obterEmpresa, obterCatalogo, formatarBRL, gerarId,
 } from "@/lib/storage";
 import { STATUS_ORDEM, STATUS_LABEL } from "@/lib/ordens";
+import {
+  FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
+  FixacaoTipo, FixacaoLados, pontosFixacao, fixacaoTipo,
+} from "@/lib/fixacao";
 import { calcularProjeto, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
@@ -137,6 +141,8 @@ export default function Configurador() {
       largura_mm: t.larguraDefault,
       altura_mm: t.alturaDefault,
       cor: pecaSel.cor,
+      fixacao: pecaSel.fixacao ?? FIXACAO_PADRAO,
+      fixacaoLados: pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO,
     };
     setProjeto({ ...projeto, pecas: [...projeto.pecas, nova] });
     setPecaSelId(nova.id);
@@ -376,6 +382,40 @@ export default function Configurador() {
                     />
                   ))}
                 </div>
+              </div>
+
+              <div>
+                <Label>Sistema de fixação</Label>
+                <Select
+                  value={pecaSel.fixacao ?? FIXACAO_PADRAO}
+                  onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}
+                >
+                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FIXACAO_TIPOS.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label>Lados da fixação</Label>
+                <Select
+                  value={pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO}
+                  onValueChange={(v) => updPeca({ fixacaoLados: v as FixacaoLados })}
+                >
+                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FIXACAO_LADOS.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  {fixacaoTipo(pecaSel.fixacao).instrucao} ·{" "}
+                  {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos de fixação.
+                </p>
               </div>
             </div>
           </CollapsiblePanel>
