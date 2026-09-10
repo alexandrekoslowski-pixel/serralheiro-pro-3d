@@ -147,6 +147,17 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
   codigoOficina: "",
+  prazoDiasUteis: 22,
+  validadeDias: 5,
+  garantiaDias: 90,
+  pixChave: "",
+  pixFavorecido: "",
+  visitaTecnica: 50,
+  textoPagamento: TEXTO_PAGAMENTO_PADRAO,
+  textoTecnico: TEXTO_TECNICO_PADRAO,
+  msgSolicitarDados: MSG_SOLICITAR_DADOS_PADRAO,
+  msgFollowUp: MSG_FOLLOWUP_PADRAO,
+  msgVisitaTecnica: MSG_VISITA_PADRAO,
 };
 
 // ---------- estado em memória ----------
