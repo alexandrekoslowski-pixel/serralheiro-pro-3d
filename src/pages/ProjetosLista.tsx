@@ -57,6 +57,8 @@ export default function ProjetosLista() {
       extras: [],
       total: 0,
       status: "orcamento",
+      etapa: "fila",
+      etapa_em: new Date().toISOString(),
       prazo_entrega: null,
       valor_faturado: 0,
       aprovado_em: null,
