@@ -48,6 +48,7 @@ export default function ProjetosLista() {
       id: gerarId(),
       nome: novoNome.trim() || "Novo projeto",
       cliente: novoCliente.trim(),
+      vendedora: "",
       cliente_documento: "",
       cliente_endereco: "",
       cliente_bairro: "",
