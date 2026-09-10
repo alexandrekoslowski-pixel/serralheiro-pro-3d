@@ -1,16 +1,17 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays } from "lucide-react";
+import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, BookOpen, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSessao } from "@/lib/sessao";
 import { projetosLocaisPendentes, importarLocaisParaNuvem } from "@/lib/storage";
+import type { Papel } from "@/lib/gestao";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const [pendentes, setPendentes] = useState(0);
-  const { sair } = useSessao();
+  const { sair, papel } = useSessao();
 
   useEffect(() => { setPendentes(projetosLocaisPendentes()); }, []);
 
@@ -22,13 +23,19 @@ export default function AppLayout() {
     } catch { toast.error("Não foi possível enviar os projetos"); }
   };
 
-  const navItems = [
-    { to: "/app", end: true, label: "Painel", icon: LayoutDashboard },
-    { to: "/app/projetos", end: false, label: "Projetos", icon: FolderKanban },
-    { to: "/app/calendario", end: false, label: "Calendário", icon: CalendarDays },
-    { to: "/app/financeiro", end: false, label: "Financeiro", icon: Wallet },
-    { to: "/app/configuracoes", end: false, label: "Empresa", icon: Building2 },
+  const todos: { to: string; end: boolean; label: string; icon: typeof Users; papeis: Papel[] }[] = [
+    { to: "/app", end: true, label: "Painel", icon: LayoutDashboard, papeis: ["gestor", "vendedora"] },
+    { to: "/app/clientes", end: false, label: "Clientes", icon: Users, papeis: ["gestor", "vendedora"] },
+    { to: "/app/projetos", end: false, label: "Orçamentos", icon: FolderKanban, papeis: ["gestor", "vendedora"] },
+    { to: "/app/calendario", end: false, label: "Calendário", icon: CalendarDays, papeis: ["gestor", "vendedora"] },
+    { to: "/app/catalogo", end: false, label: "Serviços", icon: BookOpen, papeis: ["gestor"] },
+    { to: "/app/materiais", end: false, label: "Materiais", icon: Package, papeis: ["gestor"] },
+    { to: "/app/financeiro", end: false, label: "Financeiro", icon: Wallet, papeis: ["gestor"] },
+    { to: "/app/equipe", end: false, label: "Equipe", icon: ShieldCheck, papeis: ["gestor"] },
+    { to: "/app/configuracoes", end: false, label: "Empresa", icon: Building2, papeis: ["gestor"] },
   ];
+  const navItems = todos.filter((it) => it.papeis.includes(papel));
+
 
   return (
     <div className="flex min-h-screen flex-col">

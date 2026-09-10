@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      briefings: {
+        Row: {
+          cliente_id: string | null
+          created_at: string
+          id: string
+          observacoes: string
+          respostas: Json
+          tipo_servico: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cliente_id?: string | null
+          created_at?: string
+          id?: string
+          observacoes?: string
+          respostas?: Json
+          tipo_servico?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cliente_id?: string | null
+          created_at?: string
+          id?: string
+          observacoes?: string
+          respostas?: Json
+          tipo_servico?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "briefings_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       catalogo: {
         Row: {
           dados: Json
@@ -29,6 +70,63 @@ export type Database = {
           dados?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      clientes: {
+        Row: {
+          bairro: string
+          cep: string
+          cidade: string
+          created_at: string
+          documento: string
+          email: string
+          endereco: string
+          estrategico: boolean
+          id: string
+          nome: string
+          observacoes: string
+          origem: string
+          telefone: string
+          updated_at: string
+          user_id: string
+          whatsapp: string
+        }
+        Insert: {
+          bairro?: string
+          cep?: string
+          cidade?: string
+          created_at?: string
+          documento?: string
+          email?: string
+          endereco?: string
+          estrategico?: boolean
+          id?: string
+          nome?: string
+          observacoes?: string
+          origem?: string
+          telefone?: string
+          updated_at?: string
+          user_id: string
+          whatsapp?: string
+        }
+        Update: {
+          bairro?: string
+          cep?: string
+          cidade?: string
+          created_at?: string
+          documento?: string
+          email?: string
+          endereco?: string
+          estrategico?: boolean
+          id?: string
+          nome?: string
+          observacoes?: string
+          origem?: string
+          telefone?: string
+          updated_at?: string
+          user_id?: string
+          whatsapp?: string
         }
         Relationships: []
       }
@@ -57,6 +155,42 @@ export type Database = {
           limite_amarelo_dias?: number
           limite_vermelho_dias?: number
           prazo_padrao_dias?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      materiais: {
+        Row: {
+          created_at: string
+          custo: number
+          fornecedor: string
+          id: string
+          nome: string
+          observacoes: string
+          unidade: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          custo?: number
+          fornecedor?: string
+          id?: string
+          nome?: string
+          observacoes?: string
+          unidade?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          custo?: number
+          fornecedor?: string
+          id?: string
+          nome?: string
+          observacoes?: string
+          unidade?: string
           updated_at?: string
           user_id?: string
         }
@@ -124,7 +258,9 @@ export type Database = {
       projetos: {
         Row: {
           aprovado_em: string | null
+          briefing_id: string | null
           cliente: string
+          cliente_id: string | null
           created_at: string
           dados: Json
           entregue_em: string | null
@@ -134,6 +270,8 @@ export type Database = {
           id: string
           nome: string
           prazo_entrega: string | null
+          prioridade_manual: string | null
+          responsavel_id: string | null
           status: Database["public"]["Enums"]["ordem_status"]
           total: number
           updated_at: string
@@ -142,7 +280,9 @@ export type Database = {
         }
         Insert: {
           aprovado_em?: string | null
+          briefing_id?: string | null
           cliente?: string
+          cliente_id?: string | null
           created_at?: string
           dados?: Json
           entregue_em?: string | null
@@ -152,6 +292,8 @@ export type Database = {
           id: string
           nome?: string
           prazo_entrega?: string | null
+          prioridade_manual?: string | null
+          responsavel_id?: string | null
           status?: Database["public"]["Enums"]["ordem_status"]
           total?: number
           updated_at?: string
@@ -160,7 +302,9 @@ export type Database = {
         }
         Update: {
           aprovado_em?: string | null
+          briefing_id?: string | null
           cliente?: string
+          cliente_id?: string | null
           created_at?: string
           dados?: Json
           entregue_em?: string | null
@@ -170,11 +314,94 @@ export type Database = {
           id?: string
           nome?: string
           prazo_entrega?: string | null
+          prioridade_manual?: string | null
+          responsavel_id?: string | null
           status?: Database["public"]["Enums"]["ordem_status"]
           total?: number
           updated_at?: string
           user_id?: string
           valor_faturado?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "projetos_briefing_id_fkey"
+            columns: ["briefing_id"]
+            isOneToOne: false
+            referencedRelation: "briefings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projetos_cliente_id_fkey"
+            columns: ["cliente_id"]
+            isOneToOne: false
+            referencedRelation: "clientes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      servicos_catalogo: {
+        Row: {
+          ativo: boolean
+          campos: Json
+          categoria: string
+          created_at: string
+          descricao: string
+          id: string
+          nome: string
+          preco_base: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          campos?: Json
+          categoria?: string
+          created_at?: string
+          descricao?: string
+          id?: string
+          nome?: string
+          preco_base?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          campos?: Json
+          categoria?: string
+          created_at?: string
+          descricao?: string
+          id?: string
+          nome?: string
+          preco_base?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          dono_id: string
+          id: string
+          nome: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dono_id: string
+          id?: string
+          nome?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dono_id?: string
+          id?: string
+          nome?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
         }
         Relationships: []
       }
@@ -183,6 +410,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      dono_atual: { Args: { _user_id: string }; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       mover_etapa_oficina: {
         Args: {
           _codigo: string
@@ -206,6 +441,7 @@ export type Database = {
       }
     }
     Enums: {
+      app_role: "gestor" | "vendedora" | "serralheiro"
       etapa_oficina:
         | "fila"
         | "producao"
@@ -346,6 +582,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["gestor", "vendedora", "serralheiro"],
       etapa_oficina: [
         "fila",
         "producao",

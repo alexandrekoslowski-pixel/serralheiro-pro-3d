@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import type { CameraPreset } from "@/components/Visualizador3D";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
+import { type Cliente, listarClientes } from "@/lib/gestao";
 
 import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
@@ -66,6 +67,9 @@ export default function Configurador() {
   const [showCarro, setShowCarro] = useState(false);
   const [aberto, setAberto] = useState(false);
   const [pecaSelId, setPecaSelId] = useState<string | null>(null);
+  const [clientes, setClientes] = useState<Cliente[]>([]);
+
+  useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
 
   // Carrega projeto
   useEffect(() => {
@@ -77,6 +81,7 @@ export default function Configurador() {
     }
     setProjeto(p);
   }, [id, navigate]);
+
 
   const empresa = useMemo(() => obterEmpresa(), []);
   const catalogo = useMemo(() => obterCatalogo(), []);
@@ -265,7 +270,41 @@ export default function Configurador() {
           </TabsList>
 
           <TabsContent value="cliente" className="mt-0 p-4">
+            <div className="mb-3 flex flex-wrap items-end gap-2">
+              <div className="min-w-[240px] flex-1">
+                <Label className="text-xs">Buscar cliente já cadastrado</Label>
+                <Select
+                  value={projeto.cliente_id ?? ""}
+                  onValueChange={(v) => {
+                    const c = clientes.find((x) => x.id === v);
+                    if (!c) return;
+                    setProjeto({
+                      ...projeto,
+                      cliente_id: c.id,
+                      cliente: c.nome,
+                      cliente_documento: c.documento,
+                      cliente_email: c.email,
+                      cliente_telefone: c.telefone || c.whatsapp,
+                      cliente_endereco: c.endereco,
+                      cliente_bairro: c.bairro,
+                      cliente_cidade: c.cidade,
+                      cliente_cep: c.cep,
+                    });
+                    setSalvo(false);
+                  }}
+                >
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Selecionar cliente" /></SelectTrigger>
+                  <SelectContent>
+                    {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button variant="outline" size="sm" asChild>
+                <Link to="/app/clientes">Cadastrar cliente</Link>
+              </Button>
+            </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+
               <div className="sm:col-span-2">
                 <Label className="text-xs">Cliente (nome e sobrenome)</Label>
                 <Input className="h-9" value={projeto.cliente} onChange={(e) => upd("cliente", e.target.value)} placeholder="Maria Silva" />
