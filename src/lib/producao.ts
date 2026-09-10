@@ -305,5 +305,60 @@ export function planejarProducao(tipo: TipologiaId, cortes: Corte[]): PlanoProdu
         ferramentas: [...ferramentasComuns, "Transferidor / esquadro de 30°"],
         observacoes: obsBase,
       };
+    case "grade_fixa_balaozinho":
+      return {
+        soldas: [
+          { descricao: "Cantos da moldura", tipo: "MIG", qtd: 4 },
+          { descricao: "Tubos balãozinho na moldura", tipo: "MIG", qtd: (cortes.find(c => c.descricao.includes("balãozinho"))?.qtd ?? 0) * 2 },
+        ],
+        sequencia: [
+          "Conferir peças cortadas.",
+          "Montar moldura no gabarito.",
+          "Soldar cantos.",
+          "Marcar espaçamento dos tubos (~150mm).",
+          "Posicionar e soldar tubos balãozinho.",
+          "Esmerilhar e limpar.",
+        ],
+        ferramentas: ferramentasComuns,
+        observacoes: obsBase,
+      };
+    case "grade_fixa_tijolinho":
+      return {
+        soldas: [
+          { descricao: "Cantos da moldura", tipo: "MIG", qtd: 4 },
+          { descricao: "Barras horizontais", tipo: "MIG", qtd: (cortes.find(c => c.descricao.includes("horizontal tijolinho"))?.qtd ?? 0) * 2 },
+          { descricao: "Barras verticais (amarração)", tipo: "Ponteamento", qtd: (cortes.find(c => c.descricao.includes("vertical tijolinho"))?.qtd ?? 0) * 2, observacao: "Alternar a cada vão (padrão tijolinho)" },
+        ],
+        sequencia: [
+          "Conferir peças cortadas.",
+          "Montar moldura no gabarito.",
+          "Soldar cantos.",
+          "Marcar espaçamento das barras horizontais (~150mm).",
+          "Soldar barras horizontais.",
+          "Pontear verticais alternando a amarração (padrão tijolinho).",
+          "Esmerilhar e limpar.",
+        ],
+        ferramentas: ferramentasComuns,
+        observacoes: obsBase,
+      };
+    case "grade_fixa_trabalhada":
+      return {
+        soldas: [
+          { descricao: "Cantos da moldura", tipo: "MIG", qtd: 4 },
+          { descricao: "Tubos verticais", tipo: "MIG", qtd: (cortes.find(c => c.descricao === "Tubo vertical")?.qtd ?? 0) * 2 },
+          { descricao: "Diagonais trabalhadas", tipo: "Ponteamento", qtd: (cortes.find(c => c.descricao.includes("Diagonal"))?.qtd ?? 0) * 2 },
+        ],
+        sequencia: [
+          "Conferir peças cortadas.",
+          "Montar moldura no gabarito.",
+          "Soldar cantos.",
+          "Marcar e soldar tubos verticais (~200mm).",
+          "Posicionar diagonais trabalhadas em cada vão.",
+          "Pontear e conferir o desenho.",
+          "Esmerilhar e limpar.",
+        ],
+        ferramentas: ferramentasComuns,
+        observacoes: obsBase,
+      };
   }
 }

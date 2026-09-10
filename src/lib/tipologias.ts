@@ -9,7 +9,10 @@ export type TipologiaId =
   | "portao_pivotante"
   | "janela_correr_2f"
   | "estrutura_metalica"
-  | "veneziana_metalica";
+  | "veneziana_metalica"
+  | "grade_fixa_balaozinho"
+  | "grade_fixa_tijolinho"
+  | "grade_fixa_trabalhada";
 
 export interface Tipologia {
   id: TipologiaId;
@@ -79,6 +82,27 @@ export const TIPOLOGIAS: Tipologia[] = [
     descricao: "Lâminas inclinadas para ventilação e proteção.",
     larguraMin: 600, larguraMax: 10000, larguraDefault: 1500,
     alturaMin: 600, alturaMax: 10000, alturaDefault: 1200,
+  },
+  {
+    id: "grade_fixa_balaozinho",
+    nome: "Grade Fixa Balãozinho",
+    descricao: "Grade de proteção fixa com tubos verticais em balãozinho.",
+    larguraMin: 400, larguraMax: 10000, larguraDefault: 1200,
+    alturaMin: 400, alturaMax: 10000, alturaDefault: 1200,
+  },
+  {
+    id: "grade_fixa_tijolinho",
+    nome: "Grade Fixa Tijolinho",
+    descricao: "Grade de proteção fixa em padrão tijolinho (amarração alternada).",
+    larguraMin: 400, larguraMax: 10000, larguraDefault: 1200,
+    alturaMin: 400, alturaMax: 10000, alturaDefault: 1200,
+  },
+  {
+    id: "grade_fixa_trabalhada",
+    nome: "Grade Fixa Trabalhada",
+    descricao: "Grade de proteção fixa com desenhos trabalhados e diagonais.",
+    larguraMin: 400, larguraMax: 10000, larguraDefault: 1200,
+    alturaMin: 400, alturaMax: 10000, alturaDefault: 1200,
   },
 ];
 
