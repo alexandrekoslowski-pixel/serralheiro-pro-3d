@@ -233,10 +233,7 @@ export default function ModoAtendimento() {
                         <Check className="h-4 w-4" />
                       </div>
                     )}
-                    <span className={cn(
-                      "text-sm font-bold px-2 py-0.5 rounded",
-                      ["branco","natural"].includes(a.id) ? "bg-black/70 text-white" : "bg-white/80 text-black",
-                    )}>{a.nome}</span>
+                    <span className="rounded bg-background/85 px-2 py-0.5 text-sm font-bold text-foreground">{a.nome}</span>
                   </button>
                 ))}
               </div>
