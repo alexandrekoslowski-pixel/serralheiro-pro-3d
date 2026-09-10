@@ -904,7 +904,6 @@ export default function Configurador() {
             </TabsContent>
           </Tabs>
         </div>
-      </div>
     </div>
   );
 }
