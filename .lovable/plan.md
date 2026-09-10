@@ -7,9 +7,10 @@ Hoje o PDF do orçamento traz só cabeçalho, cliente, peças, tabela de itens e
 Passa a ter 2 páginas:
 
 **Página 1 — Orçamento** (como hoje, com ajustes)
-- Cabeçalho da empresa, número, emissão e validade (5 dias corridos).
-- Dados do cliente: nome e sobrenome, RG/CPF, endereço completo, telefone.
-- Peças, desenho 3D e tabela de valores com o total.
+- Cabeçalho da empresa, número do orçamento, data de emissão e validade (5 dias corridos).
+- Bloco do cliente logo abaixo do cabeçalho, em destaque: nome e sobrenome, RG ou CPF, endereço completo (rua, número, complemento, bairro, cidade/UF, CEP), telefone/WhatsApp e e-mail.
+- Local de instalação, quando for diferente do endereço do cliente.
+- Peças com medidas, cor e sistema de fixação, e a tabela de valores com o total. Sem o desenho 3D.
 - Linha de destaque: "Prazo de entrega: aproximadamente X dias úteis após a confirmação do pagamento da entrada" — X vem do campo do orçamento (padrão 22).
 
 **Página 2 — Condições**
@@ -24,9 +25,17 @@ Passa a ter 2 páginas:
 No orçamento (tela do projeto, bloco "Cliente"):
 - Nome e sobrenome (já existe o campo cliente)
 - RG ou CPF
-- Endereço completo
+- Endereço completo: rua e número, complemento, bairro, cidade/UF, CEP
 - Telefone / WhatsApp
+- E-mail
+- Local de instalação (opcional, quando a obra é em outro endereço)
 - Prazo de entrega em dias úteis (vazio = 22)
+
+Faltavam também, e entram junto porque a proposta precisa deles:
+- E-mail do cliente, para envio e contato.
+- Local de instalação separado do endereço de cadastro.
+- Campos de "Serviços" e "Frete" no orçamento — o texto padrão diz que, se não estiverem preenchidos, não entram no valor; assim o PDF mostra "não incluso" ou o valor lançado.
+- Observações da proposta: um campo livre por orçamento, impresso antes das condições.
 
 Em Configurações > Empresa (valem para todos os PDFs, editáveis):
 - Prazo padrão em dias úteis (22)
