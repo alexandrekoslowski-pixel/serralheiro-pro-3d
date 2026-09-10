@@ -56,6 +56,12 @@ export default function ProjetosLista() {
       overrides: {},
       extras: [],
       total: 0,
+      status: "orcamento",
+      prazo_entrega: null,
+      valor_faturado: 0,
+      aprovado_em: null,
+      entregue_em: null,
+      faturado_em: null,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
@@ -66,16 +72,11 @@ export default function ProjetosLista() {
   };
 
   const duplicar = (id: string) => {
-    const novo = duplicarProjeto(id);
-    if (novo) {
-      setProjetos(listarProjetos());
-      toast.success("Projeto duplicado");
-    }
+    if (duplicarProjeto(id)) toast.success("Projeto duplicado");
   };
 
   const remover = (id: string) => {
     deletarProjeto(id);
-    setProjetos(listarProjetos());
     toast.success("Projeto excluído");
   };
 
