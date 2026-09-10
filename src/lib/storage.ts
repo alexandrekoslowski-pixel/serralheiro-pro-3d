@@ -79,7 +79,52 @@ export interface DadosEmpresa {
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
   codigoOficina: string;
+  /** Proposta comercial */
+  prazoDiasUteis: number;
+  validadeDias: number;
+  garantiaDias: number;
+  pixChave: string;
+  pixFavorecido: string;
+  visitaTecnica: number;
+  textoPagamento: string;
+  textoTecnico: string;
+  msgSolicitarDados: string;
+  msgFollowUp: string;
+  msgVisitaTecnica: string;
 }
+
+export const TEXTO_PAGAMENTO_PADRAO = [
+  "Valores de R$ 0,00 a R$ 1.000,00 — 1x sem juros;",
+  "Valores de R$ 1.000,00 até R$ 2.000,00 — em até 2x sem juros;",
+  "Valores de R$ 2.000,00 até R$ 3.000,00 — em até 3x sem juros;",
+  "Valores acima de R$ 3.000,00 — em até 4x sem juros;",
+  "Valores acima de R$ 4.000,00 — metade no PIX e a outra metade em até 5x sem juros;",
+  "À vista com 5% de desconto (sendo 50% no ato e 50% na entrega);",
+  "Valor cheio em até 12x no cartão de crédito com os juros da máquina — simule.",
+].join("\n");
+
+export const TEXTO_TECNICO_PADRAO = [
+  "Se os campos serviços e frete não estiverem preenchidos, não estão sendo considerados na composição do orçamento;",
+  "Não inclusa mão de obra de pedreiro, se necessária;",
+  "Não inclusos vidro, puxadores e caixa de correio — consulte disponibilidade e valores;",
+  "Trabalhamos com pintura eletrostática epóxi, o melhor processo de pintura do nosso segmento;",
+  "Garantia de fábrica de 90 dias;",
+  "Se considerada automação, é necessário que a ligação de energia esteja próxima aos aparelhos; caso não esteja, validar com o técnico de automação o valor deste serviço.",
+].join("\n");
+
+export const MSG_SOLICITAR_DADOS_PADRAO = [
+  "Boa tarde, tudo bem?",
+  "Para seguirmos com o orçamento, solicito as seguintes informações:",
+  "• RG ou CPF",
+  "• Endereço completo",
+  "• Nome e sobrenome",
+].join("\n");
+
+export const MSG_FOLLOWUP_PADRAO =
+  "Olá, espero que esteja bem! Enviei uma proposta há alguns dias e gostaria de saber se teve a oportunidade de analisá-la. Estou à disposição para esclarecer qualquer dúvida ou discutir detalhes. Aguardo seu retorno!";
+
+export const MSG_VISITA_PADRAO =
+  "A visita técnica tem um custo de R$ 50,00 e, em caso de fechamento da OS, esse valor é descontado do total. Confirma o interesse? Você também pode nos mandar as medidas para uma estimativa de custo e, se lhe interessar, marcamos a visita para retirar as medidas finas.";
 
 const K_PROJETOS = "spro:projetos";
 const K_EMPRESA = "spro:empresa";
