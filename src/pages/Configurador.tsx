@@ -17,7 +17,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { CollapsiblePanel } from "@/components/CollapsiblePanel";
+
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import type { CameraPreset } from "@/components/Visualizador3D";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
