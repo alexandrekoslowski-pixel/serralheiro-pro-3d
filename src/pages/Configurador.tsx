@@ -25,11 +25,11 @@ import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
 } from "@/lib/tipologias";
 import {
-  ProjetoLocal, OrdemStatus, obterProjeto, salvarProjeto, duplicarProjeto,
+  ProjetoLocal, Peca, OrdemStatus, obterProjeto, salvarProjeto, duplicarProjeto,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId,
 } from "@/lib/storage";
 import { STATUS_ORDEM, STATUS_LABEL } from "@/lib/ordens";
-import { calcular, ItemExtra, ItemOverride } from "@/lib/calculator";
+import { calcularProjeto, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
@@ -60,6 +60,7 @@ export default function Configurador() {
   const [showPessoa, setShowPessoa] = useState(false);
   const [showCarro, setShowCarro] = useState(false);
   const [aberto, setAberto] = useState(false);
+  const [pecaSelId, setPecaSelId] = useState<string | null>(null);
 
   // Carrega projeto
   useEffect(() => {
@@ -77,11 +78,8 @@ export default function Configurador() {
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
-    return calcular({
-      tipologia: projeto.tipologia,
-      largura_mm: projeto.largura_mm,
-      altura_mm: projeto.altura_mm,
-      cor: projeto.cor,
+    return calcularProjeto({
+      pecas: projeto.pecas,
       maoObraPct: projeto.maoObraPct,
       margemPct: projeto.margemPct,
       descontoGeralPct: projeto.descontoGeralPct,
@@ -114,7 +112,7 @@ export default function Configurador() {
     [resultado, barraMm],
   );
   const planoProducao = useMemo(
-    () => (projeto && resultado ? planejarProducao(projeto.tipologia, resultado.cortes) : null),
+    () => (projeto && resultado ? planejarProducao(projeto.pecas[0].tipologia, resultado.cortes) : null),
     [projeto, resultado],
   );
 
