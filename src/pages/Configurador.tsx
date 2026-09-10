@@ -662,17 +662,36 @@ function CardResumo({ label, valor, highlight }: { label: string; valor: string;
 }
 
 function SliderMm({ label, value, min, max, onChange }: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
-  const clampCm = (valorCm: number) => Math.min(max, Math.max(min, cmParaMm(valorCm)));
+  const [texto, setTexto] = useState<string | null>(null);
+  const exibido = texto ?? String(mmParaCm(value));
+
+  const confirmar = () => {
+    const n = Number(String(exibido).replace(",", "."));
+    if (Number.isFinite(n) && exibido.trim() !== "") {
+      onChange(Math.min(max, Math.max(min, cmParaMm(n))));
+    }
+    setTexto(null);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
         <Label>{label}</Label>
         <div className="flex items-center gap-1">
-          <Input type="number" className="h-7 w-20 text-right text-xs" value={mmParaCm(value)} min={mmParaCm(min)} max={mmParaCm(max)} step={1} onChange={(e) => onChange(clampCm(Number(e.target.value)))} />
+          <Input
+            type="text"
+            inputMode="decimal"
+            className="h-7 w-20 text-right text-xs"
+            value={exibido}
+            onChange={(e) => setTexto(e.target.value)}
+            onFocus={(e) => e.currentTarget.select()}
+            onBlur={confirmar}
+            onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+          />
           <span className="text-[10px] text-muted-foreground">cm</span>
         </div>
       </div>
-      <Slider min={min} max={max} step={10} value={[value]} onValueChange={([v]) => onChange(v)} />
+      <Slider min={min} max={max} step={10} value={[value]} onValueChange={([v]) => { setTexto(null); onChange(v); }} />
       <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
         <span>{cm(min)} cm</span><span>{cm(max)} cm</span>
       </div>
@@ -681,13 +700,33 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
 }
 
 function SliderPct({ label, value, onChange, max = 100 }: { label: string; value: number; onChange: (v: number) => void; max?: number }) {
+  const [texto, setTexto] = useState<string | null>(null);
+  const exibido = texto ?? String(value);
+
+  const confirmar = () => {
+    const n = Number(String(exibido).replace(",", "."));
+    if (Number.isFinite(n) && exibido.trim() !== "") {
+      onChange(Math.min(max, Math.max(0, n)));
+    }
+    setTexto(null);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-1">
         <Label>{label}</Label>
-        <Input type="number" className="h-7 w-16 text-right text-xs" value={value} min={0} max={max} step={1} onChange={(e) => onChange(Math.min(max, Math.max(0, Number(e.target.value))))} />
+        <Input
+          type="text"
+          inputMode="decimal"
+          className="h-7 w-16 text-right text-xs"
+          value={exibido}
+          onChange={(e) => setTexto(e.target.value)}
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={confirmar}
+          onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
+        />
       </div>
-      <Slider min={0} max={max} step={1} value={[value]} onValueChange={([v]) => onChange(v)} />
+      <Slider min={0} max={max} step={1} value={[value]} onValueChange={([v]) => { setTexto(null); onChange(v); }} />
     </div>
   );
 }
