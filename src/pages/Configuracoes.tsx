@@ -94,6 +94,30 @@ export default function Configuracoes() {
               onChange={(e) => setEmpresa({ ...empresa, limiteAmareloDias: Number(e.target.value) })} />
           </div>
         </div>
+
+        <h2 className="font-display text-lg mt-6 mb-2">Tela da oficina</h2>
+        <p className="text-sm text-muted-foreground mb-2">
+          Abra este endereço na TV ou tablet da oficina. Ele mostra o quadro das ordens sem nenhum valor.
+        </p>
+        {empresa.codigoOficina ? (
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input readOnly value={`${window.location.origin}/oficina/${empresa.codigoOficina}`} />
+            <Button
+              variant="outline"
+              onClick={() => {
+                void navigator.clipboard.writeText(`${window.location.origin}/oficina/${empresa.codigoOficina}`);
+                toast.success("Link copiado");
+              }}
+            >
+              Copiar link
+            </Button>
+            <Button variant="outline" onClick={() => window.open(`/oficina/${empresa.codigoOficina}`, "_blank")}>
+              Abrir
+            </Button>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">Salve os dados da empresa para gerar o link.</p>
+        )}
       </div>
 
       {/* Perfis */}
