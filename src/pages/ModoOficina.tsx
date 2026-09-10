@@ -5,10 +5,12 @@
 // 4) resumo de material (quantas barras comprar);
 // 5) sequência curta de soldas/montagem.
 // Sem preço, sem QR, sem "próxima peça", sem login.
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { Maximize2, ArrowLeft, Printer } from "lucide-react";
-import { obterProjeto, obterCatalogo } from "@/lib/storage";
+import { obterProjeto, obterCatalogo, ProjetoLocal } from "@/lib/storage";
+import { CATALOGO_PADRAO } from "@/lib/catalogo";
+import { supabase } from "@/integrations/supabase/client";
 import { calcular } from "@/lib/calculator";
 import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
