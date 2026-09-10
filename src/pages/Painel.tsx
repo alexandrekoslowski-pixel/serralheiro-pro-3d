@@ -255,6 +255,10 @@ export default function Painel() {
         })}
       </div>
 
+      <div className="mt-8">
+        <CalendarioEntregas />
+      </div>
+
       <DialogOrdem projeto={detalhe} onClose={() => setDetalhe(null)} />
     </section>
   );
