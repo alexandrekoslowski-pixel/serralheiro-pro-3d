@@ -14,7 +14,161 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      catalogo: {
+        Row: {
+          dados: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          dados?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          dados?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      empresa: {
+        Row: {
+          dados: Json
+          limite_amarelo_dias: number
+          limite_vermelho_dias: number
+          prazo_padrao_dias: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          dados?: Json
+          limite_amarelo_dias?: number
+          limite_vermelho_dias?: number
+          prazo_padrao_dias?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          dados?: Json
+          limite_amarelo_dias?: number
+          limite_vermelho_dias?: number
+          prazo_padrao_dias?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pagamentos: {
+        Row: {
+          created_at: string
+          data: string
+          forma: string
+          id: string
+          observacao: string
+          projeto_id: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          data?: string
+          forma?: string
+          id?: string
+          observacao?: string
+          projeto_id: string
+          user_id: string
+          valor?: number
+        }
+        Update: {
+          created_at?: string
+          data?: string
+          forma?: string
+          id?: string
+          observacao?: string
+          projeto_id?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          nome: string | null
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nome?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome?: string | null
+        }
+        Relationships: []
+      }
+      projetos: {
+        Row: {
+          aprovado_em: string | null
+          cliente: string
+          created_at: string
+          dados: Json
+          entregue_em: string | null
+          faturado_em: string | null
+          id: string
+          nome: string
+          prazo_entrega: string | null
+          status: Database["public"]["Enums"]["ordem_status"]
+          total: number
+          updated_at: string
+          user_id: string
+          valor_faturado: number
+        }
+        Insert: {
+          aprovado_em?: string | null
+          cliente?: string
+          created_at?: string
+          dados?: Json
+          entregue_em?: string | null
+          faturado_em?: string | null
+          id: string
+          nome?: string
+          prazo_entrega?: string | null
+          status?: Database["public"]["Enums"]["ordem_status"]
+          total?: number
+          updated_at?: string
+          user_id: string
+          valor_faturado?: number
+        }
+        Update: {
+          aprovado_em?: string | null
+          cliente?: string
+          created_at?: string
+          dados?: Json
+          entregue_em?: string | null
+          faturado_em?: string | null
+          id?: string
+          nome?: string
+          prazo_entrega?: string | null
+          status?: Database["public"]["Enums"]["ordem_status"]
+          total?: number
+          updated_at?: string
+          user_id?: string
+          valor_faturado?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +177,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      ordem_status:
+        | "orcamento"
+        | "aprovado"
+        | "producao"
+        | "entregue"
+        | "faturado"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +309,14 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      ordem_status: [
+        "orcamento",
+        "aprovado",
+        "producao",
+        "entregue",
+        "faturado",
+      ],
+    },
   },
 } as const
