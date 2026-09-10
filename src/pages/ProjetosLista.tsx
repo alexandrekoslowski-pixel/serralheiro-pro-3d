@@ -154,7 +154,7 @@ export default function ProjetosLista() {
                   </span>
                 </div>
                 <div className="mt-3 text-xs text-muted-foreground">
-                  {p.largura_mm} × {p.altura_mm} mm · {p.cor}
+                  {p.largura_mm} × {p.altura_mm} mm · {p.cor} · {STATUS_LABEL[p.status]}
                 </div>
                 <div className="mt-3 flex items-end justify-between">
                   <div>
