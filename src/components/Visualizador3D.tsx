@@ -419,6 +419,72 @@ function GeometriaTipologia({
         </group>
       );
     }
+    case "grade_fixa_balaozinho":
+    case "grade_fixa_tijolinho":
+    case "grade_fixa_trabalhada": {
+      const moldura = (
+        <>
+          <Tubo position={[0, t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
+          <Tubo position={[0, H_m - t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
+          <Tubo position={[-halfL + t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
+          <Tubo position={[halfL - t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
+        </>
+      );
+
+      if (tipologia === "grade_fixa_balaozinho") {
+        // Tubos verticais a cada ~150mm com o "balão" no meio
+        const nVert = Math.max(2, Math.ceil((L_m * 1000) / 150) - 1);
+        const esp = (L_m - 0.12) / (nVert + 1);
+        const tubos = Array.from({ length: nVert }, (_, i) => {
+          const x = -halfL + 0.06 + esp * (i + 1);
+          return (
+            <group key={`b${i}`}>
+              <Tubo position={[x, H_m / 2, 0]} size={[0.022, H_m - 0.06, 0.022]} color={cor} wireframe={wireframe} />
+              <mesh position={[x, H_m / 2, 0]}>
+                <sphereGeometry args={[0.055, 12, 10]} />
+                <meshStandardMaterial color={cor} metalness={0.6} roughness={0.4} wireframe={wireframe} />
+              </mesh>
+            </group>
+          );
+        });
+        return <group>{moldura}{tubos}</group>;
+      }
+
+      if (tipologia === "grade_fixa_tijolinho") {
+        // Barras horizontais + verticais com amarração alternada
+        const nHoriz = Math.max(2, Math.ceil((H_m * 1000) / 150) - 1);
+        const nVert = Math.max(2, Math.ceil((L_m * 1000) / 300) - 1);
+        const espH = (H_m - 0.12) / (nHoriz + 1);
+        const espV = (L_m - 0.12) / (nVert + 1);
+        const horizontais = Array.from({ length: nHoriz }, (_, i) => (
+          <Tubo key={`th${i}`} position={[0, 0.06 + espH * (i + 1), 0]} size={[L_m - 0.06, 0.022, 0.022]} color={cor} wireframe={wireframe} />
+        ));
+        const verticais = Array.from({ length: nVert }, (_, i) => {
+          const x = -halfL + 0.06 + espV * (i + 1);
+          const z = i % 2 === 0 ? 0.015 : -0.015; // alterna frente/trás
+          return <Tubo key={`tv${i}`} position={[x, H_m / 2, z]} size={[0.022, H_m - 0.06, 0.022]} color={cor} wireframe={wireframe} />;
+        });
+        return <group>{moldura}{horizontais}{verticais}</group>;
+      }
+
+      // Trabalhada: verticais a cada ~200mm + diagonais cruzadas em cada vão
+      const nVert = Math.max(2, Math.ceil((L_m * 1000) / 200) - 1);
+      const esp = (L_m - 0.12) / (nVert + 1);
+      const verticais = Array.from({ length: nVert }, (_, i) => {
+        const x = -halfL + 0.06 + esp * (i + 1);
+        return <Tubo key={`tr${i}`} position={[x, H_m / 2, 0]} size={[0.022, H_m - 0.06, 0.022]} color={cor} wireframe={wireframe} />;
+      });
+      const hUtil = H_m - 0.06;
+      const diag = Math.sqrt(esp * esp + hUtil * hUtil);
+      const ang = Math.atan2(hUtil, esp);
+      const diagonais: JSX.Element[] = [];
+      for (let i = 0; i <= nVert; i++) {
+        const xc = -halfL + 0.06 + esp * (i + 0.5);
+        diagonais.push(<Tubo key={`td1-${i}`} position={[xc, H_m / 2, 0.014]} size={[diag, 0.018, 0.018]} color={cor} rotation={[0, 0, ang]} wireframe={wireframe} />);
+        diagonais.push(<Tubo key={`td2-${i}`} position={[xc, H_m / 2, -0.014]} size={[diag, 0.018, 0.018]} color={cor} rotation={[0, 0, -ang]} wireframe={wireframe} />);
+      }
+      return <group>{moldura}{verticais}{diagonais}</group>;
+    }
   }
 }
 
