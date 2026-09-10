@@ -24,6 +24,7 @@ export interface Peca {
 export interface ProjetoLocal {
   id: string;
   nome: string;
+  vendedora: string;
   cliente: string;
   cliente_documento: string;
   cliente_endereco: string;
@@ -79,6 +80,8 @@ export interface DadosEmpresa {
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
   codigoOficina: string;
+  /** Equipe de vendas */
+  vendedoras: string[];
   /** Proposta comercial */
   prazoDiasUteis: number;
   validadeDias: number;
@@ -147,6 +150,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
   codigoOficina: "",
+  vendedoras: [],
   prazoDiasUteis: 22,
   validadeDias: 5,
   garantiaDias: 90,
