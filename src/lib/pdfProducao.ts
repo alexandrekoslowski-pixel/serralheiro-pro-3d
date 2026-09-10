@@ -20,7 +20,8 @@ export function gerarOrdemProducaoPDF(
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 12;
-  const tip = tipologiaPorId(projeto.tipologia);
+  const p0 = projeto.pecas[0];
+  const tip = tipologiaPorId(p0.tipologia);
 
   // ============ Helper: cabeçalho de página ============
   const drawHeader = (title: string, page: number, totalPages: number) => {
@@ -82,9 +83,11 @@ export function gerarOrdemProducaoPDF(
   const boxW = (pageW - margin * 2 - 6) / 3;
   const boxH = 38;
   const boxes: Array<[string, string]> = [
-    ["LARGURA", `${cm(projeto.largura_mm)} cm`],
-    ["ALTURA", `${cm(projeto.altura_mm)} cm`],
-    ["COR", projeto.cor.toUpperCase()],
+    ["LARGURA", `${cm(p0.largura_mm)} cm`],
+    ["ALTURA", `${cm(p0.altura_mm)} cm`],
+    projeto.pecas.length > 1
+      ? ["PEÇAS", `${projeto.pecas.length}`]
+      : ["COR", p0.cor.toUpperCase()],
   ];
   boxes.forEach(([label, value], i) => {
     const x = margin + i * (boxW + 3);

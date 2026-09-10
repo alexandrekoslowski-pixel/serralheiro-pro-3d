@@ -7,6 +7,16 @@ import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
 export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
 export type EtapaOficina = "fila" | "producao" | "pintura" | "acabamento" | "pos_venda" | "pronto";
 
+/** Uma peça do orçamento (portão, janela, grade…). */
+export interface Peca {
+  id: string;
+  nome: string;
+  tipologia: TipologiaId;
+  largura_mm: number;
+  altura_mm: number;
+  cor: AcabamentoId;
+}
+
 export interface ProjetoLocal {
   id: string;
   nome: string;
@@ -18,6 +28,7 @@ export interface ProjetoLocal {
   maoObraPct: number;
   margemPct: number;
   descontoGeralPct: number;
+  pecas: Peca[];
   overrides: Record<string, ItemOverride>;
   extras: ItemExtra[];
   total: number;
@@ -91,7 +102,8 @@ export function assinarDados(fn: () => void): () => void {
 }
 const notificar = () => listeners.forEach((f) => f());
 
-const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => ({
+const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
+  const base = {
   status: "orcamento",
   etapa: "fila",
   etapa_em: new Date().toISOString(),
@@ -105,8 +117,29 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => ({
   total: 0,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
+  pecas: [],
   ...(p as ProjetoLocal),
-});
+  } as ProjetoLocal;
+
+  // Orçamentos antigos (uma peça só) viram uma lista com uma peça.
+  if (!Array.isArray(base.pecas) || base.pecas.length === 0) {
+    base.pecas = [{
+      id: gerarId(),
+      nome: "Peça 1",
+      tipologia: base.tipologia,
+      largura_mm: base.largura_mm,
+      altura_mm: base.altura_mm,
+      cor: base.cor,
+    }];
+  }
+  // Campos antigos continuam refletindo a primeira peça (compatibilidade).
+  const p0 = base.pecas[0];
+  base.tipologia = p0.tipologia;
+  base.largura_mm = p0.largura_mm;
+  base.altura_mm = p0.altura_mm;
+  base.cor = p0.cor;
+  return base;
+};
 
 // ---------- sincronização ----------
 const linhaParaProjeto = (row: Record<string, unknown>): ProjetoLocal =>
@@ -152,6 +185,7 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     descontoGeralPct: p.descontoGeralPct,
     overrides: p.overrides,
     extras: p.extras,
+    pecas: p.pecas,
   },
   updated_at: p.updated_at,
 });

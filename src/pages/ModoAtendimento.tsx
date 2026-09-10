@@ -18,7 +18,7 @@ import {
 import {
   ProjetoLocal, obterProjeto, salvarProjeto, obterEmpresa, obterCatalogo, formatarBRL,
 } from "@/lib/storage";
-import { calcular } from "@/lib/calculator";
+import { calcularProjeto } from "@/lib/calculator";
 import { gerarOrcamentoPDF, AssinaturaInfo } from "@/lib/pdf";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 
@@ -46,11 +46,8 @@ export default function ModoAtendimento() {
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
-    return calcular({
-      tipologia: projeto.tipologia,
-      largura_mm: projeto.largura_mm,
-      altura_mm: projeto.altura_mm,
-      cor: projeto.cor,
+    return calcularProjeto({
+      pecas: projeto.pecas,
       maoObraPct: projeto.maoObraPct,
       margemPct: projeto.margemPct,
       descontoGeralPct: projeto.descontoGeralPct,
@@ -73,7 +70,14 @@ export default function ModoAtendimento() {
   if (!projeto || !resultado) return null;
   const tip = tipologiaPorId(projeto.tipologia);
 
-  const upd = <K extends keyof ProjetoLocal>(k: K, v: ProjetoLocal[K]) => setProjeto({ ...projeto, [k]: v });
+  // No atendimento rápido edita-se a primeira peça (as demais ficam no configurador).
+  const upd = <K extends keyof ProjetoLocal>(k: K, v: ProjetoLocal[K]) => {
+    const next = { ...projeto, [k]: v } as ProjetoLocal;
+    if (k === "tipologia" || k === "largura_mm" || k === "altura_mm" || k === "cor") {
+      next.pecas = projeto.pecas.map((pc, i) => (i === 0 ? { ...pc, [k]: v } : pc));
+    }
+    setProjeto(next);
+  };
 
   const proximo = () => setPasso((p) => Math.min(2, (p + 1)) as Passo);
   const anterior = () => setPasso((p) => Math.max(0, (p - 1)) as Passo);
@@ -142,6 +146,7 @@ export default function ModoAtendimento() {
       {/* 3D fixo no topo */}
       <div className="h-[34vh] sm:h-[40vh] border-b border-border bg-black touch-none">
         <Visualizador3DClient
+          pecas={projeto.pecas}
           tipologia={projeto.tipologia}
           largura_mm={projeto.largura_mm}
           altura_mm={projeto.altura_mm}
@@ -188,11 +193,17 @@ export default function ModoAtendimento() {
                 value={projeto.tipologia}
                 onChange={(e) => {
                   const novo = tipologiaPorId(e.target.value as TipologiaId);
+                  const tipo = e.target.value as TipologiaId;
+                  const larg = Math.min(Math.max(projeto.largura_mm, novo.larguraMin), novo.larguraMax);
+                  const alt = Math.min(Math.max(projeto.altura_mm, novo.alturaMin), novo.alturaMax);
                   setProjeto({
                     ...projeto,
-                    tipologia: e.target.value as TipologiaId,
-                    largura_mm: Math.min(Math.max(projeto.largura_mm, novo.larguraMin), novo.larguraMax),
-                    altura_mm: Math.min(Math.max(projeto.altura_mm, novo.alturaMin), novo.alturaMax),
+                    tipologia: tipo,
+                    largura_mm: larg,
+                    altura_mm: alt,
+                    pecas: projeto.pecas.map((pc, i) =>
+                      i === 0 ? { ...pc, tipologia: tipo, largura_mm: larg, altura_mm: alt } : pc,
+                    ),
                   });
                 }}
                 className="w-full h-14 px-4 rounded-xl border-2 border-border bg-card text-lg"

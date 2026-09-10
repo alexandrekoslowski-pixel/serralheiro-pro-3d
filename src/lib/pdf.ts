@@ -91,11 +91,18 @@ export function gerarOrcamentoPDF(
   doc.setFont("helvetica", "bold");
   doc.text("Tipologia", margin, y + 10);
   doc.setFont("helvetica", "normal");
-  const tip = tipologiaPorId(projeto.tipologia);
-  doc.text(`${tip.nome} — ${cm(projeto.largura_mm)} × ${cm(projeto.altura_mm)} cm — Cor: ${projeto.cor}`, margin + 22, y + 10);
+  const linhasPecas = projeto.pecas.map(
+    (pc) => `${pc.nome}: ${tipologiaPorId(pc.tipologia).nome} — ${cm(pc.largura_mm)} × ${cm(pc.altura_mm)} cm — ${pc.cor}`,
+  );
+  doc.text(linhasPecas.length === 1 ? linhasPecas[0] : `${linhasPecas.length} peças`, margin + 22, y + 10);
+  if (linhasPecas.length > 1) {
+    doc.setFontSize(8);
+    linhasPecas.forEach((l, i) => doc.text(l, margin + 22, y + 14 + i * 4));
+    doc.setFontSize(10);
+  }
 
   // ===== Snapshot 3D =====
-  let nextY = y + 18;
+  let nextY = y + 18 + (projeto.pecas.length > 1 ? projeto.pecas.length * 4 : 0);
   if (snapshot3D) {
     try {
       const imgW = (pageW - margin * 2) * 0.5;
