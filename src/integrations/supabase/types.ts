@@ -130,6 +130,45 @@ export type Database = {
         }
         Relationships: []
       }
+      cores_catalogo: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          created_at: string
+          hex_aproximado: string
+          id: string
+          multiplicador: number
+          nome: string
+          ordem: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          hex_aproximado?: string
+          id: string
+          multiplicador?: number
+          nome: string
+          ordem?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          created_at?: string
+          hex_aproximado?: string
+          id?: string
+          multiplicador?: number
+          nome?: string
+          ordem?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       empresa: {
         Row: {
           codigo_oficina: string
@@ -162,39 +201,178 @@ export type Database = {
       }
       materiais: {
         Row: {
+          acabamento: string
+          altura_mm: number | null
+          ativo: boolean
+          categoria: string
+          codigo_calculo: string
+          codigo_fornecedor: string
+          comprimento_comercial_mm: number | null
           created_at: string
           custo: number
+          descricao_original: string
+          espessura_mm: number | null
           fornecedor: string
           id: string
+          largura_mm: number | null
           nome: string
           observacoes: string
+          subtipo: string
           unidade: string
+          unidade_compra: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          acabamento?: string
+          altura_mm?: number | null
+          ativo?: boolean
+          categoria?: string
+          codigo_calculo?: string
+          codigo_fornecedor?: string
+          comprimento_comercial_mm?: number | null
+          created_at?: string
+          custo?: number
+          descricao_original?: string
+          espessura_mm?: number | null
+          fornecedor?: string
+          id?: string
+          largura_mm?: number | null
+          nome?: string
+          observacoes?: string
+          subtipo?: string
+          unidade?: string
+          unidade_compra?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          acabamento?: string
+          altura_mm?: number | null
+          ativo?: boolean
+          categoria?: string
+          codigo_calculo?: string
+          codigo_fornecedor?: string
+          comprimento_comercial_mm?: number | null
+          created_at?: string
+          custo?: number
+          descricao_original?: string
+          espessura_mm?: number | null
+          fornecedor?: string
+          id?: string
+          largura_mm?: number | null
+          nome?: string
+          observacoes?: string
+          subtipo?: string
+          unidade?: string
+          unidade_compra?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      material_importacoes: {
+        Row: {
+          created_at: string
+          fornecedor: string
+          id: string
+          nome_arquivo: string
+          observacoes: string
+          referencia: string
+          total_itens: number
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
-          custo?: number
           fornecedor?: string
           id?: string
-          nome?: string
+          nome_arquivo?: string
           observacoes?: string
-          unidade?: string
+          referencia: string
+          total_itens?: number
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
-          custo?: number
           fornecedor?: string
           id?: string
-          nome?: string
+          nome_arquivo?: string
           observacoes?: string
-          unidade?: string
+          referencia?: string
+          total_itens?: number
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      material_precos: {
+        Row: {
+          created_at: string
+          fornecedor: string
+          id: string
+          importacao_id: string | null
+          material_id: string
+          observacoes: string
+          origem: string
+          promocional: boolean
+          referencia: string
+          unidade: string
+          user_id: string
+          valor: number
+        }
+        Insert: {
+          created_at?: string
+          fornecedor?: string
+          id?: string
+          importacao_id?: string | null
+          material_id: string
+          observacoes?: string
+          origem?: string
+          promocional?: boolean
+          referencia: string
+          unidade?: string
+          user_id: string
+          valor?: number
+        }
+        Update: {
+          created_at?: string
+          fornecedor?: string
+          id?: string
+          importacao_id?: string | null
+          material_id?: string
+          observacoes?: string
+          origem?: string
+          promocional?: boolean
+          referencia?: string
+          unidade?: string
+          user_id?: string
+          valor?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "material_precos_importacao_id_fkey"
+            columns: ["importacao_id"]
+            isOneToOne: false
+            referencedRelation: "material_importacoes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_precos_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materiais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "material_precos_material_id_fkey"
+            columns: ["material_id"]
+            isOneToOne: false
+            referencedRelation: "materiais_precos_atuais"
+            referencedColumns: ["material_id"]
+          },
+        ]
       }
       pagamentos: {
         Row: {
@@ -407,7 +585,18 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      materiais_precos_atuais: {
+        Row: {
+          fornecedor: string | null
+          material_id: string | null
+          observacoes: string | null
+          promocional: boolean | null
+          referencia: string | null
+          unidade: string | null
+          valor: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       dono_atual: { Args: { _user_id: string }; Returns: string }
