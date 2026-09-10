@@ -118,7 +118,46 @@ export default function Configurador() {
 
   if (!projeto || !resultado || !planoCorte || !planoProducao) return null;
 
-  const tip = tipologiaPorId(projeto.tipologia);
+  // ---- peças do orçamento ----
+  const pecaSel: Peca = projeto.pecas.find((x) => x.id === pecaSelId) ?? projeto.pecas[0];
+  const tip = tipologiaPorId(pecaSel.tipologia);
+
+  const updPeca = (patch: Partial<Peca>) =>
+    setProjeto({
+      ...projeto,
+      pecas: projeto.pecas.map((x) => (x.id === pecaSel.id ? { ...x, ...patch } : x)),
+    });
+
+  const addPeca = () => {
+    const t = tipologiaPorId(pecaSel.tipologia);
+    const nova: Peca = {
+      id: gerarId(),
+      nome: `Peça ${projeto.pecas.length + 1}`,
+      tipologia: pecaSel.tipologia,
+      largura_mm: t.larguraDefault,
+      altura_mm: t.alturaDefault,
+      cor: pecaSel.cor,
+    };
+    setProjeto({ ...projeto, pecas: [...projeto.pecas, nova] });
+    setPecaSelId(nova.id);
+  };
+
+  const duplicarPeca = () => {
+    const nova: Peca = { ...pecaSel, id: gerarId(), nome: `${pecaSel.nome} (cópia)` };
+    setProjeto({ ...projeto, pecas: [...projeto.pecas, nova] });
+    setPecaSelId(nova.id);
+  };
+
+  const delPeca = (id: string) => {
+    if (projeto.pecas.length <= 1) { toast.error("O orçamento precisa de ao menos uma peça"); return; }
+    const restantes = projeto.pecas.filter((x) => x.id !== id);
+    setProjeto({
+      ...projeto,
+      pecas: restantes,
+      overrides: Object.fromEntries(Object.entries(projeto.overrides).filter(([k]) => !k.startsWith(`${id}::`))),
+    });
+    if (pecaSelId === id) setPecaSelId(restantes[0].id);
+  };
 
   const upd = <K extends keyof ProjetoLocal>(k: K, v: ProjetoLocal[K]) =>
     setProjeto({ ...projeto, [k]: v });
@@ -245,14 +284,56 @@ export default function Configurador() {
                 <Input value={projeto.cliente} onChange={(e) => upd("cliente", e.target.value)} />
               </div>
               <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Peças do orçamento ({projeto.pecas.length})</Label>
+                  <div className="flex gap-1">
+                    <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={duplicarPeca}>Duplicar</Button>
+                    <Button size="sm" className="h-7 px-2 text-xs" onClick={addPeca}>+ Peça</Button>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  {projeto.pecas.map((pc, i) => (
+                    <div
+                      key={pc.id}
+                      onClick={() => setPecaSelId(pc.id)}
+                      className={cn(
+                        "flex items-center gap-2 rounded border px-2 py-1.5 cursor-pointer text-xs",
+                        pc.id === pecaSel.id ? "border-primary bg-primary/10" : "border-border",
+                      )}
+                    >
+                      <span className="w-5 text-muted-foreground">{i + 1}</span>
+                      <span className="flex-1 truncate font-medium">{pc.nome}</span>
+                      <span className="text-muted-foreground whitespace-nowrap">
+                        {cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm
+                      </span>
+                      {projeto.pecas.length > 1 && (
+                        <button
+                          type="button"
+                          className="text-muted-foreground hover:text-destructive"
+                          onClick={(e) => { e.stopPropagation(); delPeca(pc.id); }}
+                          title="Remover peça"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label>Nome da peça</Label>
+                <Input value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
+              </div>
+
+              <div>
                 <Label>Tipologia</Label>
-                <Select value={projeto.tipologia} onValueChange={(v) => {
+                <Select value={pecaSel.tipologia} onValueChange={(v) => {
                   const novo = tipologiaPorId(v as TipologiaId);
-                  setProjeto({
-                    ...projeto,
+                  updPeca({
                     tipologia: v as TipologiaId,
-                    largura_mm: Math.min(Math.max(projeto.largura_mm, novo.larguraMin), novo.larguraMax),
-                    altura_mm: Math.min(Math.max(projeto.altura_mm, novo.alturaMin), novo.alturaMax),
+                    largura_mm: Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax),
+                    altura_mm: Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax),
                   });
                 }}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
@@ -267,15 +348,15 @@ export default function Configurador() {
 
               <SliderMm
                 label="Largura"
-                value={projeto.largura_mm}
+                value={pecaSel.largura_mm}
                 min={tip.larguraMin} max={tip.larguraMax}
-                onChange={(v) => upd("largura_mm", v)}
+                onChange={(v) => updPeca({ largura_mm: v })}
               />
               <SliderMm
                 label="Altura"
-                value={projeto.altura_mm}
+                value={pecaSel.altura_mm}
                 min={tip.alturaMin} max={tip.alturaMax}
-                onChange={(v) => upd("altura_mm", v)}
+                onChange={(v) => updPeca({ altura_mm: v })}
               />
 
               <div>
@@ -285,10 +366,10 @@ export default function Configurador() {
                     <button
                       key={a.id}
                       type="button"
-                      onClick={() => upd("cor", a.id as AcabamentoId)}
+                      onClick={() => updPeca({ cor: a.id as AcabamentoId })}
                       className={cn(
                         "h-10 w-10 md:h-9 md:w-9 rounded border-2 transition",
-                        projeto.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
+                        pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
                       )}
                       style={{ backgroundColor: a.hex }}
                       title={a.nome}
@@ -344,10 +425,11 @@ export default function Configurador() {
             </div>
             <div className="h-[280px] sm:h-[360px] lg:h-[420px] touch-none">
               <Visualizador3DClient
-                tipologia={projeto.tipologia}
-                largura_mm={projeto.largura_mm}
-                altura_mm={projeto.altura_mm}
-                cor={projeto.cor}
+                pecas={projeto.pecas}
+                tipologia={pecaSel.tipologia}
+                largura_mm={pecaSel.largura_mm}
+                altura_mm={pecaSel.altura_mm}
+                cor={pecaSel.cor}
                 autoRotate={autoRotate}
                 wireframe={wireframe}
                 showGrid={showGrid}
