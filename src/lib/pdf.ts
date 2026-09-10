@@ -1,10 +1,11 @@
-// Geração do PDF de orçamento.
+// Geração do PDF da proposta comercial (orçamento + condições).
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ResultadoCalculo, ItemCusto } from "./calculator";
 import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
 import { tipologiaPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
+import { fixacaoTipo, fixacaoLados } from "./fixacao";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -27,17 +28,42 @@ export interface AssinaturaInfo {
   nome: string;
 }
 
+/** Soma dias úteis (pula sábado e domingo) a partir de hoje. */
+export function somarDiasUteis(dias: number, base = new Date()): Date {
+  const d = new Date(base);
+  let restantes = Math.max(0, Math.round(dias));
+  while (restantes > 0) {
+    d.setDate(d.getDate() + 1);
+    const dow = d.getDay();
+    if (dow !== 0 && dow !== 6) restantes--;
+  }
+  return d;
+}
+
+/** Faixa de parcelamento aplicável ao total da proposta. */
+export function faixaParcelamento(total: number): string {
+  if (total > 4000) return "Acima de R$ 4.000,00: metade no PIX e a outra metade em até 5x sem juros.";
+  if (total > 3000) return "Acima de R$ 3.000,00: em até 4x sem juros.";
+  if (total > 2000) return "De R$ 2.000,00 a R$ 3.000,00: em até 3x sem juros.";
+  if (total > 1000) return "De R$ 1.000,00 a R$ 2.000,00: em até 2x sem juros.";
+  return "Até R$ 1.000,00: 1x sem juros.";
+}
+
 export function gerarOrcamentoPDF(
   projeto: ProjetoLocal,
   resultado: ResultadoCalculo,
   empresa: DadosEmpresa,
-  snapshot3D?: string,
   assinatura?: AssinaturaInfo,
   retornarBlob = false,
 ): Blob | void {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
   const margin = 14;
+  const larguraUtil = pageW - margin * 2;
+
+  const validadeDias = empresa.validadeDias || 5;
+  const prazoDias = projeto.prazo_dias_uteis ?? empresa.prazoDiasUteis ?? 22;
 
   // ===== Header =====
   doc.setFillColor(...ORANGE);
@@ -63,66 +89,80 @@ export function gerarOrcamentoPDF(
   doc.setFontSize(11);
   const orcNum = projeto.id.toUpperCase();
   const dataEmissao = new Date().toLocaleDateString("pt-BR");
-  const validade = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR");
+  const validade = new Date(Date.now() + validadeDias * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR");
   doc.text(`ORÇAMENTO Nº ${orcNum}`, pageW - margin, 16, { align: "right" });
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.text(`Emissão: ${dataEmissao}`, pageW - margin, 22, { align: "right" });
-  doc.text(`Validade: ${validade} (15 dias)`, pageW - margin, 26, { align: "right" });
+  doc.text(`Validade: ${validade} (${validadeDias} dias corridos)`, pageW - margin, 26, { align: "right" });
 
-  // ===== Cliente / Projeto =====
-  let y = 44;
+  // ===== Dados do cliente =====
+  let y = 42;
   doc.setDrawColor(220);
   doc.setLineWidth(0.2);
   doc.line(margin, y - 4, pageW - margin, y - 4);
 
+  const enderecoLinha = [
+    projeto.cliente_endereco,
+    projeto.cliente_bairro,
+    projeto.cliente_cidade,
+    projeto.cliente_cep ? `CEP ${projeto.cliente_cep}` : "",
+  ].filter(Boolean).join(" — ");
+
+  const camposCliente: [string, string][] = [
+    ["Cliente", projeto.cliente || "—"],
+    ["RG / CPF", projeto.cliente_documento || "—"],
+    ["Endereço", enderecoLinha || "—"],
+    ["Contato", [projeto.cliente_telefone, projeto.cliente_email].filter(Boolean).join(" · ") || "—"],
+  ];
+  if (projeto.local_instalacao) camposCliente.push(["Instalação", projeto.local_instalacao]);
+
+  const alturaBloco = camposCliente.length * 5 + 6;
+  doc.setFillColor(248, 246, 244);
+  doc.rect(margin, y - 1, larguraUtil, alturaBloco, "F");
+  doc.setFontSize(9.5);
+  camposCliente.forEach(([label, valor], i) => {
+    const ly = y + 4 + i * 5;
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(...DARK);
+    doc.text(label, margin + 3, ly);
+    doc.setFont("helvetica", "normal");
+    const linhas = doc.splitTextToSize(valor, larguraUtil - 32) as string[];
+    doc.text(linhas[0] ?? "—", margin + 27, ly);
+  });
+
+  let nextY = y + alturaBloco + 6;
+
+  // ===== Peças =====
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(...DARK);
-  doc.text("Cliente", margin, y);
-  doc.setFont("helvetica", "normal");
-  doc.text(projeto.cliente || "—", margin + 22, y);
+  doc.text("Peças do orçamento", margin, nextY);
+  nextY += 2;
 
-  doc.setFont("helvetica", "bold");
-  doc.text("Projeto", margin, y + 5);
-  doc.setFont("helvetica", "normal");
-  doc.text(projeto.nome, margin + 22, y + 5);
+  autoTable(doc, {
+    startY: nextY + 2,
+    head: [["Peça", "Tipologia", "Medidas (cm)", "Cor", "Fixação"]],
+    body: projeto.pecas.map((pc) => [
+      pc.nome,
+      tipologiaPorId(pc.tipologia).nome,
+      `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`,
+      pc.cor,
+      `${fixacaoTipo(pc.fixacao).curto} · ${fixacaoLados(pc.fixacaoLados).curto}`,
+    ]),
+    styles: { fontSize: 8.5, cellPadding: 2 },
+    headStyles: { fillColor: DARK, textColor: 255, fontStyle: "bold" },
+    margin: { left: margin, right: margin },
+  });
 
-  doc.setFont("helvetica", "bold");
-  doc.text("Tipologia", margin, y + 10);
-  doc.setFont("helvetica", "normal");
-  const linhasPecas = projeto.pecas.map(
-    (pc) => `${pc.nome}: ${tipologiaPorId(pc.tipologia).nome} — ${cm(pc.largura_mm)} × ${cm(pc.altura_mm)} cm — ${pc.cor}`,
-  );
-  doc.text(linhasPecas.length === 1 ? linhasPecas[0] : `${linhasPecas.length} peças`, margin + 22, y + 10);
-  if (linhasPecas.length > 1) {
-    doc.setFontSize(8);
-    linhasPecas.forEach((l, i) => doc.text(l, margin + 22, y + 14 + i * 4));
-    doc.setFontSize(10);
-  }
-
-  // ===== Snapshot 3D =====
-  let nextY = y + 18 + (projeto.pecas.length > 1 ? projeto.pecas.length * 4 : 0);
-  if (snapshot3D) {
-    try {
-      const imgW = (pageW - margin * 2) * 0.5;
-      const imgH = imgW * 0.62;
-      const imgX = pageW - margin - imgW;
-      doc.addImage(snapshot3D, "PNG", imgX, nextY, imgW, imgH);
-      doc.setTextColor(...GRAY);
-      doc.setFontSize(7);
-      doc.text("Visualização — não é desenho técnico", imgX + imgW, nextY + imgH + 3, { align: "right" });
-      nextY = Math.max(nextY, nextY + imgH + 8);
-    } catch {
-      // ignora
-    }
-  }
+  // @ts-expect-error lastAutoTable é fornecido pelo autotable
+  nextY = (doc.lastAutoTable?.finalY ?? nextY) + 6;
 
   // ===== Tabela de itens =====
   const itens = resultado.custos.filter((i) => !i.oculto && i.categoria !== "mao_obra" && i.categoria !== "margem" && i.categoria !== "desconto");
 
   autoTable(doc, {
-    startY: nextY + 4,
+    startY: nextY,
     head: [["Categoria", "Descrição", "Qtd", "Un", "Preço un.", "Total"]],
     body: itens.map((i) => [
       rotuloCategoria(i.categoria),
@@ -153,16 +193,21 @@ export function gerarOrcamentoPDF(
 
   doc.setFontSize(10);
   doc.setTextColor(...DARK);
-  const escreverLinha = (label: string, valor: number, bold = false) => {
+  const escreverLinha = (label: string, valor: number | string, bold = false) => {
     doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.text(label, pageW - margin - 60, yTot, { align: "left" });
-    doc.text(formatarBRL(valor), pageW - margin, yTot, { align: "right" });
+    doc.text(label, pageW - margin - 70, yTot, { align: "left" });
+    doc.text(typeof valor === "number" ? formatarBRL(valor) : valor, pageW - margin, yTot, { align: "right" });
     yTot += 5;
   };
   escreverLinha("Materiais", resultado.totalMateriais);
   if (mo) escreverLinha(mo.descricao, mo.total);
   if (mg) escreverLinha(mg.descricao, mg.total);
   if (desc) escreverLinha(desc.descricao, desc.total);
+  escreverLinha("Serviços", projeto.servicos_valor != null ? projeto.servicos_valor : "não incluso");
+  escreverLinha("Frete", projeto.frete_valor != null ? projeto.frete_valor : "não incluso");
+
+  const totalProposta =
+    resultado.totalGeral + (projeto.servicos_valor ?? 0) + (projeto.frete_valor ?? 0);
 
   yTot += 2;
   doc.setDrawColor(...ORANGE);
@@ -172,21 +217,35 @@ export function gerarOrcamentoPDF(
   doc.setFontSize(14);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(...ORANGE);
-  doc.text("TOTAL", pageW - margin - 60, yTot);
-  doc.text(formatarBRL(resultado.totalGeral), pageW - margin, yTot, { align: "right" });
+  doc.text("TOTAL", pageW - margin - 70, yTot);
+  doc.text(formatarBRL(totalProposta), pageW - margin, yTot, { align: "right" });
 
-  // ===== Rodapé =====
-  yTot += 14;
-  doc.setTextColor(...GRAY);
-  doc.setFontSize(8);
-  doc.setFont("helvetica", "normal");
-  const condicoes = [
-    "Condições: 50% na assinatura, 50% na entrega.",
-    "Prazo de entrega: a combinar conforme disponibilidade de material.",
-    "Garantia de 12 meses contra defeitos de fabricação.",
-    "Validade desta proposta: 15 dias.",
-  ];
-  condicoes.forEach((c, i) => doc.text(c, margin, yTot + i * 4));
+  // ===== Prazo em destaque =====
+  yTot += 10;
+  const previsao = somarDiasUteis(prazoDias).toLocaleDateString("pt-BR");
+  doc.setFillColor(248, 246, 244);
+  doc.rect(margin, yTot - 5, larguraUtil, 12, "F");
+  doc.setTextColor(...DARK);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "bold");
+  doc.text(
+    `Prazo de entrega: aproximadamente ${prazoDias} dias úteis após a confirmação do pagamento da entrada (previsão ${previsao}).`,
+    margin + 3,
+    yTot + 2,
+  );
+  yTot += 16;
+
+  // ===== Observações da proposta =====
+  if (projeto.observacoes_proposta) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.text("Observações", margin, yTot);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...GRAY);
+    const obs = doc.splitTextToSize(projeto.observacoes_proposta, larguraUtil) as string[];
+    doc.text(obs, margin, yTot + 5);
+    yTot += 5 + obs.length * 4 + 4;
+  }
 
   // ===== Assinatura =====
   if (assinatura?.dataUrl) {
@@ -194,7 +253,7 @@ export function gerarOrcamentoPDF(
       const sigW = 70;
       const sigH = 25;
       const sigX = pageW - margin - sigW;
-      const sigY = yTot + condicoes.length * 4 + 8;
+      const sigY = Math.min(yTot + 4, pageH - 45);
       doc.addImage(assinatura.dataUrl, "PNG", sigX, sigY, sigW, sigH);
       doc.setDrawColor(...DARK);
       doc.setLineWidth(0.3);
@@ -210,6 +269,84 @@ export function gerarOrcamentoPDF(
       // ignora
     }
   }
+
+  // ===== Página 2: condições =====
+  doc.addPage();
+  doc.setFillColor(...ORANGE);
+  doc.rect(0, 0, pageW, 4, "F");
+  let y2 = 18;
+
+  const titulo = (t: string) => {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...ORANGE);
+    doc.text(t.toUpperCase(), margin, y2);
+    y2 += 5;
+    doc.setDrawColor(230);
+    doc.setLineWidth(0.2);
+    doc.line(margin, y2 - 2, pageW - margin, y2 - 2);
+    y2 += 2;
+  };
+
+  const paragrafos = (texto: string, bullet = true) => {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...DARK);
+    texto.split("\n").map((l) => l.trim()).filter(Boolean).forEach((linha) => {
+      const prefixo = bullet && !linha.startsWith("•") ? "• " : "";
+      const linhas = doc.splitTextToSize(prefixo + linha, larguraUtil) as string[];
+      if (y2 + linhas.length * 4.4 > pageH - 18) {
+        doc.addPage();
+        y2 = 18;
+      }
+      doc.text(linhas, margin, y2);
+      y2 += linhas.length * 4.4 + 1.5;
+    });
+    y2 += 4;
+  };
+
+  titulo("Formas de pagamento");
+  paragrafos(empresa.textoPagamento || "");
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...ORANGE);
+  const faixa = doc.splitTextToSize(`Para este orçamento: ${faixaParcelamento(totalProposta)}`, larguraUtil) as string[];
+  doc.text(faixa, margin, y2);
+  y2 += faixa.length * 4.4 + 8;
+
+  if (empresa.pixChave) {
+    titulo("Pagamento à vista (PIX)");
+    paragrafos(
+      [
+        `Chave PIX: ${empresa.pixChave}`,
+        empresa.pixFavorecido ? `Favorecido: ${empresa.pixFavorecido}` : "",
+        "Enviar o comprovante de pagamento para o nosso número de atendimento.",
+      ].filter(Boolean).join("\n"),
+    );
+  }
+
+  titulo("Prazo e validade");
+  paragrafos(
+    [
+      `Prazo de entrega de aproximadamente ${prazoDias} dias úteis após a confirmação do pagamento da entrada.`,
+      `Orçamento válido por ${validadeDias} dias corridos.`,
+      empresa.garantiaDias ? `Garantia de fábrica de ${empresa.garantiaDias} dias.` : "",
+      empresa.visitaTecnica
+        ? `Visita técnica: ${formatarBRL(empresa.visitaTecnica)}, descontado do total em caso de fechamento da OS.`
+        : "",
+    ].filter(Boolean).join("\n"),
+  );
+
+  titulo("Informações técnicas");
+  paragrafos(empresa.textoTecnico || "");
+
+  doc.setTextColor(...GRAY);
+  doc.setFontSize(8);
+  doc.text(
+    `${empresa.nome || "Sua Serralheria"}${empresa.telefone ? " · " + empresa.telefone : ""}${empresa.cnpj ? " · CNPJ " + empresa.cnpj : ""}`,
+    margin,
+    pageH - 10,
+  );
 
   if (retornarBlob) {
     return doc.output("blob");

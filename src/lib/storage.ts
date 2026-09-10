@@ -25,6 +25,18 @@ export interface ProjetoLocal {
   id: string;
   nome: string;
   cliente: string;
+  cliente_documento: string;
+  cliente_endereco: string;
+  cliente_bairro: string;
+  cliente_cidade: string;
+  cliente_cep: string;
+  cliente_telefone: string;
+  cliente_email: string;
+  local_instalacao: string;
+  prazo_dias_uteis: number | null;
+  servicos_valor: number | null;
+  frete_valor: number | null;
+  observacoes_proposta: string;
   tipologia: TipologiaId;
   largura_mm: number;
   altura_mm: number;
@@ -67,7 +79,52 @@ export interface DadosEmpresa {
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
   codigoOficina: string;
+  /** Proposta comercial */
+  prazoDiasUteis: number;
+  validadeDias: number;
+  garantiaDias: number;
+  pixChave: string;
+  pixFavorecido: string;
+  visitaTecnica: number;
+  textoPagamento: string;
+  textoTecnico: string;
+  msgSolicitarDados: string;
+  msgFollowUp: string;
+  msgVisitaTecnica: string;
 }
+
+export const TEXTO_PAGAMENTO_PADRAO = [
+  "Valores de R$ 0,00 a R$ 1.000,00 — 1x sem juros;",
+  "Valores de R$ 1.000,00 até R$ 2.000,00 — em até 2x sem juros;",
+  "Valores de R$ 2.000,00 até R$ 3.000,00 — em até 3x sem juros;",
+  "Valores acima de R$ 3.000,00 — em até 4x sem juros;",
+  "Valores acima de R$ 4.000,00 — metade no PIX e a outra metade em até 5x sem juros;",
+  "À vista com 5% de desconto (sendo 50% no ato e 50% na entrega);",
+  "Valor cheio em até 12x no cartão de crédito com os juros da máquina — simule.",
+].join("\n");
+
+export const TEXTO_TECNICO_PADRAO = [
+  "Se os campos serviços e frete não estiverem preenchidos, não estão sendo considerados na composição do orçamento;",
+  "Não inclusa mão de obra de pedreiro, se necessária;",
+  "Não inclusos vidro, puxadores e caixa de correio — consulte disponibilidade e valores;",
+  "Trabalhamos com pintura eletrostática epóxi, o melhor processo de pintura do nosso segmento;",
+  "Garantia de fábrica de 90 dias;",
+  "Se considerada automação, é necessário que a ligação de energia esteja próxima aos aparelhos; caso não esteja, validar com o técnico de automação o valor deste serviço.",
+].join("\n");
+
+export const MSG_SOLICITAR_DADOS_PADRAO = [
+  "Boa tarde, tudo bem?",
+  "Para seguirmos com o orçamento, solicito as seguintes informações:",
+  "• RG ou CPF",
+  "• Endereço completo",
+  "• Nome e sobrenome",
+].join("\n");
+
+export const MSG_FOLLOWUP_PADRAO =
+  "Olá, espero que esteja bem! Enviei uma proposta há alguns dias e gostaria de saber se teve a oportunidade de analisá-la. Estou à disposição para esclarecer qualquer dúvida ou discutir detalhes. Aguardo seu retorno!";
+
+export const MSG_VISITA_PADRAO =
+  "A visita técnica tem um custo de R$ 50,00 e, em caso de fechamento da OS, esse valor é descontado do total. Confirma o interesse? Você também pode nos mandar as medidas para uma estimativa de custo e, se lhe interessar, marcamos a visita para retirar as medidas finas.";
 
 const K_PROJETOS = "spro:projetos";
 const K_EMPRESA = "spro:empresa";
@@ -90,6 +147,17 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
   codigoOficina: "",
+  prazoDiasUteis: 22,
+  validadeDias: 5,
+  garantiaDias: 90,
+  pixChave: "",
+  pixFavorecido: "",
+  visitaTecnica: 50,
+  textoPagamento: TEXTO_PAGAMENTO_PADRAO,
+  textoTecnico: TEXTO_TECNICO_PADRAO,
+  msgSolicitarDados: MSG_SOLICITAR_DADOS_PADRAO,
+  msgFollowUp: MSG_FOLLOWUP_PADRAO,
+  msgVisitaTecnica: MSG_VISITA_PADRAO,
 };
 
 // ---------- estado em memória ----------
@@ -122,6 +190,18 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
   pecas: [],
+  cliente_documento: "",
+  cliente_endereco: "",
+  cliente_bairro: "",
+  cliente_cidade: "",
+  cliente_cep: "",
+  cliente_telefone: "",
+  cliente_email: "",
+  local_instalacao: "",
+  prazo_dias_uteis: null,
+  servicos_valor: null,
+  frete_valor: null,
+  observacoes_proposta: "",
   ...(p as ProjetoLocal),
   } as ProjetoLocal;
 
@@ -198,6 +278,18 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     overrides: p.overrides,
     extras: p.extras,
     pecas: p.pecas,
+    cliente_documento: p.cliente_documento,
+    cliente_endereco: p.cliente_endereco,
+    cliente_bairro: p.cliente_bairro,
+    cliente_cidade: p.cliente_cidade,
+    cliente_cep: p.cliente_cep,
+    cliente_telefone: p.cliente_telefone,
+    cliente_email: p.cliente_email,
+    local_instalacao: p.local_instalacao,
+    prazo_dias_uteis: p.prazo_dias_uteis,
+    servicos_valor: p.servicos_valor,
+    frete_valor: p.frete_valor,
+    observacoes_proposta: p.observacoes_proposta,
   },
   updated_at: p.updated_at,
 });
@@ -394,6 +486,17 @@ export function salvarEmpresa(e: DadosEmpresa): void {
       dados: {
         nome: empresa.nome, cnpj: empresa.cnpj, telefone: empresa.telefone,
         email: empresa.email, endereco: empresa.endereco,
+        prazoDiasUteis: empresa.prazoDiasUteis,
+        validadeDias: empresa.validadeDias,
+        garantiaDias: empresa.garantiaDias,
+        pixChave: empresa.pixChave,
+        pixFavorecido: empresa.pixFavorecido,
+        visitaTecnica: empresa.visitaTecnica,
+        textoPagamento: empresa.textoPagamento,
+        textoTecnico: empresa.textoTecnico,
+        msgSolicitarDados: empresa.msgSolicitarDados,
+        msgFollowUp: empresa.msgFollowUp,
+        msgVisitaTecnica: empresa.msgVisitaTecnica,
       },
       prazo_padrao_dias: empresa.prazoPadraoDias,
       limite_vermelho_dias: empresa.limiteVermelhoDias,

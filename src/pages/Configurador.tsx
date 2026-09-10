@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -198,8 +199,7 @@ export default function Configurador() {
 
   const exportarOrcamento = () => {
     salvarProjeto({ ...projeto, total: resultado.totalGeral });
-    const snap = canvasRef.current ? canvasRef.current.toDataURL("image/png") : undefined;
-    gerarOrcamentoPDF(projeto, resultado, empresa, snap);
+    gerarOrcamentoPDF(projeto, resultado, empresa);
     toast.success("Orçamento gerado");
   };
 
@@ -286,8 +286,87 @@ export default function Configurador() {
                 <Input value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} />
               </div>
               <div>
-                <Label>Cliente</Label>
+                <Label>Cliente (nome e sobrenome)</Label>
                 <Input value={projeto.cliente} onChange={(e) => upd("cliente", e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <Label className="text-xs">RG ou CPF</Label>
+                  <Input className="h-9" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Telefone / WhatsApp</Label>
+                  <Input className="h-9" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">E-mail</Label>
+                <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} />
+              </div>
+              <div>
+                <Label className="text-xs">Endereço (rua, número, complemento)</Label>
+                <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Bairro</Label>
+                  <Input className="h-9" value={projeto.cliente_bairro ?? ""} onChange={(e) => upd("cliente_bairro", e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">Cidade/UF</Label>
+                  <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} />
+                </div>
+                <div>
+                  <Label className="text-xs">CEP</Label>
+                  <Input className="h-9" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Local de instalação (se for outro endereço)</Label>
+                <Input className="h-9" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} />
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <Label className="text-xs">Prazo (dias úteis)</Label>
+                  <Input
+                    className="h-9"
+                    type="number"
+                    min={1}
+                    placeholder={String(empresa.prazoDiasUteis ?? 22)}
+                    value={projeto.prazo_dias_uteis ?? ""}
+                    onChange={(e) => upd("prazo_dias_uteis", e.target.value === "" ? null : Number(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Serviços (R$)</Label>
+                  <Input
+                    className="h-9"
+                    type="number"
+                    step="0.01"
+                    placeholder="não incluso"
+                    value={projeto.servicos_valor ?? ""}
+                    onChange={(e) => upd("servicos_valor", e.target.value === "" ? null : Number(e.target.value))}
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs">Frete (R$)</Label>
+                  <Input
+                    className="h-9"
+                    type="number"
+                    step="0.01"
+                    placeholder="não incluso"
+                    value={projeto.frete_valor ?? ""}
+                    onChange={(e) => upd("frete_valor", e.target.value === "" ? null : Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs">Observações da proposta</Label>
+                <Textarea
+                  rows={3}
+                  value={projeto.observacoes_proposta ?? ""}
+                  onChange={(e) => upd("observacoes_proposta", e.target.value)}
+                />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-2">

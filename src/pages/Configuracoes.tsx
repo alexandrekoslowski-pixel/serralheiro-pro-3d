@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Building2, Save, Plus, Trash2, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import {
@@ -93,6 +94,72 @@ export default function Configuracoes() {
             <Input type="number" min={0} value={empresa.limiteAmareloDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteAmareloDias: Number(e.target.value) })} />
           </div>
+        </div>
+
+        <h2 className="font-display text-lg mt-6 mb-4">Proposta comercial (PDF do orçamento)</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          <div>
+            <Label>Prazo padrão (dias úteis)</Label>
+            <Input type="number" min={1} value={empresa.prazoDiasUteis}
+              onChange={(e) => setEmpresa({ ...empresa, prazoDiasUteis: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label>Validade do orçamento (dias)</Label>
+            <Input type="number" min={1} value={empresa.validadeDias}
+              onChange={(e) => setEmpresa({ ...empresa, validadeDias: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label>Garantia (dias)</Label>
+            <Input type="number" min={0} value={empresa.garantiaDias}
+              onChange={(e) => setEmpresa({ ...empresa, garantiaDias: Number(e.target.value) })} />
+          </div>
+          <div>
+            <Label>Chave PIX</Label>
+            <Input value={empresa.pixChave} onChange={(e) => setEmpresa({ ...empresa, pixChave: e.target.value })} />
+          </div>
+          <div>
+            <Label>Favorecido do PIX</Label>
+            <Input value={empresa.pixFavorecido} onChange={(e) => setEmpresa({ ...empresa, pixFavorecido: e.target.value })} />
+          </div>
+          <div>
+            <Label>Visita técnica (R$)</Label>
+            <Input type="number" step="0.01" min={0} value={empresa.visitaTecnica}
+              onChange={(e) => setEmpresa({ ...empresa, visitaTecnica: Number(e.target.value) })} />
+          </div>
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 mt-4">
+          <div>
+            <Label>Formas de pagamento (uma por linha)</Label>
+            <Textarea rows={7} value={empresa.textoPagamento}
+              onChange={(e) => setEmpresa({ ...empresa, textoPagamento: e.target.value })} />
+          </div>
+          <div>
+            <Label>Informações técnicas (uma por linha)</Label>
+            <Textarea rows={7} value={empresa.textoTecnico}
+              onChange={(e) => setEmpresa({ ...empresa, textoTecnico: e.target.value })} />
+          </div>
+        </div>
+
+        <h2 className="font-display text-lg mt-6 mb-2">Mensagens para o cliente</h2>
+        <p className="text-sm text-muted-foreground mb-3">Modelos prontos para copiar e enviar no WhatsApp.</p>
+        <div className="grid gap-4 md:grid-cols-3">
+          {([
+            ["msgSolicitarDados", "Solicitar dados"],
+            ["msgFollowUp", "Retomar contato"],
+            ["msgVisitaTecnica", "Visita técnica"],
+          ] as const).map(([campo, titulo]) => (
+            <div key={campo}>
+              <div className="flex items-center justify-between">
+                <Label>{titulo}</Label>
+                <Button variant="ghost" size="sm" className="h-6 px-2 text-xs"
+                  onClick={() => { void navigator.clipboard.writeText(empresa[campo]); toast.success("Mensagem copiada"); }}>
+                  Copiar
+                </Button>
+              </div>
+              <Textarea rows={5} value={empresa[campo]}
+                onChange={(e) => setEmpresa({ ...empresa, [campo]: e.target.value })} />
+            </div>
+          ))}
         </div>
 
         <h2 className="font-display text-lg mt-6 mb-2">Tela da oficina</h2>
