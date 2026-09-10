@@ -405,152 +405,155 @@ export default function Configurador() {
         </Tabs>
       </div>
 
-      {/* Layout: sidebar + central */}
-      <div className="grid gap-4 lg:grid-cols-[340px_1fr]">
-        {/* Sidebar */}
-        <aside className="space-y-3">
-          <CollapsiblePanel icon={<Settings2 className="h-4 w-4 text-primary" />} title="Peças e medidas">
-            <div className="space-y-3">
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <Label>Peças do orçamento ({projeto.pecas.length})</Label>
-                  <div className="flex gap-1">
-                    <Button size="sm" variant="outline" className="h-7 px-2 text-xs" onClick={duplicarPeca}>Duplicar</Button>
-                    <Button size="sm" className="h-7 px-2 text-xs" onClick={addPeca}>+ Peça</Button>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  {projeto.pecas.map((pc, i) => (
-                    <div
-                      key={pc.id}
-                      onClick={() => setPecaSelId(pc.id)}
-                      className={cn(
-                        "flex items-center gap-2 rounded border px-2 py-1.5 cursor-pointer text-xs",
-                        pc.id === pecaSel.id ? "border-primary bg-primary/10" : "border-border",
-                      )}
-                    >
-                      <span className="w-5 text-muted-foreground">{i + 1}</span>
-                      <span className="flex-1 truncate font-medium">{pc.nome}</span>
-                      <span className="text-muted-foreground whitespace-nowrap">
-                        {cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm
-                      </span>
-                      {projeto.pecas.length > 1 && (
-                        <button
-                          type="button"
-                          className="text-muted-foreground hover:text-destructive"
-                          onClick={(e) => { e.stopPropagation(); delPeca(pc.id); }}
-                          title="Remover peça"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </div>
+      {/* Peças e medidas */}
+      <div className="surface-card rounded-lg border border-border p-4 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="font-display text-sm flex items-center gap-2">
+            <Settings2 className="h-4 w-4 text-primary" /> Peças do orçamento ({projeto.pecas.length})
+          </div>
+          <div className="flex gap-2">
+            <Button size="sm" variant="outline" onClick={duplicarPeca}>Duplicar peça</Button>
+            <Button size="sm" className="bg-gradient-orange text-primary-foreground shadow-orange" onClick={addPeca}>
+              <Plus className="mr-1 h-3.5 w-3.5" /> Peça
+            </Button>
+          </div>
+        </div>
+
+        <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+          {projeto.pecas.map((pc, i) => (
+            <div
+              key={pc.id}
+              onClick={() => setPecaSelId(pc.id)}
+              className={cn(
+                "relative min-w-[170px] shrink-0 cursor-pointer rounded-lg border-2 p-3 transition",
+                pc.id === pecaSel.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/40",
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Peça {i + 1}</span>
+                <span
+                  className="h-3 w-3 rounded-full border border-border"
+                  style={{ backgroundColor: ACABAMENTOS.find((a) => a.id === pc.cor)?.hex }}
+                />
               </div>
-
-              <div>
-                <Label>Nome da peça</Label>
-                <Input value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
+              <div className="truncate text-sm font-medium">{pc.nome}</div>
+              <div className="text-xs text-muted-foreground">
+                {cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm
               </div>
-
-              <div>
-                <Label>Tipologia</Label>
-                <Select value={pecaSel.tipologia} onValueChange={(v) => {
-                  const novo = tipologiaPorId(v as TipologiaId);
-                  updPeca({
-                    tipologia: v as TipologiaId,
-                    largura_mm: Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax),
-                    altura_mm: Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax),
-                  });
-                }}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {TIPOLOGIAS.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-1 text-[11px] text-muted-foreground">{tip.descricao}</p>
-              </div>
-
-              <SliderMm
-                label="Largura"
-                value={pecaSel.largura_mm}
-                min={tip.larguraMin} max={tip.larguraMax}
-                onChange={(v) => updPeca({ largura_mm: v })}
-              />
-              <SliderMm
-                label="Altura"
-                value={pecaSel.altura_mm}
-                min={tip.alturaMin} max={tip.alturaMax}
-                onChange={(v) => updPeca({ altura_mm: v })}
-              />
-
-              <div>
-                <Label>Acabamento / cor</Label>
-                <div className="mt-2 flex gap-2 flex-wrap">
-                  {ACABAMENTOS.map((a) => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => updPeca({ cor: a.id as AcabamentoId })}
-                      className={cn(
-                        "h-10 w-10 md:h-9 md:w-9 rounded border-2 transition",
-                        pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
-                      )}
-                      style={{ backgroundColor: a.hex }}
-                      title={a.nome}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <Label>Sistema de fixação</Label>
-                <Select
-                  value={pecaSel.fixacao ?? FIXACAO_PADRAO}
-                  onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}
+              {projeto.pecas.length > 1 && (
+                <button
+                  type="button"
+                  className="absolute right-1.5 top-1 text-muted-foreground hover:text-destructive"
+                  onClick={(e) => { e.stopPropagation(); delPeca(pc.id); }}
+                  title="Remover peça"
                 >
-                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FIXACAO_TIPOS.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Lados da fixação</Label>
-                <Select
-                  value={pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO}
-                  onValueChange={(v) => updPeca({ fixacaoLados: v as FixacaoLados })}
-                >
-                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FIXACAO_LADOS.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <p className="mt-2 text-xs text-muted-foreground">
-                  {fixacaoTipo(pecaSel.fixacao).instrucao} ·{" "}
-                  {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos de fixação.
-                </p>
-              </div>
+                  ×
+                </button>
+              )}
             </div>
-          </CollapsiblePanel>
+          ))}
+        </div>
 
-          <CollapsiblePanel icon={<DollarSign className="h-4 w-4 text-primary" />} title="Orçamento">
-            <SliderPct label="Mão de obra" value={projeto.maoObraPct} onChange={(v) => upd("maoObraPct", v)} />
-            <SliderPct label="Margem" value={projeto.margemPct} onChange={(v) => upd("margemPct", v)} />
-            <SliderPct label="Desconto geral" value={projeto.descontoGeralPct} onChange={(v) => upd("descontoGeralPct", v)} max={50} />
-          </CollapsiblePanel>
-        </aside>
+        <div className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div>
+            <Label>Nome da peça</Label>
+            <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
+          </div>
 
-        {/* Painel central */}
-        <div className="space-y-4 min-w-0">
+          <div className="sm:col-span-2">
+            <Label>Tipologia</Label>
+            <Select value={pecaSel.tipologia} onValueChange={(v) => {
+              const novo = tipologiaPorId(v as TipologiaId);
+              updPeca({
+                tipologia: v as TipologiaId,
+                largura_mm: Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax),
+                altura_mm: Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax),
+              });
+            }}>
+              <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {TIPOLOGIAS.map((t) => (
+                  <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-1 text-[11px] text-muted-foreground">{tip.descricao}</p>
+          </div>
+
+          <div>
+            <Label>Acabamento / cor</Label>
+            <div className="mt-2 flex flex-wrap gap-2">
+              {ACABAMENTOS.map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => updPeca({ cor: a.id as AcabamentoId })}
+                  className={cn(
+                    "h-9 w-9 rounded border-2 transition",
+                    pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
+                  )}
+                  style={{ backgroundColor: a.hex }}
+                  title={a.nome}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="sm:col-span-2">
+            <SliderMm
+              label="Largura"
+              value={pecaSel.largura_mm}
+              min={tip.larguraMin} max={tip.larguraMax}
+              onChange={(v) => updPeca({ largura_mm: v })}
+            />
+          </div>
+          <div className="sm:col-span-2">
+            <SliderMm
+              label="Altura"
+              value={pecaSel.altura_mm}
+              min={tip.alturaMin} max={tip.alturaMax}
+              onChange={(v) => updPeca({ altura_mm: v })}
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <Label>Sistema de fixação</Label>
+            <Select
+              value={pecaSel.fixacao ?? FIXACAO_PADRAO}
+              onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}
+            >
+              <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FIXACAO_TIPOS.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="sm:col-span-2">
+            <Label>Lados da fixação</Label>
+            <Select
+              value={pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO}
+              onValueChange={(v) => updPeca({ fixacaoLados: v as FixacaoLados })}
+            >
+              <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {FIXACAO_LADOS.map((f) => (
+                  <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {fixacaoTipo(pecaSel.fixacao).instrucao} ·{" "}
+              {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos de fixação.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Desenho e detalhamento */}
+      <div className="space-y-4 min-w-0">
           {/* Card 3D */}
           <div className="surface-card rounded-lg border border-border overflow-hidden">
             <div className="flex flex-col gap-2 border-b border-border px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
