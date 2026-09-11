@@ -258,11 +258,16 @@ export default function Painel() {
                 </div>
 
                 <div className="relative z-10 mt-3 flex flex-wrap gap-1 border-t border-border pt-3">
-                  {prox && (
+                  {p.status === "orcamento" ? (
+                    <Button size="sm" onClick={() => avancar(p)} className="bg-gradient-orange text-primary-foreground">
+                      Aprovar e mandar para a oficina <ArrowRight className="ml-1 h-3.5 w-3.5" />
+                    </Button>
+                  ) : prox ? (
                     <Button size="sm" variant="ghost" onClick={() => avancar(p)}>
                       {STATUS_LABEL[prox]} <ArrowRight className="ml-1 h-3.5 w-3.5" />
                     </Button>
-                  )}
+                  ) : null}
+
                   <Button size="sm" variant="ghost" onClick={() => setDetalhe(p)}>
                     <Wallet className="mr-1 h-3.5 w-3.5" /> Financeiro
                   </Button>
