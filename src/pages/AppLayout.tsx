@@ -41,8 +41,8 @@ export default function AppLayout() {
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
-        <div className="container flex h-14 items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="container flex h-14 items-center justify-between gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <button
               className="grid h-9 w-9 shrink-0 place-items-center rounded border border-border lg:hidden"
               onClick={() => setOpen((v) => !v)}
