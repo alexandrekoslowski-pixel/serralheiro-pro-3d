@@ -88,6 +88,7 @@ export interface MembroEquipe {
   dono_id: string;
   role: Papel;
   nome: string;
+  email?: string | null;
 }
 
 export const ORIGENS = [
