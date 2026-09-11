@@ -99,7 +99,7 @@ export default function MinhasOrdens() {
     <div className="space-y-4">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl">Minhas ordens</h1>
+          <h1 className="font-display text-2xl">{papel === "serralheiro" ? "Minhas ordens" : "Oficina"}</h1>
           <p className="text-sm text-muted-foreground">O que está na oficina agora.</p>
         </div>
         <Button variant="outline" onClick={() => void carregar()}>
