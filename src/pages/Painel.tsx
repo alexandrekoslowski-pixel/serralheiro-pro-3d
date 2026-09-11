@@ -110,7 +110,13 @@ export default function Painel() {
         filtro === "todos" ? true :
         filtro === "abertos" ? p.status !== "faturado" && p.status !== "entregue" :
         p.status === filtro;
-      return okBusca && okStatus;
+      const d = diasRestantes(p.prazo_entrega);
+      const aberta = p.status !== "faturado" && p.status !== "entregue";
+      const okPrazo =
+        filtroPrazo === "todos" ? true :
+        filtroPrazo === "atrasadas" ? aberta && d !== null && d < 0 :
+        aberta && d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
+      return okBusca && okStatus && okPrazo;
     });
     const peso = (p: ProjetoLocal) => {
       if (p.status === "entregue" || p.status === "faturado") return 9999;
