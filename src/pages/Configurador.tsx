@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
+import { PainelFotos } from "@/components/FotosOrdem";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -460,6 +461,14 @@ export default function Configurador() {
                 <Label className="text-xs">Total orçado</Label>
                 <Input className="h-9" readOnly value={formatarBRL(resultado.totalGeral)} />
               </div>
+            </div>
+
+            <div className="mt-5 border-t border-border pt-4">
+              <h3 className="font-display text-base">Fotos da ordem</h3>
+              <p className="mb-3 text-sm text-muted-foreground">
+                Fotos da medição no local, da produção e da instalação.
+              </p>
+              <PainelFotos projetoId={projeto.id} etapaInicial="medicao" />
             </div>
           </TabsContent>
         </Tabs>

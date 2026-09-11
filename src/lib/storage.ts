@@ -87,6 +87,8 @@ export interface DadosEmpresa {
   codigoOficina: string;
   /** Equipe de vendas */
   vendedoras: string[];
+  /** Empresas parceiras de pintura */
+  empresasPintura: string[];
   /** Proposta comercial */
   prazoDiasUteis: number;
   validadeDias: number;
@@ -156,6 +158,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   limiteAmareloDias: 7,
   codigoOficina: "",
   vendedoras: [],
+  empresasPintura: [],
   prazoDiasUteis: 22,
   validadeDias: 5,
   garantiaDias: 90,
@@ -510,6 +513,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
         nome: empresa.nome, cnpj: empresa.cnpj, telefone: empresa.telefone,
         email: empresa.email, endereco: empresa.endereco,
         vendedoras: empresa.vendedoras,
+        empresasPintura: empresa.empresasPintura,
         prazoDiasUteis: empresa.prazoDiasUteis,
         validadeDias: empresa.validadeDias,
         garantiaDias: empresa.garantiaDias,

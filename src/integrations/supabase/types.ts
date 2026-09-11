@@ -374,6 +374,100 @@ export type Database = {
           },
         ]
       }
+      ordem_etapas: {
+        Row: {
+          concluida_em: string | null
+          created_at: string
+          etapa: Database["public"]["Enums"]["etapa_oficina"]
+          id: string
+          iniciada_em: string
+          observacao: string
+          projeto_id: string
+          responsavel_id: string | null
+          responsavel_nome: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          concluida_em?: string | null
+          created_at?: string
+          etapa: Database["public"]["Enums"]["etapa_oficina"]
+          id?: string
+          iniciada_em?: string
+          observacao?: string
+          projeto_id: string
+          responsavel_id?: string | null
+          responsavel_nome?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          concluida_em?: string | null
+          created_at?: string
+          etapa?: Database["public"]["Enums"]["etapa_oficina"]
+          id?: string
+          iniciada_em?: string
+          observacao?: string
+          projeto_id?: string
+          responsavel_id?: string | null
+          responsavel_nome?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordem_etapas_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ordem_fotos: {
+        Row: {
+          caminho: string
+          created_at: string
+          enviado_nome: string
+          enviado_por: string | null
+          etapa: string
+          id: string
+          observacao: string
+          projeto_id: string
+          user_id: string
+        }
+        Insert: {
+          caminho: string
+          created_at?: string
+          enviado_nome?: string
+          enviado_por?: string | null
+          etapa?: string
+          id?: string
+          observacao?: string
+          projeto_id: string
+          user_id: string
+        }
+        Update: {
+          caminho?: string
+          created_at?: string
+          enviado_nome?: string
+          enviado_por?: string | null
+          etapa?: string
+          id?: string
+          observacao?: string
+          projeto_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ordem_fotos_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pagamentos: {
         Row: {
           created_at: string
@@ -615,16 +709,28 @@ export type Database = {
         }
         Returns: undefined
       }
+      mover_etapa_resp: {
+        Args: {
+          _codigo: string
+          _etapa: Database["public"]["Enums"]["etapa_oficina"]
+          _projeto_id: string
+          _responsavel: string
+        }
+        Returns: undefined
+      }
       ordens_oficina: {
         Args: { _codigo: string }
         Returns: {
           cliente: string
           dados: Json
+          endereco: string
           etapa: Database["public"]["Enums"]["etapa_oficina"]
           etapa_em: string
+          fotos: number
           id: string
           nome: string
           prazo_entrega: string
+          responsavel: string
           status: Database["public"]["Enums"]["ordem_status"]
         }[]
       }
