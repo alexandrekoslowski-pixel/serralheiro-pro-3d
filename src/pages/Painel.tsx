@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,7 @@ import {
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
-  diasRestantes, somarDias, dataISO,
+  diasRestantes, somarDias, dataISO, ETAPA_LABEL,
 } from "@/lib/ordens";
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
@@ -34,6 +34,7 @@ export default function Painel() {
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<"todos" | OrdemStatus | "abertos">("abertos");
   const [vendedora, setVendedora] = useState("todas");
+  const [filtroPrazo, setFiltroPrazo] = useState<"todos" | "atrasadas" | "urgentes">("todos");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
 
   const pagamentos = listarPagamentos();
