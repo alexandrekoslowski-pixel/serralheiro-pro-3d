@@ -216,10 +216,7 @@ export default function ModoAtendimento() {
         {passo === 1 && (
           <div className="space-y-5">
             <div>
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">Cor / acabamento</div>
-                <div className="text-sm font-semibold">{ACABAMENTOS.find((a) => a.id === projeto.cor)?.nome ?? "—"}</div>
-              </div>
+              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Cor / acabamento</div>
               <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
                 {ACABAMENTOS.map((a) => (
                   <button
