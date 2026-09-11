@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { TipologiaId, AcabamentoId, tipologiaPorId } from "./tipologias";
 import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
+import { CHECKLIST_VERSAO, normalizarRespostasChecklist, type RespostasChecklist } from "./checklistPedido";
 
 export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
 export type EtapaOficina =
@@ -45,6 +46,8 @@ export interface ProjetoLocal {
   servicos_valor: number | null;
   frete_valor: number | null;
   observacoes_proposta: string;
+  checklist_versao: number;
+  checklist_respostas: RespostasChecklist;
   tipologia: TipologiaId;
   largura_mm: number;
   altura_mm: number;
@@ -211,6 +214,8 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   faturado_em: null,
   overrides: {},
   extras: [],
+  checklist_versao: CHECKLIST_VERSAO,
+  checklist_respostas: {},
   total: 0,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
@@ -256,6 +261,8 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   base.largura_mm = p0.largura_mm;
   base.altura_mm = p0.altura_mm;
   base.cor = p0.cor;
+  base.checklist_versao = Number(base.checklist_versao || CHECKLIST_VERSAO);
+  base.checklist_respostas = normalizarRespostasChecklist(base.checklist_respostas);
   return base;
 };
 
@@ -325,6 +332,8 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     servicos_valor: p.servicos_valor,
     frete_valor: p.frete_valor,
     observacoes_proposta: p.observacoes_proposta,
+    checklist_versao: p.checklist_versao,
+    checklist_respostas: p.checklist_respostas,
   },
   updated_at: p.updated_at,
 });
@@ -461,6 +470,8 @@ export function criarOrcamentoRapido(): ProjetoLocal {
     servicos_valor: null,
     frete_valor: null,
     observacoes_proposta: "",
+    checklist_versao: CHECKLIST_VERSAO,
+    checklist_respostas: {},
     tipologia,
     largura_mm: tip.larguraDefault,
     altura_mm: tip.alturaDefault,

@@ -6,6 +6,7 @@ import { ProjetoLocal } from "./storage";
 import { tipologiaPorId } from "./tipologias";
 import { PlanoCorte, PlanoProducao } from "./producao";
 import { cm } from "@/lib/medidas";
+import { linhasChecklist } from "./checklistPedido";
 
 const BLACK: [number, number, number] = [0, 0, 0];
 const GRAY: [number, number, number] = [110, 110, 110];
@@ -22,6 +23,7 @@ export function gerarOrdemProducaoPDF(
   const margin = 12;
   const p0 = projeto.pecas[0];
   const tip = tipologiaPorId(p0.tipologia);
+  const checklist = linhasChecklist(projeto.pecas.map((p) => p.tipologia), projeto.checklist_respostas ?? {});
 
   // ============ Helper: cabeçalho de página ============
   const drawHeader = (title: string, page: number, totalPages: number) => {
@@ -146,6 +148,21 @@ export function gerarOrdemProducaoPDF(
   ];
   linhas.forEach((l) => { doc.text(l, margin, y); y += 7; });
   drawFooter();
+
+  if (checklist.length > 0) {
+    doc.addPage();
+    drawHeader("Checklist do pedido", 2, totalEstimado);
+    autoTable(doc, {
+      startY: 24,
+      head: [["Seção", "Verificação", "Resposta"]],
+      body: checklist.map((item) => [item.secao, item.pergunta, item.resposta]),
+      styles: { fontSize: 10, cellPadding: 2.5, textColor: BLACK, lineColor: LIGHT, lineWidth: 0.2 },
+      headStyles: { fillColor: BLACK, textColor: 255, fontSize: 10 },
+      columnStyles: { 0: { cellWidth: 38 }, 2: { cellWidth: 55 } },
+      margin: { left: margin, right: margin },
+    });
+    drawFooter();
+  }
 
   // ============================================================
   // PÁGINA 2 — MAPA DE CORTE

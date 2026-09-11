@@ -13,3 +13,5 @@
 - Login para o serralheiro e reconciliação com a tela pública de oficina (TV)
 - Ocultar custos/margem para vendedora dentro do orçamento
 - Fases seguintes: OS congelada, medição com fotos, materiais planejados x usados, novo kanban, entrega e pós-venda, metas do painel
+- [x] Checklist técnico obrigatório e condicional no orçamento
+- [x] Validação antes de aprovar e envio das respostas para oficina/PDFs

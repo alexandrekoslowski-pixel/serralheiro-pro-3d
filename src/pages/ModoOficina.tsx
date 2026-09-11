@@ -18,6 +18,7 @@ import { resumoFixacao, fixacaoTipo } from "@/lib/fixacao";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import { DiagramaBarras } from "@/components/DiagramaBarras";
 import { cm } from "@/lib/medidas";
+import { linhasChecklist } from "@/lib/checklistPedido";
 
 export default function ModoOficina() {
   const { id = "", codigo } = useParams();
@@ -115,6 +116,7 @@ export default function ModoOficina() {
   const acab = acabamentoPorId(projeto.cor);
   const totalPecas = cortesAgrupados.reduce((s, c) => s + c.qtd, 0);
   const metragemTotal = cortesAgrupados.reduce((s, c) => s + (c.comprimento_mm * c.qtd) / 1000, 0);
+  const respostasTecnicas = linhasChecklist(projeto.pecas.map((p) => p.tipologia), projeto.checklist_respostas ?? {});
 
   return (
     <div className="min-h-screen bg-black text-white print:bg-white print:text-black">
@@ -194,6 +196,21 @@ export default function ModoOficina() {
           </p>
         )}
       </section>
+
+      {respostasTecnicas.length > 0 && (
+        <section className="px-6 py-5 border-t border-zinc-800 print:border-black">
+          <h2 className="text-orange-400 print:text-black text-sm font-black uppercase tracking-widest mb-3">Checklist do pedido</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+            {respostasTecnicas.map((item) => (
+              <div key={`${item.secao}-${item.pergunta}`} className="rounded border border-zinc-800 print:border-black px-3 py-2">
+                <p className="text-[10px] uppercase text-zinc-500 print:text-black">{item.secao}</p>
+                <p className="text-sm text-zinc-400 print:text-black">{item.pergunta}</p>
+                <p className="text-lg font-bold text-white print:text-black">{item.resposta}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* CORPO: tabela de cortes (esquerda) + diagrama de barras (direita) */}
       <main className="grid grid-cols-1 lg:grid-cols-2 gap-0">

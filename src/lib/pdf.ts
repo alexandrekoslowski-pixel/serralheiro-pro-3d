@@ -6,6 +6,7 @@ import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
 import { acabamentoPorId, tipologiaPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
 import { fixacaoTipo, fixacaoLados } from "./fixacao";
+import { linhasChecklist } from "./checklistPedido";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -64,6 +65,7 @@ export function gerarOrcamentoPDF(
 
   const validadeDias = empresa.validadeDias || 5;
   const prazoDias = projeto.prazo_dias_uteis ?? empresa.prazoDiasUteis ?? 22;
+  const checklistComercial = linhasChecklist(projeto.pecas.map((p) => p.tipologia), projeto.checklist_respostas ?? {}, true);
 
   // ===== Header =====
   doc.setFillColor(...ORANGE);
@@ -246,6 +248,22 @@ export function gerarOrcamentoPDF(
     const obs = doc.splitTextToSize(projeto.observacoes_proposta, larguraUtil) as string[];
     doc.text(obs, margin, yTot + 5);
     yTot += 5 + obs.length * 4 + 4;
+  }
+
+  if (checklistComercial.length > 0 && yTot < pageH - 35) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...DARK);
+    doc.text("Informações confirmadas", margin, yTot);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...GRAY);
+    checklistComercial.forEach((item) => {
+      const linhas = doc.splitTextToSize(`${item.pergunta}: ${item.resposta}`, larguraUtil) as string[];
+      if (yTot + 5 + linhas.length * 4 < pageH - 15) {
+        doc.text(linhas, margin, yTot + 5);
+        yTot += 5 + linhas.length * 4;
+      }
+    });
   }
 
   // ===== Assinatura =====
