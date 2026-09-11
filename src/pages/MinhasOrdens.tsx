@@ -11,6 +11,7 @@ import { ETAPAS_OFICINA, ETAPA_LABEL, proximaEtapa, diasRestantes, tempoNaEtapa 
 import type { EtapaOficina } from "@/lib/storage";
 import { obterEmpresa } from "@/lib/storage";
 import { useDados } from "@/hooks/useDados";
+import { useSessao } from "@/lib/sessao";
 import { listarEquipe, MembroEquipe } from "@/lib/gestao";
 import { moverComResponsavel, etapaFotoDaOficina } from "@/lib/fotos";
 import { PainelFotos, FotosOrdemDialog } from "@/components/FotosOrdem";
@@ -49,6 +50,7 @@ const textoPrazo = (prazo: string | null) => {
 
 export default function MinhasOrdens() {
   useDados();
+  const { papel } = useSessao();
   const empresa = obterEmpresa();
   const codigo = empresa.codigoOficina;
   const [ordens, setOrdens] = useState<OrdemOficina[]>([]);
@@ -99,7 +101,7 @@ export default function MinhasOrdens() {
     <div className="space-y-4">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl">Minhas ordens</h1>
+          <h1 className="font-display text-2xl">{papel === "serralheiro" ? "Minhas ordens" : "Oficina"}</h1>
           <p className="text-sm text-muted-foreground">O que está na oficina agora.</p>
         </div>
         <Button variant="outline" onClick={() => void carregar()}>
