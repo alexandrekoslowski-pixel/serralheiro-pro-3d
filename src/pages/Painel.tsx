@@ -17,7 +17,7 @@ import {
   listarPagamentos, totalRecebido, adicionarPagamento, removerPagamento, OrdemStatus,
 } from "@/lib/storage";
 import {
-  STATUS_LABEL, STATUS_ORDEM, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
+  STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
   diasRestantes, somarDias, dataISO, ETAPA_LABEL,
 } from "@/lib/ordens";
 import { tipologiaPorId } from "@/lib/tipologias";

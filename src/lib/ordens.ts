@@ -45,6 +45,34 @@ export const STATUS_LABEL: Record<OrdemStatus, string> = {
   faturado: "Faturado",
 };
 
+export const STATUS_CORES: Record<OrdemStatus, { badge: string; chip: string; chipAtivo: string }> = {
+  orcamento: {
+    badge: "bg-sky-500/15 text-sky-400",
+    chip: "border-sky-500/40 text-sky-400",
+    chipAtivo: "border-sky-500 bg-sky-500/15 text-sky-400",
+  },
+  aprovado: {
+    badge: "bg-violet-500/15 text-violet-400",
+    chip: "border-violet-500/40 text-violet-400",
+    chipAtivo: "border-violet-500 bg-violet-500/15 text-violet-400",
+  },
+  producao: {
+    badge: "bg-orange-500/15 text-orange-400",
+    chip: "border-orange-500/40 text-orange-400",
+    chipAtivo: "border-orange-500 bg-orange-500/15 text-orange-400",
+  },
+  entregue: {
+    badge: "bg-emerald-500/15 text-emerald-400",
+    chip: "border-emerald-500/40 text-emerald-400",
+    chipAtivo: "border-emerald-500 bg-emerald-500/15 text-emerald-400",
+  },
+  faturado: {
+    badge: "bg-muted text-muted-foreground",
+    chip: "border-border text-muted-foreground",
+    chipAtivo: "border-foreground/50 bg-muted text-foreground",
+  },
+};
+
 export const proximoStatus = (s: OrdemStatus): OrdemStatus | null => {
   const i = STATUS_ORDEM.indexOf(s);
   return i >= 0 && i < STATUS_ORDEM.length - 1 ? STATUS_ORDEM[i + 1] : null;
