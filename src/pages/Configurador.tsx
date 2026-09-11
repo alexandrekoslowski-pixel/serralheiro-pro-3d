@@ -43,7 +43,7 @@ import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
-import { perguntasPendentes } from "@/lib/checklistPedido";
+import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 
 const PALETA_BARRAS = [
   "hsl(18 78% 52%)", "hsl(210 60% 55%)", "hsl(140 50% 50%)",
@@ -226,11 +226,14 @@ export default function Configurador() {
   };
 
   const aprovarParaOficina = () => {
-    const pendentes = perguntasPendentes(projeto.pecas.map((p) => p.tipologia), projeto.checklist_respostas);
+    const pendentes = [
+      ...pendentesComunsChecklist(projeto.checklist_respostas),
+      ...projeto.pecas.flatMap((p) => pendentesPecaChecklist(p.tipologia, p.checklist_respostas ?? {})),
+    ];
     if (pendentes.length > 0) {
       setMostrarPendencias(true);
       setAbaCadastro("checklist");
-      window.setTimeout(() => document.getElementById(`check-${pendentes[0].id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
+      window.setTimeout(() => document.querySelector<HTMLElement>(`[id$="-${pendentes[0].id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
       toast.error(`Complete o checklist: ${pendentes.length} resposta${pendentes.length === 1 ? "" : "s"} pendente${pendentes.length === 1 ? "" : "s"}`);
       return;
     }
@@ -470,8 +473,14 @@ export default function Configurador() {
 
           <TabsContent value="checklist" className="mt-0 p-4">
             <ChecklistPedido
-              tipos={projeto.pecas.map((p) => p.tipologia)}
+              pecas={projeto.pecas}
+              selecionadaId={pecaSel.id}
               respostas={projeto.checklist_respostas}
+              onSelecionarPeca={setPecaSelId}
+              onChangePeca={(pecaId, checklist_respostas) => {
+                setProjeto({ ...projeto, pecas: projeto.pecas.map((p) => p.id === pecaId ? { ...p, checklist_respostas } : p) });
+                setMostrarPendencias(false);
+              }}
               mostrarPendencias={mostrarPendencias}
               onChange={(checklist_respostas) => {
                 setProjeto({ ...projeto, checklist_respostas });
