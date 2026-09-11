@@ -181,6 +181,8 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
 
 // ---------- estado em memória ----------
 let userId: string | null = null;
+/** Dono do cadastro único da serralheria (a linha de empresa usada por toda a equipe). */
+let empresaUserId: string | null = null;
 let projetos: ProjetoLocal[] = [];
 let pagamentos: Pagamento[] = [];
 let empresa: DadosEmpresa = { ...EMPRESA_PADRAO };
