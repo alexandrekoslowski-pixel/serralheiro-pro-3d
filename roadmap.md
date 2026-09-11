@@ -22,3 +22,4 @@
 - [ ] Envio automático oficial no WhatsApp (bloqueado: falta conta/API oficial do WhatsApp Business)
 - [x] Contrato de prestação de serviço sem materiais
 - [x] Comprovante de pagamento e aviso de entrada pendente
+- [x] Corrigir sobreposição do menu principal e da barra de ações do orçamento em todos os tamanhos de tela

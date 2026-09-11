@@ -3,9 +3,12 @@ import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Save, Copy, Download, Settings2, DollarSign, Send, FileSignature, Loader2,
   RotateCw, Box as BoxIcon, Grid3x3, Ruler, Plus, Trash2, RefreshCw, EyeOff, Eye,
-  Wrench, FileText, FileSpreadsheet, Smartphone, Sun, Moon, User, Car, Play,
+  Wrench, FileText, FileSpreadsheet, Smartphone, Sun, Moon, User, Car, Play, MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -294,7 +297,7 @@ export default function Configurador() {
   return (
     <div className="container py-4 md:py-6 space-y-4">
       {/* Top bar */}
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <div className="space-y-3">
         <div className="flex items-center gap-3 min-w-0">
           <Button asChild variant="soft" size="sm" className="shrink-0">
             <Link to="/app"><ArrowLeft className="mr-1 h-4 w-4" /> Orçamentos</Link>
@@ -313,21 +316,9 @@ export default function Configurador() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2 overflow-x-auto -mx-1 px-1 md:overflow-visible">
-          <Button variant="outline" size="sm" className="shrink-0" onClick={duplicar}>
-            <Copy className="mr-1 h-4 w-4" /> Duplicar
-          </Button>
+        <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); toast.success("Salvo"); }}>
             <Save className="mr-1 h-4 w-4" /> Salvar
-          </Button>
-          <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); navigate(`/app/projeto/${projeto.id}/atender`); }} title="Modo cliente: tela cheia, 3 passos">
-            <Smartphone className="mr-1 h-4 w-4" /> Atendimento
-          </Button>
-          <Button variant="outline" size="sm" className="shrink-0" onClick={exportarOP} title="PDF para a oficina, sem preços">
-            <FileSpreadsheet className="mr-1 h-4 w-4" /> Imprimir OS
-          </Button>
-          <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); window.open(`/op/${projeto.id}`, "_blank"); }} title="Abrir modo TV (oficina, sem preços)">
-            <Wrench className="mr-1 h-4 w-4" /> Modo TV
           </Button>
           <Button size="sm" variant="outline" className="shrink-0" onClick={exportarOrcamento}>
             <Download className="mr-1 h-4 w-4" /> Orçamento
@@ -345,6 +336,27 @@ export default function Configurador() {
               <Wrench className="mr-1 h-4 w-4" /> Aprovar e mandar para a oficina
             </Button>
           )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="soft" size="sm" className="shrink-0">
+                <MoreHorizontal className="mr-1 h-4 w-4" /> Mais ações
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem onClick={duplicar}>
+                <Copy className="mr-2 h-4 w-4" /> Duplicar orçamento
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); navigate(`/app/projeto/${projeto.id}/atender`); }}>
+                <Smartphone className="mr-2 h-4 w-4" /> Abrir atendimento
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={exportarOP}>
+                <FileSpreadsheet className="mr-2 h-4 w-4" /> Imprimir OS
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); window.open(`/op/${projeto.id}`, "_blank"); }}>
+                <Wrench className="mr-2 h-4 w-4" /> Abrir modo TV
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 
