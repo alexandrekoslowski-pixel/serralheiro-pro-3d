@@ -9,6 +9,29 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Material, MaterialPreco, listarMateriais, listarHistoricoMaterial, salvarMaterial, excluirMaterial } from "@/lib/gestao";
 import { formatarBRL } from "@/lib/storage";
 
+const NOMES_CATEGORIAS: Record<string, string> = {
+  "automatizadores": "Automatizadores",
+  "chapas": "Chapas",
+  "chapas-buzios": "Chapas Búzios",
+  "chapas-frisadas": "Chapas frisadas",
+  "consumiveis": "Consumíveis",
+  "epi": "EPI",
+  "ferragens": "Ferragens",
+  "ferramentas": "Ferramentas",
+  "fixadores": "Fixadores",
+  "kits-basculantes": "Kits basculantes",
+  "laminados": "Laminados",
+  "perfis": "Perfis",
+  "telas-expandidas": "Telas expandidas",
+  "tubos-galvanizados": "Tubos galvanizados",
+  "tubos-pretos": "Tubos pretos",
+  "vigas-u": "Vigas",
+};
+
+function nomeCategoria(categoria: string) {
+  return NOMES_CATEGORIAS[categoria] ?? categoria;
+}
+
 export default function Materiais() {
   const [materiais, setMateriais] = useState<Material[]>([]);
   const [busca, setBusca] = useState("");
@@ -22,7 +45,7 @@ export default function Materiais() {
   const lista = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return materiais.filter((m) => {
-      const texto = `${m.nome} ${m.codigo_fornecedor} ${m.fornecedor} ${m.subtipo}`.toLowerCase();
+      const texto = `${m.nome} ${m.codigo_fornecedor} ${m.fornecedor} ${m.subtipo} ${m.categoria} ${nomeCategoria(m.categoria)}`.toLowerCase();
       return (categoria === "todas" || m.categoria === categoria) && (!q || texto.includes(q));
     });
   }, [materiais, busca, categoria]);
@@ -56,7 +79,7 @@ export default function Materiais() {
         </div>
         <Select value={categoria} onValueChange={setCategoria}>
           <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent><SelectItem value="todas">Todas as categorias</SelectItem>{categorias.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+          <SelectContent><SelectItem value="todas">Todas as categorias</SelectItem>{categorias.map((c) => <SelectItem key={c} value={c}>{nomeCategoria(c)}</SelectItem>)}</SelectContent>
         </Select>
       </div>
 
@@ -75,7 +98,7 @@ export default function Materiais() {
             {lista.map((m) => (
               <tr key={m.id} className="border-b border-border/60 last:border-0">
                  <td className="p-3"><div className="font-mono text-xs text-muted-foreground">{m.codigo_fornecedor || "SEM CÓDIGO"}</div><div className="font-medium">{m.nome}</div><div className="text-xs text-muted-foreground">{m.fornecedor || "—"}</div></td>
-                 <td className="p-3"><span className="rounded bg-card px-2 py-1 text-xs">{m.categoria}</span><div className="mt-1 text-xs text-muted-foreground">{m.subtipo}</div></td>
+                 <td className="p-3"><span className="rounded bg-card px-2 py-1 text-xs">{nomeCategoria(m.categoria)}</span><div className="mt-1 text-xs text-muted-foreground">{m.subtipo}</div></td>
                  <td className="p-3 text-muted-foreground">{m.comprimento_comercial_mm ? `${Number(m.comprimento_comercial_mm) / 1000} m` : m.largura_mm ? `${Number(m.largura_mm) / 1000} m` : "—"}<div className="text-xs">{m.espessura_mm ? `${m.espessura_mm} mm` : m.unidade_compra}</div></td>
                  <td className="p-3 font-medium">{formatarBRL(Number(m.preco_atual ?? m.custo))}<div className="text-xs font-normal text-muted-foreground">por {m.preco_unidade || m.unidade_compra || m.unidade}</div></td>
                  <td className="p-3 text-muted-foreground">{m.preco_referencia ? new Date(`${m.preco_referencia}T12:00:00`).toLocaleDateString("pt-BR") : "—"}</td>
