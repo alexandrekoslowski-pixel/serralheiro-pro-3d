@@ -50,6 +50,7 @@ const textoPrazo = (prazo: string | null) => {
 
 export default function MinhasOrdens() {
   useDados();
+  const { papel } = useSessao();
   const empresa = obterEmpresa();
   const codigo = empresa.codigoOficina;
   const [ordens, setOrdens] = useState<OrdemOficina[]>([]);
