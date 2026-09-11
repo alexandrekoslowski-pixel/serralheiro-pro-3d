@@ -72,16 +72,16 @@ export default function Auth() {
             {modo === "criar" && (
               <div>
                 <Label>Seu nome</Label>
-                <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da serralheria ou seu nome" />
+                <Input maxLength={100} autoComplete="name" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da serralheria ou seu nome" />
               </div>
             )}
             <div>
               <Label>E-mail</Label>
-              <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
               <Label>Senha</Label>
-              <Input type="password" required minLength={6} value={senha} onChange={(e) => setSenha(e.target.value)} />
+              <Input type="password" required minLength={6} maxLength={128} autoComplete={modo === "entrar" ? "current-password" : "new-password"} value={senha} onChange={(e) => setSenha(e.target.value)} />
             </div>
             <Button type="submit" disabled={enviando} className="w-full bg-gradient-orange text-primary-foreground shadow-orange">
               {enviando ? "Aguarde..." : modo === "entrar" ? "Entrar" : "Criar conta"}

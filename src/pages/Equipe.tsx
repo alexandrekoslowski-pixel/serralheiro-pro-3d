@@ -98,7 +98,7 @@ export default function Equipe() {
           <div className="space-y-3">
             <div>
               <Label>Nome da pessoa</Label>
-              <Input className="mt-1.5" value={edicao?.nome ?? ""} onChange={(e) => setEdicao((n) => n && { ...n, nome: e.target.value })} />
+              <Input className="mt-1.5" maxLength={100} value={edicao?.nome ?? ""} onChange={(e) => setEdicao((n) => n && { ...n, nome: e.target.value })} />
             </div>
             <div>
               <Label>Papel</Label>
@@ -123,7 +123,7 @@ export default function Equipe() {
           <div className="space-y-3">
             <div>
               <Label>Nome da pessoa</Label>
-              <Input className="mt-1.5" value={novo?.nome ?? ""} onChange={(e) => setNovo((n) => n && { ...n, nome: e.target.value })} />
+              <Input className="mt-1.5" maxLength={100} value={novo?.nome ?? ""} onChange={(e) => setNovo((n) => n && { ...n, nome: e.target.value })} />
             </div>
             <div>
               <Label>E-mail da conta</Label>
