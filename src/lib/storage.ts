@@ -357,6 +357,7 @@ export async function hidratarNuvem(uid: string): Promise<void> {
   }));
 
   const linhaEmpresa = (emp.data ?? [])[0];
+  empresaUserId = (linhaEmpresa as { user_id?: string } | undefined)?.user_id ?? uid;
   if (linhaEmpresa) {
     const d = (linhaEmpresa.dados ?? {}) as Partial<DadosEmpresa>;
     empresa = {
