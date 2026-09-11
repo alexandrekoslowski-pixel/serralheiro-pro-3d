@@ -519,7 +519,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
   notificar();
   if (userId) {
     void supabase.from("empresa").upsert({
-      user_id: userId,
+      user_id: empresaUserId ?? userId,
       dados: {
         nome: empresa.nome, cnpj: empresa.cnpj, telefone: empresa.telefone,
         email: empresa.email, endereco: empresa.endereco,
