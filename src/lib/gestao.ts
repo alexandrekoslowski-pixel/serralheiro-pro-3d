@@ -177,18 +177,23 @@ export async function excluirServico(id: string): Promise<void> {
 // ---------- materiais ----------
 async function buscarTudo<T>(tabela: "materiais" | "materiais_precos_atuais", ordem?: string): Promise<T[]> {
   const passo = 1000;
-  const todos: T[] = [];
-  for (let inicio = 0; ; inicio += passo) {
-    let q = (supabase as any).from(tabela).select("*").range(inicio, inicio + passo - 1);
+  const contagem = await (supabase as any).from(tabela).select("id", { count: "exact", head: true });
+  if (contagem.error) throw contagem.error;
 
-    if (ordem) q = q.order(ordem);
-    const { data, error } = await q;
-    if (error) throw error;
-    const lote = (data ?? []) as T[];
-    todos.push(...lote);
-    if (lote.length < passo) break;
-  }
-  return todos;
+  const total = Number(contagem.count ?? 0);
+  if (total === 0) return [];
+
+  const paginas = Array.from({ length: Math.ceil(total / passo) }, (_, pagina) => {
+    const inicio = pagina * passo;
+    let consulta = (supabase as any).from(tabela).select("*");
+    if (ordem) consulta = consulta.order(ordem).order("id");
+    else consulta = consulta.order("id");
+    return consulta.range(inicio, Math.min(inicio + passo - 1, total - 1));
+  });
+  const resultados = await Promise.all(paginas);
+  const erro = resultados.find((resultado) => resultado.error)?.error;
+  if (erro) throw erro;
+  return resultados.flatMap((resultado) => (resultado.data ?? []) as T[]);
 }
 
 export async function listarMateriais(): Promise<Material[]> {
