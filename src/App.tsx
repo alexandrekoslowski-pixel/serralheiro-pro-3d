@@ -38,20 +38,21 @@ const App = () => (
             <Route path="/" element={<Landing />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/app" element={<ExigirLogin><AppLayout /></ExigirLogin>}>
-              <Route index element={<Painel />} />
-              <Route path="projetos" element={<ProjetosLista />} />
-              <Route path="clientes" element={<Clientes />} />
-              <Route path="clientes/:id" element={<ClienteDetalhe />} />
-              <Route path="catalogo" element={<Catalogo />} />
-              <Route path="materiais" element={<Materiais />} />
-              <Route path="equipe" element={<Equipe />} />
-              <Route path="financeiro" element={<Financeiro />} />
+              <Route index element={<ExigirGestao><Painel /></ExigirGestao>} />
+              <Route path="oficina" element={<MinhasOrdens />} />
+              <Route path="projetos" element={<ExigirGestao><ProjetosLista /></ExigirGestao>} />
+              <Route path="clientes" element={<ExigirGestao><Clientes /></ExigirGestao>} />
+              <Route path="clientes/:id" element={<ExigirGestao><ClienteDetalhe /></ExigirGestao>} />
+              <Route path="catalogo" element={<ExigirGestao><Catalogo /></ExigirGestao>} />
+              <Route path="materiais" element={<ExigirGestao><Materiais /></ExigirGestao>} />
+              <Route path="equipe" element={<ExigirGestao><Equipe /></ExigirGestao>} />
+              <Route path="financeiro" element={<ExigirGestao><Financeiro /></ExigirGestao>} />
 
-              <Route path="calendario" element={<Calendario />} />
-              <Route path="projeto/:id" element={<Configurador />} />
-              <Route path="configuracoes" element={<Configuracoes />} />
+              <Route path="calendario" element={<ExigirGestao><Calendario /></ExigirGestao>} />
+              <Route path="projeto/:id" element={<ExigirGestao><Configurador /></ExigirGestao>} />
+              <Route path="configuracoes" element={<ExigirGestao><Configuracoes /></ExigirGestao>} />
             </Route>
-            <Route path="/app/projeto/:id/atender" element={<ExigirLogin><ModoAtendimento /></ExigirLogin>} />
+            <Route path="/app/projeto/:id/atender" element={<ExigirLogin><ExigirGestao><ModoAtendimento /></ExigirGestao></ExigirLogin>} />
             <Route path="/oficina/:codigo" element={<KanbanOficina />} />
             <Route path="/oficina/:codigo/os/:id" element={<ModoOficina />} />
             <Route path="/op/:id" element={<ExigirLogin><ModoOficina /></ExigirLogin>} />
