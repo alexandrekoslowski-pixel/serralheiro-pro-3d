@@ -16,6 +16,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
 import { PainelFotos } from "@/components/FotosOrdem";
+import { ChecklistPedido } from "@/components/ChecklistPedido";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +43,7 @@ import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
+import { perguntasPendentes } from "@/lib/checklistPedido";
 
 const PALETA_BARRAS = [
   "hsl(18 78% 52%)", "hsl(210 60% 55%)", "hsl(140 50% 50%)",
@@ -73,6 +75,8 @@ export default function Configurador() {
   const [aberto, setAberto] = useState(false);
   const [pecaSelId, setPecaSelId] = useState<string | null>(null);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [abaCadastro, setAbaCadastro] = useState("cliente");
+  const [mostrarPendencias, setMostrarPendencias] = useState(false);
 
   useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
 
@@ -220,6 +224,14 @@ export default function Configurador() {
   };
 
   const aprovarParaOficina = () => {
+    const pendentes = perguntasPendentes(projeto.pecas.map((p) => p.tipologia), projeto.checklist_respostas);
+    if (pendentes.length > 0) {
+      setMostrarPendencias(true);
+      setAbaCadastro("checklist");
+      window.setTimeout(() => document.getElementById(`check-${pendentes[0].id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
+      toast.error(`Complete o checklist: ${pendentes.length} resposta${pendentes.length === 1 ? "" : "s"} pendente${pendentes.length === 1 ? "" : "s"}`);
+      return;
+    }
     const agora = new Date().toISOString();
     const atualizado: ProjetoLocal = {
       ...projeto,
@@ -299,11 +311,12 @@ export default function Configurador() {
 
       {/* Cadastro do orçamento */}
       <div className="surface-card rounded-lg border border-border">
-        <Tabs defaultValue="cliente">
+        <Tabs value={abaCadastro} onValueChange={setAbaCadastro}>
           <TabsList className="w-full justify-start overflow-x-auto rounded-b-none border-b border-border bg-transparent p-0">
             <TabsTrigger value="cliente">1 · Cliente</TabsTrigger>
             <TabsTrigger value="proposta">2 · Proposta</TabsTrigger>
-            <TabsTrigger value="ordem">3 · Ordem de serviço</TabsTrigger>
+            <TabsTrigger value="checklist">3 · Checklist do pedido</TabsTrigger>
+            <TabsTrigger value="ordem">4 · Ordem de serviço</TabsTrigger>
           </TabsList>
 
           <TabsContent value="cliente" className="mt-0 p-4">
@@ -451,6 +464,18 @@ export default function Configurador() {
                 />
               </div>
             </div>
+          </TabsContent>
+
+          <TabsContent value="checklist" className="mt-0 p-4">
+            <ChecklistPedido
+              tipos={projeto.pecas.map((p) => p.tipologia)}
+              respostas={projeto.checklist_respostas}
+              mostrarPendencias={mostrarPendencias}
+              onChange={(checklist_respostas) => {
+                setProjeto({ ...projeto, checklist_respostas });
+                setMostrarPendencias(false);
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="ordem" className="mt-0 p-4">
