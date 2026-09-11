@@ -2,10 +2,17 @@
 // Carregar via Visualizador3DClient (lazy) para evitar problemas de SSR/init.
 import { useEffect, useRef, useMemo, useState } from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, Environment, Grid, Html } from "@react-three/drei";
+import { OrbitControls, Grid, Html, AdaptiveDpr, AdaptiveEvents, Bvh } from "@react-three/drei";
 import { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { TipologiaId, AcabamentoId, acabamentoPorId } from "@/lib/tipologias";
+import { TipoFixacao, LadosFixacao } from "@/lib/fixacao";
+import { Tubo, TuboMoldura, perfisTipologia } from "./viz/perfis";
+import { materialVidro } from "./viz/materiais";
+import { Ambiente as AmbienteHDR, LuzesDia, LuzesNoite, Chao, Muro } from "./viz/cena";
+import { Cota } from "./viz/cotas";
+import { AcessoriosTipologia, Fixacoes } from "./viz/acessorios";
+import { PessoaEscala, CarroEscala } from "./viz/escala";
 
 export type CameraPreset = "iso" | "frente" | "lateral" | "topo";
 export type Ambiente = "dia" | "noite";
@@ -39,209 +46,30 @@ export interface Visualizador3DProps {
   onCanvasReady?: (canvas: HTMLCanvasElement) => void;
 }
 
-// Tubo retangular — wrapper sobre boxGeometry.
-function Tubo({
-  position,
-  size,
-  color,
+/** Quadro da peça: 4 barras da moldura com o perfil real. */
+function Moldura({
+  L,
+  H,
+  w,
+  d,
+  cor,
   wireframe,
-  rotation,
 }: {
-  position: [number, number, number];
-  size: [number, number, number];
-  color: string;
+  L: number;
+  H: number;
+  w: number;
+  d: number;
+  cor: string;
   wireframe?: boolean;
-  rotation?: [number, number, number];
 }) {
+  const half = L / 2;
   return (
-    <mesh position={position} rotation={rotation} castShadow receiveShadow>
-      <boxGeometry args={size} />
-      <meshStandardMaterial color={color} metalness={0.6} roughness={0.45} wireframe={wireframe} />
-    </mesh>
-  );
-}
-
-// ============ Pessoa de escala (silhueta 1,75m) — estilizada ============
-function PessoaEscala({ position }: { position: [number, number, number] }) {
-  const pele = "#d4a574";
-  const camisa = "#1e3a5f";
-  const calca = "#2a2a35";
-  const sapato = "#0a0a0a";
-  const cabelo = "#2a1810";
-  return (
-    <group position={position}>
-      {/* sapatos */}
-      <mesh position={[-0.09, 0.025, 0.04]} castShadow>
-        <boxGeometry args={[0.09, 0.05, 0.22]} />
-        <meshStandardMaterial color={sapato} roughness={0.7} />
-      </mesh>
-      <mesh position={[0.09, 0.025, 0.04]} castShadow>
-        <boxGeometry args={[0.09, 0.05, 0.22]} />
-        <meshStandardMaterial color={sapato} roughness={0.7} />
-      </mesh>
-      {/* pernas */}
-      <mesh position={[-0.09, 0.4, 0]} castShadow>
-        <capsuleGeometry args={[0.065, 0.6, 6, 12]} />
-        <meshStandardMaterial color={calca} roughness={0.85} />
-      </mesh>
-      <mesh position={[0.09, 0.4, 0]} castShadow>
-        <capsuleGeometry args={[0.065, 0.6, 6, 12]} />
-        <meshStandardMaterial color={calca} roughness={0.85} />
-      </mesh>
-      {/* tronco (camisa) */}
-      <mesh position={[0, 1.0, 0]} castShadow>
-        <capsuleGeometry args={[0.2, 0.42, 6, 16]} />
-        <meshStandardMaterial color={camisa} roughness={0.8} />
-      </mesh>
-      {/* ombros */}
-      <mesh position={[0, 1.28, 0]} castShadow>
-        <sphereGeometry args={[0.22, 16, 12]} />
-        <meshStandardMaterial color={camisa} roughness={0.8} />
-      </mesh>
-      {/* braços */}
-      <mesh position={[-0.24, 1.0, 0]} rotation={[0, 0, 0.1]} castShadow>
-        <capsuleGeometry args={[0.06, 0.5, 6, 12]} />
-        <meshStandardMaterial color={camisa} roughness={0.8} />
-      </mesh>
-      <mesh position={[0.24, 1.0, 0]} rotation={[0, 0, -0.1]} castShadow>
-        <capsuleGeometry args={[0.06, 0.5, 6, 12]} />
-        <meshStandardMaterial color={camisa} roughness={0.8} />
-      </mesh>
-      {/* mãos */}
-      <mesh position={[-0.27, 0.72, 0]} castShadow>
-        <sphereGeometry args={[0.055, 12, 12]} />
-        <meshStandardMaterial color={pele} roughness={0.85} />
-      </mesh>
-      <mesh position={[0.27, 0.72, 0]} castShadow>
-        <sphereGeometry args={[0.055, 12, 12]} />
-        <meshStandardMaterial color={pele} roughness={0.85} />
-      </mesh>
-      {/* pescoço */}
-      <mesh position={[0, 1.46, 0]} castShadow>
-        <cylinderGeometry args={[0.05, 0.055, 0.08, 12]} />
-        <meshStandardMaterial color={pele} roughness={0.85} />
-      </mesh>
-      {/* cabeça */}
-      <mesh position={[0, 1.58, 0]} castShadow>
-        <sphereGeometry args={[0.115, 20, 20]} />
-        <meshStandardMaterial color={pele} roughness={0.85} />
-      </mesh>
-      {/* cabelo (calota superior) */}
-      <mesh position={[0, 1.63, -0.01]} castShadow>
-        <sphereGeometry args={[0.118, 20, 20, 0, Math.PI * 2, 0, Math.PI / 2.2]} />
-        <meshStandardMaterial color={cabelo} roughness={0.95} />
-      </mesh>
-      {/* legenda */}
-      <Html position={[0, 1.95, 0]} center>
-        <div className="px-1.5 py-0.5 rounded bg-zinc-800/90 text-white text-[9px] font-semibold whitespace-nowrap shadow">
-          1,75 m
-        </div>
-      </Html>
-    </group>
-  );
-}
-
-// ============ Carro de escala (silhueta 4,5 × 1,5 m) — estilizado ============
-function CarroEscala({ position }: { position: [number, number, number] }) {
-  const corpo = "#c0392b";
-  const corpoDark = "#8b2820";
-  const vidro = "#1a2a3a";
-  const farol = "#fff8d8";
-  const lanterna = "#c83020";
-  const roda = "#0a0a0a";
-  const aro = "#888";
-  return (
-    <group position={position}>
-      {/* chassis baixo */}
-      <mesh position={[0, 0.32, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4.0, 0.12, 1.65]} />
-        <meshStandardMaterial color="#1a1a1a" roughness={0.9} />
-      </mesh>
-      {/* corpo principal — mais bojudo na frente/traseira */}
-      <mesh position={[0, 0.62, 0]} castShadow receiveShadow>
-        <boxGeometry args={[4.2, 0.45, 1.72]} />
-        <meshStandardMaterial color={corpo} metalness={0.55} roughness={0.35} />
-      </mesh>
-      {/* faixa lateral inferior (acento escuro) */}
-      <mesh position={[0, 0.42, 0.87]} castShadow>
-        <boxGeometry args={[4.0, 0.08, 0.02]} />
-        <meshStandardMaterial color={corpoDark} roughness={0.6} />
-      </mesh>
-      <mesh position={[0, 0.42, -0.87]} castShadow>
-        <boxGeometry args={[4.0, 0.08, 0.02]} />
-        <meshStandardMaterial color={corpoDark} roughness={0.6} />
-      </mesh>
-      {/* capô (frente, baixo) */}
-      <mesh position={[1.45, 0.78, 0]} castShadow>
-        <boxGeometry args={[1.3, 0.12, 1.65]} />
-        <meshStandardMaterial color={corpo} metalness={0.55} roughness={0.35} />
-      </mesh>
-      {/* porta-malas */}
-      <mesh position={[-1.6, 0.78, 0]} castShadow>
-        <boxGeometry args={[1.0, 0.12, 1.65]} />
-        <meshStandardMaterial color={corpo} metalness={0.55} roughness={0.35} />
-      </mesh>
-      {/* cabine */}
-      <mesh position={[-0.15, 1.05, 0]} castShadow>
-        <boxGeometry args={[2.4, 0.5, 1.6]} />
-        <meshStandardMaterial color={corpo} metalness={0.55} roughness={0.35} />
-      </mesh>
-      {/* vidros — laterais */}
-      <mesh position={[-0.15, 1.08, 0.81]} castShadow>
-        <boxGeometry args={[2.2, 0.42, 0.02]} />
-        <meshPhysicalMaterial color={vidro} transparent opacity={0.55} roughness={0.05} metalness={0.1} transmission={0.5} />
-      </mesh>
-      <mesh position={[-0.15, 1.08, -0.81]} castShadow>
-        <boxGeometry args={[2.2, 0.42, 0.02]} />
-        <meshPhysicalMaterial color={vidro} transparent opacity={0.55} roughness={0.05} metalness={0.1} transmission={0.5} />
-      </mesh>
-      {/* parabrisa (frente) inclinado */}
-      <mesh position={[1.0, 1.05, 0]} rotation={[0, 0, -0.5]} castShadow>
-        <boxGeometry args={[0.15, 0.55, 1.55]} />
-        <meshPhysicalMaterial color={vidro} transparent opacity={0.55} roughness={0.05} metalness={0.1} transmission={0.5} />
-      </mesh>
-      {/* vidro traseiro */}
-      <mesh position={[-1.3, 1.05, 0]} rotation={[0, 0, 0.55]} castShadow>
-        <boxGeometry args={[0.15, 0.5, 1.55]} />
-        <meshPhysicalMaterial color={vidro} transparent opacity={0.55} roughness={0.05} metalness={0.1} transmission={0.5} />
-      </mesh>
-      {/* faróis */}
-      <mesh position={[2.08, 0.7, 0.55]} castShadow>
-        <boxGeometry args={[0.04, 0.12, 0.3]} />
-        <meshStandardMaterial color={farol} emissive={farol} emissiveIntensity={0.4} roughness={0.2} />
-      </mesh>
-      <mesh position={[2.08, 0.7, -0.55]} castShadow>
-        <boxGeometry args={[0.04, 0.12, 0.3]} />
-        <meshStandardMaterial color={farol} emissive={farol} emissiveIntensity={0.4} roughness={0.2} />
-      </mesh>
-      {/* lanternas traseiras */}
-      <mesh position={[-2.08, 0.7, 0.55]} castShadow>
-        <boxGeometry args={[0.04, 0.14, 0.32]} />
-        <meshStandardMaterial color={lanterna} emissive={lanterna} emissiveIntensity={0.3} roughness={0.3} />
-      </mesh>
-      <mesh position={[-2.08, 0.7, -0.55]} castShadow>
-        <boxGeometry args={[0.04, 0.14, 0.32]} />
-        <meshStandardMaterial color={lanterna} emissive={lanterna} emissiveIntensity={0.3} roughness={0.3} />
-      </mesh>
-      {/* rodas + aros */}
-      {[[-1.35, -0.72], [1.35, -0.72], [-1.35, 0.72], [1.35, 0.72]].map(([x, z], i) => (
-        <group key={i} position={[x, 0.34, z]}>
-          <mesh rotation={[Math.PI / 2, 0, 0]} castShadow>
-            <cylinderGeometry args={[0.34, 0.34, 0.26, 24]} />
-            <meshStandardMaterial color={roda} roughness={0.95} />
-          </mesh>
-          <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, z > 0 ? 0.13 : -0.13]}>
-            <cylinderGeometry args={[0.2, 0.2, 0.02, 16]} />
-            <meshStandardMaterial color={aro} metalness={0.85} roughness={0.25} />
-          </mesh>
-        </group>
-      ))}
-      <Html position={[0, 1.55, 0]} center>
-        <div className="px-1.5 py-0.5 rounded bg-zinc-800/90 text-white text-[9px] font-semibold whitespace-nowrap shadow">
-          carro 4,5 m
-        </div>
-      </Html>
-    </group>
+    <>
+      <TuboMoldura position={[0, w / 2, 0]} size={[L, w, d]} color={cor} wireframe={wireframe} />
+      <TuboMoldura position={[0, H - w / 2, 0]} size={[L, w, d]} color={cor} wireframe={wireframe} />
+      <TuboMoldura position={[-half + w / 2, H / 2, 0]} size={[w, H, d]} color={cor} wireframe={wireframe} />
+      <TuboMoldura position={[half - w / 2, H / 2, 0]} size={[w, H, d]} color={cor} wireframe={wireframe} />
+    </>
   );
 }
 
@@ -261,8 +89,12 @@ function GeometriaTipologia({
   wireframe?: boolean;
   abertura: number;
 }) {
-  const t = 0.05;
-  const tThin = 0.03;
+  // Seções reais dos perfis (as mesmas da lista de corte).
+  const pf = perfisTipologia(tipologia);
+  const t = pf.moldura.w;
+  const tp = pf.moldura.d;
+  const tThin = pf.interno.w;
+  const tThinP = pf.interno.d;
   const halfL = L_m / 2;
 
   switch (tipologia) {
@@ -289,10 +121,7 @@ function GeometriaTipologia({
         return (
           <group position={[pivotX, 0, 0]} rotation={[0, abertura * (Math.PI / 2.2), 0]}>
             <group position={[-pivotX, 0, 0]}>
-              <Tubo position={[0, t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-              <Tubo position={[0, H_m - t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-              <Tubo position={[-halfL + t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
-              <Tubo position={[halfL - t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
+              <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
               {verticais}
             </group>
           </group>
@@ -301,10 +130,7 @@ function GeometriaTipologia({
 
       return (
         <group {...groupTransform}>
-          <Tubo position={[0, t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[0, H_m - t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[-halfL + t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[halfL - t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
+          <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
           {verticais}
           {tipologia === "portao_correr" && (
             <Tubo position={[L_m * abertura * 0.95, -0.04, 0]} size={[L_m * 1.1, 0.04, 0.06]} color="#444" wireframe={wireframe} />
@@ -378,10 +204,7 @@ function GeometriaTipologia({
       const desloc = abertura * (L_m / 2 - t);
       return (
         <group>
-          <Tubo position={[0, t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[0, H_m - t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[-halfL + t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[halfL - t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
+          <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
           <Tubo position={[0, H_m / 2, 0]} size={[t * 0.6, H_m - 2 * t, t * 0.6]} color={cor} wireframe={wireframe} />
           <mesh position={[-L_m / 4, H_m / 2, 0]} >
             <boxGeometry args={[L_m / 2 - t, H_m - 2 * t, 0.008]} />
@@ -411,10 +234,7 @@ function GeometriaTipologia({
       ));
       return (
         <group>
-          <Tubo position={[0, t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[0, H_m - t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[-halfL + t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[halfL - t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
+          <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
           {lams}
         </group>
       );
@@ -424,10 +244,7 @@ function GeometriaTipologia({
     case "grade_fixa_trabalhada": {
       const moldura = (
         <>
-          <Tubo position={[0, t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[0, H_m - t / 2, 0]} size={[L_m, t, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[-halfL + t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
-          <Tubo position={[halfL - t / 2, H_m / 2, 0]} size={[t, H_m, t]} color={cor} wireframe={wireframe} />
+          <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
         </>
       );
 
@@ -620,96 +437,143 @@ export default function Visualizador3D({
   const isNoite = ambiente === "noite";
   const fundoFinal = isNoite ? "#08070a" : bgColor;
 
+  // Pausa a renderização quando a aba não está visível (economia no celular).
+  const [ativo, setAtivo] = useState(true);
+  useEffect(() => {
+    const onVis = () => setAtivo(document.visibilityState === "visible");
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const fmt = (mm: number) => `${(mm / 10).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} cm`;
+
   return (
     <Canvas
       shadows
-      dpr={[1, 2]}
-      gl={{ preserveDrawingBuffer: true, antialias: true }}
+      dpr={[1, isMobile ? 1.4 : 2]}
+      frameloop={ativo ? "always" : "demand"}
+      gl={{ preserveDrawingBuffer: true, antialias: !isMobile, powerPreference: "high-performance" }}
       camera={{ position: [4, 3, 4], fov: 45, near: 0.1, far: 200 }}
       style={{ background: fundoFinal }}
     >
       <CanvasReadyHook onReady={onCanvasReady} />
+      <AdaptiveDpr pixelated />
+      <AdaptiveEvents />
 
-      {isNoite ? (
-        <>
-          <ambientLight intensity={0.15} color="#3a4a6a" />
-          <directionalLight position={[3, 5, 2]} intensity={0.25} color="#6a7aa0" />
-          <spotLight
-            position={[0, H_m * 1.5 + 1, 3]}
-            angle={0.6}
-            penumbra={0.6}
-            intensity={2.2}
-            color="#ffd6a0"
-            castShadow
-            target-position={[0, H_m / 2, 0]}
-          />
-          <pointLight position={[L_m, H_m * 0.4, 2]} intensity={0.6} color="#ffb060" />
-        </>
-      ) : (
-        <>
-          <ambientLight intensity={0.5} />
-          <directionalLight position={[5, 8, 5]} intensity={1.1} castShadow />
-          <directionalLight position={[-5, 4, -5]} intensity={0.4} />
-          <Environment preset="warehouse" />
-        </>
-      )}
+      <AmbienteHDR noite={isNoite} />
+      {isNoite ? <LuzesNoite larguraCena={L_m} altura={H_m} /> : <LuzesDia larguraCena={L_m} />}
+      <Chao larguraCena={L_m} noite={isNoite} />
+      {preset !== "topo" && <Muro larguraCena={L_m} altura={H_m} />}
 
       {showGrid && (
         <Grid
           args={[20, 20]}
-          cellColor={isNoite ? "#1a1a25" : "#3a3530"}
-          sectionColor={isNoite ? "#2a2a40" : "#5a4a3a"}
+          cellColor={isNoite ? "#1a1a25" : "#6d6862"}
+          sectionColor={isNoite ? "#2a2a40" : "#8a7b6a"}
           fadeDistance={40}
           fadeStrength={1.5}
           infiniteGrid
-          position={[0, 0, 0]}
+          position={[0, 0.006, 0]}
         />
       )}
 
-      {layout.map((item, i) => (
-        <group key={item.peca.id ?? i} position={[item.x, 0, 0]}>
-          <AnimatedGeometria
-            tipologia={item.peca.tipologia}
-            L_m={item.L_m}
-            H_m={item.H_m}
-            cor={item.hex}
-            wireframe={wireframe}
-            aberturaAlvo={abertura}
-          />
-          {showCotas && (
-            <>
-              <Html position={[0, -0.25, 0]} center>
-                <div className="px-2 py-1 rounded bg-primary text-primary-foreground text-[10px] font-semibold whitespace-nowrap shadow-orange">
-                  {(item.peca.largura_mm / 10).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} cm
-                </div>
-              </Html>
-              <Html position={[item.L_m / 2 + 0.2, item.H_m / 2, 0]} center>
-                <div className="px-2 py-1 rounded bg-primary text-primary-foreground text-[10px] font-semibold whitespace-nowrap shadow-orange">
-                  {(item.peca.altura_mm / 10).toLocaleString("pt-BR", { maximumFractionDigits: 1 })} cm
-                </div>
-              </Html>
-            </>
-          )}
-          {lista.length > 1 && item.peca.nome && (
-            <Html position={[0, item.H_m + 0.25, 0]} center>
-              <div className="px-2 py-0.5 rounded bg-background/85 border border-border text-[10px] font-semibold whitespace-nowrap">
-                {item.peca.nome}
-              </div>
-            </Html>
-          )}
-        </group>
-      ))}
+      <Bvh firstHitOnly>
+        {layout.map((item, i) => {
+          const pf = perfisTipologia(item.peca.tipologia);
+          const sel = !!selecionadaId && item.peca.id === selecionadaId;
+          return (
+            <group
+              key={item.peca.id ?? i}
+              position={[item.x, 0, 0]}
+              onClick={
+                onSelecionar
+                  ? (e) => {
+                      e.stopPropagation();
+                      if (item.peca.id) onSelecionar(item.peca.id);
+                    }
+                  : undefined
+              }
+            >
+              <AnimatedGeometria
+                tipologia={item.peca.tipologia}
+                L_m={item.L_m}
+                H_m={item.H_m}
+                cor={item.hex}
+                wireframe={wireframe}
+                aberturaAlvo={abertura}
+              />
+              <AcessoriosTipologia
+                tipologia={item.peca.tipologia}
+                L={item.L_m}
+                H={item.H_m}
+                prof={pf.moldura.d}
+              />
+              {item.peca.fixacao && (
+                <Fixacoes
+                  tipo={item.peca.fixacao}
+                  lados={item.peca.fixacaoLados ?? "um_lado"}
+                  L={item.L_m}
+                  H={item.H_m}
+                  prof={pf.moldura.d}
+                />
+              )}
 
-      {showPessoa && <PessoaEscala position={[L_m / 2 + 0.6, 0, 0]} />}
-      {showCarro && <CarroEscala position={[0, 0, -H_m / 2 - 2.2]} />}
+              {sel && (
+                <mesh position={[0, item.H_m / 2, 0]}>
+                  <boxGeometry args={[item.L_m + 0.16, item.H_m + 0.16, 0.34]} />
+                  <meshBasicMaterial color="#f97316" wireframe transparent opacity={0.6} />
+                </mesh>
+              )}
+
+              {showCotas && (
+                <>
+                  <Cota
+                    eixo="x"
+                    de={-item.L_m / 2}
+                    ate={item.L_m / 2}
+                    nivel={-0.35}
+                    texto={fmt(item.peca.largura_mm)}
+                  />
+                  <Cota
+                    eixo="y"
+                    de={0}
+                    ate={item.H_m}
+                    nivel={item.L_m / 2 + 0.35}
+                    texto={fmt(item.peca.altura_mm)}
+                  />
+                </>
+              )}
+
+              {lista.length > 1 && item.peca.nome && (
+                <Html position={[0, item.H_m + 0.28, 0]} center distanceFactor={9}>
+                  <div
+                    className={`whitespace-nowrap rounded border px-2 py-0.5 text-[10px] font-semibold ${
+                      sel ? "border-orange-500 bg-orange-500 text-white" : "border-border bg-background/85"
+                    }`}
+                  >
+                    {item.peca.nome}
+                  </div>
+                </Html>
+              )}
+            </group>
+          );
+        })}
+      </Bvh>
+
+      {showPessoa && <PessoaEscala position={[L_m / 2 + 0.7, 0, 0.3]} />}
+      {showCarro && <CarroEscala position={[0, 0, -H_m / 2 - 2.6]} />}
 
       <OrbitControls
         ref={controlsRef as any}
         enablePan
         autoRotate={autoRotate}
         autoRotateSpeed={1.2}
+        enableDamping
+        dampingFactor={0.08}
         minDistance={1.5}
         maxDistance={80}
+        maxPolarAngle={Math.PI / 2 - 0.02}
         target={[0, H_m / 2, 0]}
       />
       <CameraRig preset={preset} L_m={L_m} H_m={H_m} controlsRef={controlsRef} />
