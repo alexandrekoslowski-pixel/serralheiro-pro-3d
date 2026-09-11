@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +18,7 @@ import {
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
-  diasRestantes, somarDias, dataISO,
+  diasRestantes, somarDias, dataISO, ETAPA_LABEL,
 } from "@/lib/ordens";
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
@@ -34,6 +34,7 @@ export default function Painel() {
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<"todos" | OrdemStatus | "abertos">("abertos");
   const [vendedora, setVendedora] = useState("todas");
+  const [filtroPrazo, setFiltroPrazo] = useState<"todos" | "atrasadas" | "urgentes">("todos");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
 
   const pagamentos = listarPagamentos();
@@ -86,12 +87,16 @@ export default function Painel() {
   }, [base]);
 
   const alertas = useMemo(() => {
-    const abertos = base.filter((p) => p.status !== "entregue" && p.status !== "faturado");
-    const atrasadas = abertos.filter((p) => (diasRestantes(p.prazo_entrega) ?? 99) < 0).length;
-    const urgentes = abertos.filter((p) => {
-      const d = diasRestantes(p.prazo_entrega);
-      return d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
-    }).length;
+    const abertas = base.filter((p) => p.status !== "entregue" && p.status !== "faturado");
+    const atrasadas = abertas
+      .filter((p) => (diasRestantes(p.prazo_entrega) ?? 99) < 0)
+      .sort((a, b) => (diasRestantes(a.prazo_entrega) ?? 0) - (diasRestantes(b.prazo_entrega) ?? 0));
+    const urgentes = abertas
+      .filter((p) => {
+        const d = diasRestantes(p.prazo_entrega);
+        return d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
+      })
+      .sort((a, b) => (diasRestantes(a.prazo_entrega) ?? 99) - (diasRestantes(b.prazo_entrega) ?? 99));
     return { atrasadas, urgentes };
   }, [base, empresa]);
 
@@ -105,7 +110,13 @@ export default function Painel() {
         filtro === "todos" ? true :
         filtro === "abertos" ? p.status !== "faturado" && p.status !== "entregue" :
         p.status === filtro;
-      return okBusca && okStatus;
+      const d = diasRestantes(p.prazo_entrega);
+      const aberta = p.status !== "faturado" && p.status !== "entregue";
+      const okPrazo =
+        filtroPrazo === "todos" ? true :
+        filtroPrazo === "atrasadas" ? aberta && d !== null && d < 0 :
+        aberta && d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
+      return okBusca && okStatus && okPrazo;
     });
     const peso = (p: ProjetoLocal) => {
       if (p.status === "entregue" || p.status === "faturado") return 9999;
@@ -113,7 +124,7 @@ export default function Painel() {
       return d === null ? 9000 : d;
     };
     return [...filtrados].sort((a, b) => peso(a) - peso(b));
-  }, [base, busca, filtro]);
+  }, [base, busca, filtro, filtroPrazo, empresa]);
 
   const avancar = (p: ProjetoLocal) => {
     const prox = proximoStatus(p.status);
@@ -152,23 +163,85 @@ export default function Painel() {
         </Button>
       </div>
 
-      {(alertas.atrasadas > 0 || alertas.urgentes > 0) && (
+      {(alertas.atrasadas.length > 0 || alertas.urgentes.length > 0) && (
         <div className="mt-4 flex flex-wrap gap-2 text-sm">
-          {alertas.atrasadas > 0 && (
+          {alertas.atrasadas.length > 0 && (
             <button
-              onClick={() => setFiltro("abertos")}
-              className="rounded-md bg-destructive/15 px-3 py-2 font-medium text-destructive"
+              onClick={() => setFiltroPrazo((f) => (f === "atrasadas" ? "todos" : "atrasadas"))}
+              className={`rounded-md px-3 py-2 font-medium transition ${
+                filtroPrazo === "atrasadas"
+                  ? "bg-destructive text-destructive-foreground"
+                  : "bg-destructive/15 text-destructive hover:bg-destructive/25"
+              }`}
             >
-              {alertas.atrasadas} ordem(ns) atrasada(s)
+              {alertas.atrasadas.length} ordem(ns) atrasada(s)
             </button>
           )}
-          {alertas.urgentes > 0 && (
+          {alertas.urgentes.length > 0 && (
             <button
-              onClick={() => setFiltro("abertos")}
-              className="rounded-md bg-amber-500/15 px-3 py-2 font-medium text-amber-500"
+              onClick={() => setFiltroPrazo((f) => (f === "urgentes" ? "todos" : "urgentes"))}
+              className={`rounded-md px-3 py-2 font-medium transition ${
+                filtroPrazo === "urgentes"
+                  ? "bg-amber-500 text-white"
+                  : "bg-amber-500/15 text-amber-500 hover:bg-amber-500/25"
+              }`}
             >
-              {alertas.urgentes} com prazo apertado
+              {alertas.urgentes.length} com prazo apertado
             </button>
+          )}
+        </div>
+      )}
+
+      {(alertas.atrasadas.length > 0 || alertas.urgentes.length > 0) && (
+        <div className="surface-card mt-4 rounded-lg border border-border p-4">
+          <h2 className="font-display text-sm uppercase tracking-wide text-muted-foreground">Prioridades</h2>
+
+          {alertas.atrasadas.length > 0 && (
+            <div className="mt-3 space-y-1.5">
+              {alertas.atrasadas.map((p) => {
+                const d = diasRestantes(p.prazo_entrega) ?? 0;
+                return (
+                  <Link
+                    key={p.id}
+                    to={`/app/projeto/${p.id}`}
+                    className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm transition hover:border-destructive hover:bg-destructive/15"
+                  >
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
+                    <span className="min-w-0 flex-1 truncate font-medium">{p.nome}</span>
+                    <span className="hidden truncate text-xs text-muted-foreground sm:inline">
+                      {p.cliente || "Sem cliente"} · {ETAPA_LABEL[p.etapa]}
+                    </span>
+                    <span className="shrink-0 rounded bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground">
+                      atrasada há {Math.abs(d)} {Math.abs(d) === 1 ? "dia" : "dias"}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {alertas.urgentes.length > 0 && (
+            <div className="mt-3 space-y-1.5">
+              {alertas.urgentes.map((p) => {
+                const d = diasRestantes(p.prazo_entrega) ?? 0;
+                return (
+                  <Link
+                    key={p.id}
+                    to={`/app/projeto/${p.id}`}
+                    className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm transition hover:border-amber-500 hover:bg-amber-500/15"
+                  >
+                    <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+                    <span className="min-w-0 flex-1 truncate font-medium">{p.nome}</span>
+                    <span className="hidden truncate text-xs text-muted-foreground sm:inline">
+                      {p.cliente || "Sem cliente"} · {ETAPA_LABEL[p.etapa]}
+                    </span>
+                    <span className="shrink-0 rounded bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
+                      {d === 0 ? "vence hoje" : `faltam ${d} ${d === 1 ? "dia" : "dias"}`}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
@@ -260,7 +333,26 @@ export default function Painel() {
                   </span>
                 </div>
 
-                <div className={`mt-3 text-xs font-medium ${cls.texto}`}>{textoPrazo(p)}</div>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className={`text-xs font-medium ${cls.texto}`}>{textoPrazo(p)}</span>
+                  {(() => {
+                    const d = diasRestantes(p.prazo_entrega);
+                    if (d === null || p.status === "entregue" || p.status === "faturado") return null;
+                    if (d < 0)
+                      return (
+                        <span className="rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold uppercase text-destructive-foreground">
+                          {Math.abs(d)} d de atraso
+                        </span>
+                      );
+                    if (d <= empresa.limiteVermelhoDias)
+                      return (
+                        <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                          {d === 0 ? "vence hoje" : `faltam ${d} d`}
+                        </span>
+                      );
+                    return null;
+                  })()}
+                </div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                   <div><div className="text-[10px] uppercase text-muted-foreground">Orçado</div><div>{formatarBRL(p.total)}</div></div>
