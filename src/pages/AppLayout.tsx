@@ -58,7 +58,7 @@ export default function AppLayout() {
             </Link>
           </div>
 
-          <nav className="hidden min-w-0 flex-1 items-center justify-end gap-0.5 overflow-x-auto lg:flex [&::-webkit-scrollbar]:hidden">
+          <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto lg:flex [&::-webkit-scrollbar]:hidden">
             {navItems.map((it) => (
               <NavLink
                 key={it.to}
