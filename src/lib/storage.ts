@@ -354,15 +354,16 @@ export async function hidratarNuvem(uid: string): Promise<void> {
     observacao: (r.observacao as string) ?? "",
   }));
 
-  if (emp.data) {
-    const d = (emp.data.dados ?? {}) as Partial<DadosEmpresa>;
+  const linhaEmpresa = (emp.data ?? [])[0];
+  if (linhaEmpresa) {
+    const d = (linhaEmpresa.dados ?? {}) as Partial<DadosEmpresa>;
     empresa = {
       ...EMPRESA_PADRAO,
       ...d,
-      prazoPadraoDias: emp.data.prazo_padrao_dias ?? 15,
-      limiteVermelhoDias: emp.data.limite_vermelho_dias ?? 3,
-      limiteAmareloDias: emp.data.limite_amarelo_dias ?? 7,
-      codigoOficina: (emp.data as { codigo_oficina?: string }).codigo_oficina ?? "",
+      prazoPadraoDias: linhaEmpresa.prazo_padrao_dias ?? 15,
+      limiteVermelhoDias: linhaEmpresa.limite_vermelho_dias ?? 3,
+      limiteAmareloDias: linhaEmpresa.limite_amarelo_dias ?? 7,
+      codigoOficina: (linhaEmpresa as { codigo_oficina?: string }).codigo_oficina ?? "",
     };
   } else {
     empresa = safe(() => {
