@@ -258,6 +258,7 @@ export default function MinhasOrdens() {
                 <Textarea
                   id="retorno"
                   rows={3}
+                  maxLength={2000}
                   value={retorno}
                   onChange={(e) => setRetorno(e.target.value)}
                   placeholder="Cliente aprovou a instalação? Alguma pendência, ajuste ou reclamação?"

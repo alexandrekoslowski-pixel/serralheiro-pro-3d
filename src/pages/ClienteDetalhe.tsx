@@ -107,7 +107,7 @@ export default function ClienteDetalhe() {
 
             <div>
               <Label>Observações</Label>
-              <Textarea className="mt-1.5" rows={3} value={rascunho.observacoes ?? ""}
+              <Textarea className="mt-1.5" rows={3} maxLength={2000} value={rascunho.observacoes ?? ""}
                         onChange={(e) => setRascunho((b) => ({ ...b, observacoes: e.target.value }))} />
             </div>
 
