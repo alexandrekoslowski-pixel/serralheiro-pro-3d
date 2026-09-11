@@ -470,6 +470,12 @@ export type Database = {
       }
       pagamentos: {
         Row: {
+          comprovante_caminho: string | null
+          comprovante_enviado_em: string | null
+          comprovante_enviado_nome: string
+          comprovante_enviado_por: string | null
+          comprovante_nome: string | null
+          comprovante_tipo: string | null
           created_at: string
           data: string
           forma: string
@@ -480,6 +486,12 @@ export type Database = {
           valor: number
         }
         Insert: {
+          comprovante_caminho?: string | null
+          comprovante_enviado_em?: string | null
+          comprovante_enviado_nome?: string
+          comprovante_enviado_por?: string | null
+          comprovante_nome?: string | null
+          comprovante_tipo?: string | null
           created_at?: string
           data?: string
           forma?: string
@@ -490,6 +502,12 @@ export type Database = {
           valor?: number
         }
         Update: {
+          comprovante_caminho?: string | null
+          comprovante_enviado_em?: string | null
+          comprovante_enviado_nome?: string
+          comprovante_enviado_por?: string | null
+          comprovante_nome?: string | null
+          comprovante_tipo?: string | null
           created_at?: string
           data?: string
           forma?: string
@@ -539,9 +557,15 @@ export type Database = {
           created_at: string
           dados: Json
           entregue_em: string | null
+          enviado_em: string | null
+          enviado_por_nome: string
           etapa: Database["public"]["Enums"]["etapa_oficina"]
           etapa_em: string
           faturado_em: string | null
+          followup_em: string | null
+          followup_erro: string
+          followup_status: string
+          followup_tentativa_em: string | null
           id: string
           nome: string
           prazo_entrega: string | null
@@ -561,9 +585,15 @@ export type Database = {
           created_at?: string
           dados?: Json
           entregue_em?: string | null
+          enviado_em?: string | null
+          enviado_por_nome?: string
           etapa?: Database["public"]["Enums"]["etapa_oficina"]
           etapa_em?: string
           faturado_em?: string | null
+          followup_em?: string | null
+          followup_erro?: string
+          followup_status?: string
+          followup_tentativa_em?: string | null
           id: string
           nome?: string
           prazo_entrega?: string | null
@@ -583,9 +613,15 @@ export type Database = {
           created_at?: string
           dados?: Json
           entregue_em?: string | null
+          enviado_em?: string | null
+          enviado_por_nome?: string
           etapa?: Database["public"]["Enums"]["etapa_oficina"]
           etapa_em?: string
           faturado_em?: string | null
+          followup_em?: string | null
+          followup_erro?: string
+          followup_status?: string
+          followup_tentativa_em?: string | null
           id?: string
           nome?: string
           prazo_entrega?: string | null
