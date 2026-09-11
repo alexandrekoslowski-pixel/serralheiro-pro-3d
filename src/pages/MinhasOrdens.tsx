@@ -94,7 +94,7 @@ export default function MinhasOrdens() {
                 <div className="space-y-2">
                   {doGrupo.map((o) => {
                     const prox = proximaEtapa(o.etapa);
-                    const tip = tipologiaPorId(o.dados?.tipologia ?? "");
+                    const tip = tipologiaPorId((o.dados?.tipologia ?? "") as never);
                     const cor = o.dados?.cor ? acabamentoPorId(o.dados.cor as never) : null;
                     return (
                       <article key={o.id} className="overflow-hidden rounded border border-border bg-card">
