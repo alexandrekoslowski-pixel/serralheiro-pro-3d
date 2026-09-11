@@ -235,12 +235,12 @@ export default function Painel() {
           const recebido = totalRecebido(p.id);
           const prox = proximoStatus(p.status);
           return (
-            <div key={p.id} className="surface-card overflow-hidden rounded-lg border border-border">
+            <div key={p.id} className="surface-card relative overflow-hidden rounded-lg border border-border transition hover:shadow-md">
               <div className={`h-1.5 w-full ${cls.faixa}`} />
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <Link to={`/app/projeto/${p.id}`} className="font-display text-sm hover:underline">{p.nome}</Link>
+                    <Link to={`/app/projeto/${p.id}`} className="after:absolute after:inset-0 font-display text-sm hover:underline">{p.nome}</Link>
                     <p className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {tipologiaPorId(p.tipologia).nome}</p>
                     {p.vendedora && <p className="truncate text-[11px] text-muted-foreground">Venda: {p.vendedora}</p>}
                   </div>
