@@ -179,7 +179,7 @@ async function buscarTudo<T>(tabela: "materiais" | "materiais_precos_atuais", or
   const passo = 1000;
   const todos: T[] = [];
   for (let inicio = 0; ; inicio += passo) {
-    let q = (supabase.from(tabela) as any).select("*").range(inicio, inicio + passo - 1);
+    let q = (supabase as any).from(tabela).select("*").range(inicio, inicio + passo - 1);
 
     if (ordem) q = q.order(ordem);
     const { data, error } = await q;
