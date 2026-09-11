@@ -49,6 +49,26 @@ export function SessaoProvider({ children }: { children: ReactNode }) {
     return () => { ativo = false; };
   }, [session?.user?.id]);
 
+  // Atualiza os dados automaticamente quando algo muda no banco.
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const canal = supabase
+      .channel(`sessao-projetos-${uid}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "projetos" }, () => {
+        if (timer) clearTimeout(timer);
+        timer = setTimeout(() => void hidratarNuvem(uid).catch(() => undefined), 600);
+      })
+      .subscribe();
+    return () => {
+      if (timer) clearTimeout(timer);
+      void supabase.removeChannel(canal);
+    };
+  }, [session?.user?.id]);
+
+
+
   const sair = async () => {
     await supabase.auth.signOut();
     limparMemoria();
