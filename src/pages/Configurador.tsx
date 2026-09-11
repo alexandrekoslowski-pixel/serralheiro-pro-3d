@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Save, Copy, Download, Settings2, DollarSign,
   RotateCw, Box as BoxIcon, Grid3x3, Ruler, Plus, Trash2, RefreshCw, EyeOff, Eye,
@@ -51,10 +51,13 @@ const PALETA_BARRAS = [
 export default function Configurador() {
   const { id = "" } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [projeto, setProjeto] = useState<ProjetoLocal | null>(null);
   const [salvando, setSalvando] = useState(false);
   const [salvo, setSalvo] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const clienteNomeRef = useRef<HTMLInputElement | null>(null);
+  const focoInicialFeito = useRef(false);
 
   // Controles 3D
   const [preset, setPreset] = useState<CameraPreset>("iso");
@@ -82,6 +85,17 @@ export default function Configurador() {
     }
     setProjeto(p);
   }, [id, navigate]);
+
+  useEffect(() => {
+    if (
+      !projeto
+      || focoInicialFeito.current
+      || !(location.state as { novoOrcamento?: boolean } | null)?.novoOrcamento
+    ) return;
+    focoInicialFeito.current = true;
+    const timer = window.setTimeout(() => clienteNomeRef.current?.focus(), 80);
+    return () => window.clearTimeout(timer);
+  }, [location.state, projeto]);
 
 
   const empresa = useMemo(() => obterEmpresa(), []);
@@ -329,7 +343,7 @@ export default function Configurador() {
 
               <div className="sm:col-span-2">
                 <Label className="text-xs">Cliente (nome e sobrenome)</Label>
-                <Input className="h-9" value={projeto.cliente} onChange={(e) => upd("cliente", e.target.value)} placeholder="Maria Silva" />
+                <Input ref={clienteNomeRef} className="h-9" value={projeto.cliente} onChange={(e) => upd("cliente", e.target.value)} placeholder="Maria Silva" />
               </div>
               <div>
                 <Label className="text-xs">RG ou CPF</Label>

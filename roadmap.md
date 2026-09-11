@@ -1,6 +1,7 @@
 # Roadmap — sistema de gestão da serralheria
 
 ## Concluído
+- Criação rápida: Novo orçamento abre diretamente no preenchimento, sem janela intermediária
 - Fase 1 base: clientes, briefing, catálogo de serviços, materiais, equipe/papéis (gestor, vendedora, serralheiro)
 - Rotas e menu por papel; vendedora não vê Financeiro/Materiais/Serviços/Equipe
 - Orçamento ligado a uma ficha de cliente (cliente_id) com preenchimento automático
