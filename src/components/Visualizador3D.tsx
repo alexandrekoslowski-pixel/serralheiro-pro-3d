@@ -459,7 +459,7 @@ export default function Visualizador3D({
       shadows
       dpr={[1, isMobile ? 1.4 : 2]}
       frameloop={ativo ? "always" : "demand"}
-      gl={{ preserveDrawingBuffer: true, antialias: !isMobile, powerPreference: "high-performance" }}
+      gl={{ preserveDrawingBuffer: true, antialias: !isMobile, powerPreference: "high-performance", toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 0.95 }}
       camera={{ position: [4, 3, 4], fov: 45, near: 0.1, far: 200 }}
       style={{ background: fundoFinal }}
     >
