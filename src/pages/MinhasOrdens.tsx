@@ -43,6 +43,7 @@ export default function MinhasOrdens() {
   const codigo = obterEmpresa().codigoOficina;
   const [ordens, setOrdens] = useState<OrdemOficina[]>([]);
   const [carregando, setCarregando] = useState(true);
+  const [alvo, setAlvo] = useState<EtapaOficina | null>(null);
 
   const carregar = useCallback(async () => {
     if (!codigo) { setCarregando(false); return; }
@@ -86,7 +87,19 @@ export default function MinhasOrdens() {
           {ETAPAS_OFICINA.map((etapa) => {
             const doGrupo = ordens.filter((o) => o.etapa === etapa);
             return (
-              <section key={etapa} className="rounded border border-border bg-card/40 p-2">
+              <section
+                key={etapa}
+                className={`rounded border p-2 transition ${alvo === etapa ? "border-primary bg-primary/10" : "border-border bg-card/40"}`}
+                onDragOver={(e) => { e.preventDefault(); setAlvo(etapa); }}
+                onDragLeave={() => setAlvo((a) => (a === etapa ? null : a))}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setAlvo(null);
+                  const id = e.dataTransfer.getData("text/plain");
+                  const o = ordens.find((x) => x.id === id);
+                  if (o && o.etapa !== etapa) void mover(o, etapa);
+                }}
+              >
                 <h2 className="mb-2 flex items-center justify-between px-1 text-sm font-semibold uppercase tracking-wide">
                   {ETAPA_LABEL[etapa]}
                   <span className="rounded bg-muted px-1.5 text-xs text-muted-foreground">{doGrupo.length}</span>
@@ -97,7 +110,12 @@ export default function MinhasOrdens() {
                     const tip = tipologiaPorId((o.dados?.tipologia ?? "") as never);
                     const cor = o.dados?.cor ? acabamentoPorId(o.dados.cor as never) : null;
                     return (
-                      <article key={o.id} className="overflow-hidden rounded border border-border bg-card">
+                      <article
+                        key={o.id}
+                        draggable
+                        onDragStart={(e) => e.dataTransfer.setData("text/plain", o.id)}
+                        className="cursor-grab overflow-hidden rounded border border-border bg-card active:cursor-grabbing"
+                      >
                         <div className={`h-1.5 ${faixaPrazo(o.prazo_entrega)}`} />
                         <div className="space-y-1 p-2">
                           <p className="font-semibold leading-tight">{o.nome}</p>
