@@ -25,6 +25,7 @@ export default function AppLayout() {
 
   const todos: { to: string; end: boolean; label: string; icon: typeof Users; papeis: Papel[] }[] = [
     { to: "/app", end: true, label: "Painel", icon: LayoutDashboard, papeis: ["gestor", "vendedora"] },
+    { to: "/app/oficina", end: false, label: "Minhas ordens", icon: Wrench, papeis: ["serralheiro"] },
     { to: "/app/clientes", end: false, label: "Clientes", icon: Users, papeis: ["gestor", "vendedora"] },
     { to: "/app/projetos", end: false, label: "Orçamentos", icon: FolderKanban, papeis: ["gestor", "vendedora"] },
     { to: "/app/calendario", end: false, label: "Calendário", icon: CalendarDays, papeis: ["gestor", "vendedora"] },
