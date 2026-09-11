@@ -461,6 +461,14 @@ export default function Configurador() {
                 <Input className="h-9" readOnly value={formatarBRL(resultado.totalGeral)} />
               </div>
             </div>
+
+            <div className="mt-5 border-t border-border pt-4">
+              <h3 className="font-display text-base">Fotos da ordem</h3>
+              <p className="mb-3 text-sm text-muted-foreground">
+                Fotos da medição no local, da produção e da instalação.
+              </p>
+              <PainelFotos projetoId={projeto.id} etapaInicial="medicao" />
+            </div>
           </TabsContent>
         </Tabs>
       </div>

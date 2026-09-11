@@ -105,6 +105,34 @@ export default function Configuracoes() {
           </Button>
         </div>
 
+        <h2 className="font-display text-lg mt-6 mb-2">Empresas de pintura</h2>
+        <p className="text-sm text-muted-foreground mb-3">
+          Aparecem como sugestão ao mandar a ordem para a etapa de pintura.
+        </p>
+        <div className="space-y-2 md:max-w-md">
+          {(empresa.empresasPintura ?? []).map((v, i) => (
+            <div key={i} className="flex gap-2">
+              <Input
+                value={v}
+                placeholder="Nome da empresa de pintura"
+                onChange={(e) => {
+                  const next = [...(empresa.empresasPintura ?? [])];
+                  next[i] = e.target.value;
+                  setEmpresa({ ...empresa, empresasPintura: next });
+                }}
+              />
+              <Button size="icon" variant="dangerOutline" title="Excluir"
+                onClick={() => setEmpresa({ ...empresa, empresasPintura: (empresa.empresasPintura ?? []).filter((_, idx) => idx !== i) })}>
+                <Trash2 className="h-4 w-4" />
+              </Button>
+            </div>
+          ))}
+          <Button size="sm" variant="outline"
+            onClick={() => setEmpresa({ ...empresa, empresasPintura: [...(empresa.empresasPintura ?? []), ""] })}>
+            <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar empresa
+          </Button>
+        </div>
+
         <h2 className="font-display text-lg mt-6 mb-4">Prazos das ordens</h2>
         <div className="grid gap-4 md:grid-cols-3">
           <div>
