@@ -9,6 +9,7 @@ import { ETAPAS_OFICINA, ETAPA_LABEL, proximaEtapa, diasRestantes, tempoNaEtapa 
 import type { EtapaOficina } from "@/lib/storage";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import { cm } from "@/lib/medidas";
+import { useRealtimeProjetos } from "@/hooks/useRealtimeProjetos";
 
 interface OrdemOficina {
   id: string;
@@ -55,9 +56,11 @@ export default function KanbanOficina() {
 
   useEffect(() => {
     void carregar();
-    const t = setInterval(() => void carregar(), 60000);
+    const t = setInterval(() => void carregar(), 15000);
     return () => clearInterval(t);
   }, [carregar]);
+
+  useRealtimeProjetos(() => void carregar());
 
   const mover = async (o: OrdemOficina, etapa: EtapaOficina) => {
     setOrdens((lista) => lista.map((x) => (x.id === o.id ? { ...x, etapa, etapa_em: new Date().toISOString() } : x)));
