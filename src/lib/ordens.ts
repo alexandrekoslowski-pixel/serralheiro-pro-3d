@@ -1,13 +1,22 @@
 // Regras de situação e prazo das ordens de serviço.
 import { OrdemStatus, ProjetoLocal, DadosEmpresa, EtapaOficina } from "./storage";
 
-export const ETAPAS_OFICINA: EtapaOficina[] = ["fila", "producao", "pintura", "acabamento", "pos_venda", "pronto"];
+export const ETAPAS_OFICINA: EtapaOficina[] = [
+  "fila",
+  "producao",
+  "acabamento",
+  "pintura",
+  "entrega",
+  "pos_venda",
+  "pronto",
+];
 
 export const ETAPA_LABEL: Record<EtapaOficina, string> = {
   fila: "Fila",
-  producao: "Produção",
-  pintura: "Pintura",
+  producao: "Produção / montagem",
   acabamento: "Acabamento",
+  pintura: "Pintura",
+  entrega: "Entrega",
   pos_venda: "Pós-venda",
   pronto: "Pronto",
 };

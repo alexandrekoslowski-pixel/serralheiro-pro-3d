@@ -16,7 +16,7 @@ export const ETAPAS_FOTO: { id: EtapaFoto; nome: string }[] = [
 export const etapaFotoDaOficina = (e: EtapaOficina): EtapaFoto => {
   if (e === "pintura") return "pintura";
   if (e === "acabamento") return "acabamento";
-  if (e === "pos_venda" || e === "pronto") return "entrega";
+  if (e === "entrega" || e === "pos_venda" || e === "pronto") return "entrega";
   return "montagem";
 };
 
@@ -132,6 +132,7 @@ export async function moverComResponsavel(
   projetoId: string,
   etapa: EtapaOficina,
   responsavel: string,
+  observacao = "",
 ): Promise<void> {
   const { error } = await supabase.rpc("mover_etapa_resp", {
     _codigo: codigo,
@@ -140,4 +141,11 @@ export async function moverComResponsavel(
     _responsavel: responsavel,
   });
   if (error) throw error;
+  if (observacao.trim()) {
+    await supabase
+      .from("ordem_etapas")
+      .update({ observacao: observacao.trim() } as never)
+      .eq("projeto_id", projetoId)
+      .eq("etapa", etapa);
+  }
 }

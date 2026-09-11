@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ETAPAS_OFICINA, ETAPA_LABEL, proximaEtapa, diasRestantes, tempoNaEtapa } from "@/lib/ordens";
 import type { EtapaOficina } from "@/lib/storage";
@@ -59,6 +60,7 @@ export default function MinhasOrdens() {
   const [alvo, setAlvo] = useState<EtapaOficina | null>(null);
   const [mover, setMover] = useState<{ ordem: OrdemOficina; etapa: EtapaOficina } | null>(null);
   const [responsavel, setResponsavel] = useState("");
+  const [retorno, setRetorno] = useState("");
 
   const carregar = useCallback(async () => {
     if (!codigo) { setCarregando(false); return; }
@@ -76,6 +78,7 @@ export default function MinhasOrdens() {
 
   const abrirMover = (o: OrdemOficina, etapa: EtapaOficina) => {
     setResponsavel(o.responsavel ?? "");
+    setRetorno("");
     setMover({ ordem: o, etapa });
   };
 
@@ -88,12 +91,13 @@ export default function MinhasOrdens() {
       ),
     );
     setMover(null);
-    await moverComResponsavel(codigo, ordem.id, etapa, responsavel.trim());
+    await moverComResponsavel(codigo, ordem.id, etapa, responsavel.trim(), retorno);
     void carregar();
   };
 
   const sugestoes = mover?.etapa === "pintura" ? (empresa.empresasPintura ?? []) : equipe.map((m) => m.nome).filter(Boolean);
-  const pedirFoto = mover ? ["pos_venda", "pronto"].includes(mover.etapa) : false;
+  const pedirFoto = mover?.etapa === "entrega";
+  const pedirRetorno = mover?.etapa === "pos_venda";
 
   if (carregando) return <div className="py-16 text-center text-muted-foreground">Carregando ordens...</div>;
 
@@ -114,7 +118,7 @@ export default function MinhasOrdens() {
           Nenhuma ordem na oficina no momento.
         </p>
       ) : (
-        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">
           {ETAPAS_OFICINA.map((etapa) => {
             const doGrupo = ordens.filter((o) => o.etapa === etapa);
             return (
@@ -166,7 +170,7 @@ export default function MinhasOrdens() {
                               {o.responsavel || "sem responsável"}
                             </span>
                           </p>
-                          {["pos_venda", "pronto"].includes(o.etapa) && o.endereco ? (
+                          {["entrega", "pos_venda", "pronto"].includes(o.etapa) && o.endereco ? (
                             <p className="flex items-start gap-1 text-[11px] text-muted-foreground">
                               <MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {o.endereco}
                             </p>
@@ -230,7 +234,7 @@ export default function MinhasOrdens() {
               ) : null}
             </div>
 
-            {mover?.ordem.endereco && ["pos_venda", "pronto"].includes(mover.etapa) ? (
+            {mover?.ordem.endereco && ["entrega", "pos_venda", "pronto"].includes(mover.etapa) ? (
               <p className="flex items-start gap-1 rounded border border-border bg-muted/30 p-2 text-sm">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" /> {mover.ordem.endereco}
               </p>
@@ -242,6 +246,19 @@ export default function MinhasOrdens() {
                   <Camera className="h-4 w-4" /> Anexe a foto da instalação
                 </p>
                 <PainelFotos projetoId={mover.ordem.id} somenteEtapa="entrega" />
+              </div>
+            ) : null}
+
+            {pedirRetorno ? (
+              <div className="space-y-1">
+                <Label htmlFor="retorno">Retorno do cliente (pós-venda)</Label>
+                <Textarea
+                  id="retorno"
+                  rows={3}
+                  value={retorno}
+                  onChange={(e) => setRetorno(e.target.value)}
+                  placeholder="Cliente aprovou a instalação? Alguma pendência, ajuste ou reclamação?"
+                />
               </div>
             ) : null}
           </div>
