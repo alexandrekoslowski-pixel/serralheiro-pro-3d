@@ -768,7 +768,7 @@ export default function Configurador() {
                       <Input className="h-8 col-span-3 sm:col-span-2 text-right" type="number" step="0.01" value={ex.qtd} onChange={(e) => updExtra(ex.id, { qtd: Number(e.target.value) })} />
                       <Input className="h-8 col-span-3 sm:col-span-1" placeholder="un" value={ex.unidade} onChange={(e) => updExtra(ex.id, { unidade: e.target.value })} />
                       <Input className="h-8 col-span-4 sm:col-span-3 text-right" type="number" step="0.01" placeholder="Preço" value={ex.precoUnit} onChange={(e) => updExtra(ex.id, { precoUnit: Number(e.target.value) })} />
-                      <Button size="icon" variant="soft" className="col-span-2 sm:col-span-1" onClick={() => delExtra(ex.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button size="icon" variant="dangerOutline" title="Excluir" className="col-span-2 sm:col-span-1" onClick={() => delExtra(ex.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   ))}
                 </div>

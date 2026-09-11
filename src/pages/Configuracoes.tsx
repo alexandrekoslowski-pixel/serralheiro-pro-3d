@@ -246,7 +246,7 @@ export default function Configuracoes() {
                   <td className="py-1 pr-2"><Input className="h-8" value={p.descricao} onChange={(e) => updPerfil(i, { descricao: e.target.value })} /></td>
                   <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={p.precoPorMetro} onChange={(e) => updPerfil(i, { precoPorMetro: Number(e.target.value) })} /></td>
                   <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={p.pesoLinear} onChange={(e) => updPerfil(i, { pesoLinear: Number(e.target.value) })} /></td>
-                  <td className="py-1"><Button size="icon" variant="soft" onClick={() => delPerfil(i)}><Trash2 className="h-4 w-4 text-destructive" /></Button></td>
+                  <td className="py-1"><Button size="icon" variant="dangerOutline" title="Excluir" onClick={() => delPerfil(i)}><Trash2 className="h-4 w-4" /></Button></td>
                 </tr>
               ))}
             </tbody>
@@ -280,7 +280,7 @@ export default function Configuracoes() {
                   <td className="py-1 pr-2"><Input className="h-8" value={a.descricao} onChange={(e) => updAce(i, { descricao: e.target.value })} /></td>
                   <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={a.preco} onChange={(e) => updAce(i, { preco: Number(e.target.value) })} /></td>
                   <td className="py-1 pr-2"><Input className="h-8" value={a.unidade} onChange={(e) => updAce(i, { unidade: e.target.value })} /></td>
-                  <td className="py-1"><Button size="icon" variant="soft" onClick={() => delAce(i)}><Trash2 className="h-4 w-4 text-destructive" /></Button></td>
+                  <td className="py-1"><Button size="icon" variant="dangerOutline" title="Excluir" onClick={() => delAce(i)}><Trash2 className="h-4 w-4" /></Button></td>
                 </tr>
               ))}
             </tbody>
