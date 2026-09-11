@@ -95,7 +95,7 @@ export default function MinhasOrdens() {
                   {doGrupo.map((o) => {
                     const prox = proximaEtapa(o.etapa);
                     const tip = tipologiaPorId(o.dados?.tipologia ?? "");
-                    const cor = acabamentoPorId(o.dados?.cor ?? "");
+                    const cor = o.dados?.cor ? acabamentoPorId(o.dados.cor as never) : null;
                     return (
                       <article key={o.id} className="overflow-hidden rounded border border-border bg-card">
                         <div className={`h-1.5 ${faixaPrazo(o.prazo_entrega)}`} />
