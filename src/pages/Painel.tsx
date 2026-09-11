@@ -87,12 +87,16 @@ export default function Painel() {
   }, [base]);
 
   const alertas = useMemo(() => {
-    const abertos = base.filter((p) => p.status !== "entregue" && p.status !== "faturado");
-    const atrasadas = abertos.filter((p) => (diasRestantes(p.prazo_entrega) ?? 99) < 0).length;
-    const urgentes = abertos.filter((p) => {
-      const d = diasRestantes(p.prazo_entrega);
-      return d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
-    }).length;
+    const abertas = base.filter((p) => p.status !== "entregue" && p.status !== "faturado");
+    const atrasadas = abertas
+      .filter((p) => (diasRestantes(p.prazo_entrega) ?? 99) < 0)
+      .sort((a, b) => (diasRestantes(a.prazo_entrega) ?? 0) - (diasRestantes(b.prazo_entrega) ?? 0));
+    const urgentes = abertas
+      .filter((p) => {
+        const d = diasRestantes(p.prazo_entrega);
+        return d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
+      })
+      .sort((a, b) => (diasRestantes(a.prazo_entrega) ?? 99) - (diasRestantes(b.prazo_entrega) ?? 99));
     return { atrasadas, urgentes };
   }, [base, empresa]);
 
