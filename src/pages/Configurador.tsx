@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import type { CameraPreset } from "@/components/Visualizador3D";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
+import { useVendedores } from "@/hooks/useVendedores";
 import { type Cliente, listarClientes } from "@/lib/gestao";
 
 import {
@@ -100,7 +101,7 @@ export default function Configurador() {
 
   const empresa = useMemo(() => obterEmpresa(), []);
   const catalogo = useMemo(() => obterCatalogo(), []);
-  const vendedores = vendedoresLista;
+  const vendedores = useVendedores();
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
