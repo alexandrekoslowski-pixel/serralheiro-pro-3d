@@ -38,6 +38,18 @@ export default function Painel() {
 
   const pagamentos = listarPagamentos();
 
+  // Tudo do topo (resumos, contadores e alertas) respeita o filtro de vendedor(a).
+  const base = useMemo(() => projetos.filter((p) =>
+    vendedora === "todas" ? true :
+    vendedora === "__sem__" ? !(p.vendedora ?? "").trim() :
+    (p.vendedora ?? "").trim().toLowerCase() === vendedora.trim().toLowerCase()
+  ), [projetos, vendedora]);
+  const idsBase = useMemo(() => new Set(base.map((p) => p.id)), [base]);
+  const pagamentosBase = useMemo(
+    () => pagamentos.filter((x) => idsBase.has(x.projeto_id)),
+    [pagamentos, idsBase],
+  );
+
   // Resumo do mês (e do mês anterior, para comparar).
   const resumo = useMemo(() => {
     const chave = (iso: string | null) => (iso ? iso.slice(0, 7) : "");
@@ -47,57 +59,53 @@ export default function Painel() {
     const mesAnterior = `${ant.getFullYear()}-${String(ant.getMonth() + 1).padStart(2, "0")}`;
 
     const calc = (mes: string) => {
-      const criados = projetos.filter((p) => chave(p.created_at) === mes);
+      const criados = base.filter((p) => chave(p.created_at) === mes);
       const orcado = criados.reduce((s, p) => s + p.total, 0);
-      const aprovado = projetos
+      const aprovado = base
         .filter((p) => chave(p.aprovado_em) === mes)
         .reduce((s, p) => s + p.total, 0);
-      const faturado = projetos
+      const faturado = base
         .filter((p) => chave(p.faturado_em) === mes)
         .reduce((s, p) => s + (p.valor_faturado || 0), 0);
-      const recebido = pagamentos.filter((p) => p.data.slice(0, 7) === mes).reduce((s, p) => s + p.valor, 0);
+      const recebido = pagamentosBase.filter((p) => p.data.slice(0, 7) === mes).reduce((s, p) => s + p.valor, 0);
       const ticket = criados.length ? orcado / criados.length : 0;
       return { orcado, aprovado, faturado, recebido, ticket, qtd: criados.length };
     };
 
-    const aReceber = projetos.reduce(
+    const aReceber = base.reduce(
       (s, p) => s + Math.max(0, (p.valor_faturado || 0) - totalRecebido(p.id)),
       0,
     );
     return { atual: calc(mesAtual), anterior: calc(mesAnterior), aReceber };
-  }, [projetos, pagamentos]);
+  }, [base, pagamentosBase]);
 
   const contagem = useMemo(() => {
     const c: Record<string, number> = {};
-    for (const p of projetos) c[p.status] = (c[p.status] ?? 0) + 1;
+    for (const p of base) c[p.status] = (c[p.status] ?? 0) + 1;
     return c;
-  }, [projetos]);
+  }, [base]);
 
   const alertas = useMemo(() => {
-    const abertos = projetos.filter((p) => p.status !== "entregue" && p.status !== "faturado");
+    const abertos = base.filter((p) => p.status !== "entregue" && p.status !== "faturado");
     const atrasadas = abertos.filter((p) => (diasRestantes(p.prazo_entrega) ?? 99) < 0).length;
     const urgentes = abertos.filter((p) => {
       const d = diasRestantes(p.prazo_entrega);
       return d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
     }).length;
     return { atrasadas, urgentes };
-  }, [projetos, empresa]);
+  }, [base, empresa]);
 
   const nomesVendedores = useVendedores();
 
   const lista = useMemo(() => {
     const q = busca.toLowerCase().trim();
-    const filtrados = projetos.filter((p) => {
+    const filtrados = base.filter((p) => {
       const okBusca = !q || p.nome.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q);
       const okStatus =
         filtro === "todos" ? true :
         filtro === "abertos" ? p.status !== "faturado" && p.status !== "entregue" :
         p.status === filtro;
-      const okVend =
-        vendedora === "todas" ? true :
-        vendedora === "__sem__" ? !(p.vendedora ?? "").trim() :
-        (p.vendedora ?? "").trim().toLowerCase() === vendedora.trim().toLowerCase();
-      return okBusca && okStatus && okVend;
+      return okBusca && okStatus;
     });
     const peso = (p: ProjetoLocal) => {
       if (p.status === "entregue" || p.status === "faturado") return 9999;
@@ -105,7 +113,7 @@ export default function Painel() {
       return d === null ? 9000 : d;
     };
     return [...filtrados].sort((a, b) => peso(a) - peso(b));
-  }, [projetos, busca, filtro, vendedora]);
+  }, [base, busca, filtro]);
 
   const avancar = (p: ProjetoLocal) => {
     const prox = proximoStatus(p.status);
