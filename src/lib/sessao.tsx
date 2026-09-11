@@ -76,3 +76,10 @@ export function ExigirLogin({ children }: { children: ReactNode }) {
   if (!session) return <Navigate to="/auth" state={{ from: loc.pathname }} replace />;
   return <>{children}</>;
 }
+
+/** Bloqueia telas de gestão para quem é serralheiro. */
+export function ExigirGestao({ children }: { children: ReactNode }) {
+  const { papel } = useSessao();
+  if (papel === "serralheiro") return <Navigate to="/app/oficina" replace />;
+  return <>{children}</>;
+}
