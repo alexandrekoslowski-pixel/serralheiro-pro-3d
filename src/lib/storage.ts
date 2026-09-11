@@ -340,7 +340,7 @@ export async function hidratarNuvem(uid: string): Promise<void> {
   const [proj, pag, emp, cat] = await Promise.all([
     supabase.from("projetos").select("*").order("updated_at", { ascending: false }),
     supabase.from("pagamentos").select("*").order("data", { ascending: false }),
-    supabase.from("empresa").select("*").maybeSingle(),
+    supabase.from("empresa").select("*").order("updated_at", { ascending: false }).limit(1),
     supabase.from("catalogo").select("*").maybeSingle(),
   ]);
 
