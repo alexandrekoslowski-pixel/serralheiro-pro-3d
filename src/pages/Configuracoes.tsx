@@ -79,14 +79,14 @@ export default function Configuracoes() {
 
         <h2 className="font-display text-lg mt-6 mb-2">Equipe de vendas</h2>
         <p className="text-sm text-muted-foreground mb-3">
-          Quem aparece na lista de vendedoras do orçamento e nos filtros do painel.
+          Nomes extras que aparecem na lista de vendedores do orçamento. A equipe cadastrada já entra automaticamente.
         </p>
         <div className="space-y-2 md:max-w-md">
           {(empresa.vendedoras ?? []).map((v, i) => (
             <div key={i} className="flex gap-2">
               <Input
                 value={v}
-                placeholder="Nome da vendedora"
+                placeholder="Nome do vendedor(a)"
                 onChange={(e) => {
                   const next = [...(empresa.vendedoras ?? [])];
                   next[i] = e.target.value;
@@ -101,7 +101,7 @@ export default function Configuracoes() {
           ))}
           <Button size="sm" variant="outline"
             onClick={() => setEmpresa({ ...empresa, vendedoras: [...(empresa.vendedoras ?? []), ""] })}>
-            <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar vendedora
+            <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar vendedor(a)
           </Button>
         </div>
 

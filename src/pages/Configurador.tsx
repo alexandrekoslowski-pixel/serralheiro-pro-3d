@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import type { CameraPreset } from "@/components/Visualizador3D";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
+import { useVendedores } from "@/hooks/useVendedores";
 import { type Cliente, listarClientes } from "@/lib/gestao";
 
 import {
@@ -100,7 +101,7 @@ export default function Configurador() {
 
   const empresa = useMemo(() => obterEmpresa(), []);
   const catalogo = useMemo(() => obterCatalogo(), []);
-  const vendedoras = empresa.vendedoras ?? [];
+  const vendedores = useVendedores();
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
@@ -387,16 +388,16 @@ export default function Configurador() {
                 <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} />
               </div>
               <div className="sm:col-span-2">
-                <Label className="text-xs">Vendedora responsável</Label>
-                {vendedoras.length > 0 ? (
+                <Label className="text-xs">Vendedor(a) responsável</Label>
+                {vendedores.length > 0 ? (
                   <Select
                     value={projeto.vendedora || "__nenhuma__"}
                     onValueChange={(v) => upd("vendedora", v === "__nenhuma__" ? "" : v)}
                   >
                     <SelectTrigger className="h-9"><SelectValue placeholder="Selecionar" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__nenhuma__">Sem vendedora</SelectItem>
-                      {vendedoras.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+                      <SelectItem value="__nenhuma__">Sem vendedor(a)</SelectItem>
+                      {vendedores.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 ) : (
