@@ -203,7 +203,7 @@ export default function ProjetosLista() {
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="soft" className="text-destructive hover:text-destructive">
+                    <Button size="sm" variant="dangerOutline">
                       <Trash2 className="mr-1 h-3.5 w-3.5" /> Excluir
                     </Button>
                   </AlertDialogTrigger>

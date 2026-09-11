@@ -134,8 +134,8 @@ export default function ClienteDetalhe() {
                   <span className="text-xs text-muted-foreground">
                     {new Date(b.created_at).toLocaleDateString("pt-BR")}
                   </span>
-                  <Button size="sm" variant="soft" onClick={async () => { await excluirBriefing(b.id); await recarregar(); }}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  <Button size="sm" variant="dangerOutline" onClick={async () => { await excluirBriefing(b.id); await recarregar(); }}>
+                    <Trash2 className="mr-1 h-3.5 w-3.5" /> Excluir
                   </Button>
                 </div>
               </div>

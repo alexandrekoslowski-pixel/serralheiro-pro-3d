@@ -80,11 +80,17 @@ export default function Materiais() {
                  <td className="p-3 font-medium">{formatarBRL(Number(m.preco_atual ?? m.custo))}<div className="text-xs font-normal text-muted-foreground">por {m.preco_unidade || m.unidade_compra || m.unidade}</div></td>
                  <td className="p-3 text-muted-foreground">{m.preco_referencia ? new Date(`${m.preco_referencia}T12:00:00`).toLocaleDateString("pt-BR") : "—"}</td>
                 <td className="p-3 text-right">
-                   <Button size="sm" variant="soft" title="Histórico de preços" onClick={async () => setHistorico({ material: m, precos: await listarHistoricoMaterial(m.id) })}><History className="h-3.5 w-3.5" /></Button>
-                  <Button size="sm" variant="soft" onClick={() => setEdit(m)}><Pencil className="h-3.5 w-3.5" /></Button>
-                  <Button size="sm" variant="soft" onClick={async () => { await excluirMaterial(m.id); await recarregar(); }}>
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                  </Button>
+                  <div className="flex flex-wrap justify-end gap-1.5">
+                    <Button size="sm" variant="soft" onClick={async () => setHistorico({ material: m, precos: await listarHistoricoMaterial(m.id) })}>
+                      <History className="mr-1 h-3.5 w-3.5" /> Preços
+                    </Button>
+                    <Button size="sm" variant="soft" onClick={() => setEdit(m)}>
+                      <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
+                    </Button>
+                    <Button size="sm" variant="dangerOutline" onClick={async () => { await excluirMaterial(m.id); await recarregar(); }}>
+                      <Trash2 className="mr-1 h-3.5 w-3.5" /> Excluir
+                    </Button>
+                  </div>
                 </td>
               </tr>
             ))}
