@@ -500,6 +500,7 @@ export function criarOrcamentoRapido(): ProjetoLocal {
       cor: "branco",
       fixacao: FIXACAO_PADRAO,
       fixacaoLados: FIXACAO_LADOS_PADRAO,
+      checklist_respostas: {},
     }],
     overrides: {},
     extras: [],
