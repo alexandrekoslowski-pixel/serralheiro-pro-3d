@@ -18,7 +18,7 @@ const features = [
   { icon: FileText, title: "Orçamento em PDF", desc: "Documento profissional com snapshot 3D e sua marca." },
   { icon: Layers, title: "Plano de corte", desc: "Nesting otimizado por barra com aproveitamento." },
   { icon: Package, title: "Catálogo próprio", desc: "Edite preços de perfis e acessórios à vontade." },
-  { icon: Save, title: "Projetos salvos", desc: "Tudo no navegador. Funciona offline, sem login." },
+  { icon: Save, title: "Orçamentos salvos", desc: "Tudo no navegador. Funciona offline, sem login." },
 ];
 
 export default function Landing() {

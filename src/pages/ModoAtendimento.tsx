@@ -37,7 +37,7 @@ export default function ModoAtendimento() {
 
   useEffect(() => {
     const p = obterProjeto(id);
-    if (!p) { toast.error("Projeto não encontrado"); navigate("/app"); return; }
+    if (!p) { toast.error("Orçamento não encontrado"); navigate("/app"); return; }
     setProjeto(p);
   }, [id, navigate]);
 

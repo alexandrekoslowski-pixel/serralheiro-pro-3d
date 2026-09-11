@@ -75,7 +75,7 @@ export default function Configurador() {
   useEffect(() => {
     const p = obterProjeto(id);
     if (!p) {
-      toast.error("Projeto não encontrado");
+      toast.error("Orçamento não encontrado");
       navigate("/app");
       return;
     }
@@ -238,10 +238,10 @@ export default function Configurador() {
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3 min-w-0">
           <Button asChild variant="ghost" size="sm" className="shrink-0">
-            <Link to="/app"><ArrowLeft className="mr-1 h-4 w-4" /> Projetos</Link>
+            <Link to="/app"><ArrowLeft className="mr-1 h-4 w-4" /> Orçamentos</Link>
           </Button>
           <div className="min-w-0">
-            <h1 className="font-display text-base md:text-xl truncate">{projeto.nome || "Projeto"}</h1>
+            <h1 className="font-display text-base md:text-xl truncate">{projeto.nome || "Orçamento"}</h1>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <span className="truncate">{tip.nome}</span>
               <span>·</span>
@@ -368,7 +368,7 @@ export default function Configurador() {
           <TabsContent value="proposta" className="mt-0 p-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div className="sm:col-span-2">
-                <Label className="text-xs">Nome do projeto</Label>
+                <Label className="text-xs">Nome do orçamento</Label>
                 <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} />
               </div>
               <div className="sm:col-span-2">
