@@ -16,3 +16,4 @@
 - [x] Checklist técnico obrigatório e condicional no orçamento
 - [x] Validação antes de aprovar e envio das respostas para oficina/PDFs
 - [x] Checklist técnico por peça refletido nos movimentos, folhas, preenchimentos, motores e acessórios do desenho 3D
+- [ ] Revisar e padronizar máscaras, limites e validações em todos os campos editáveis
