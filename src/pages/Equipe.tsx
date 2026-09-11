@@ -54,15 +54,15 @@ export default function Equipe() {
           <p className="text-sm text-muted-foreground">Cada pessoa entra com a própria conta e vê só o que precisa.</p>
         </div>
         <Button className="bg-gradient-orange text-primary-foreground shadow-orange"
-                onClick={() => setNovo({ user_id: "", nome: "", role: "vendedora" })}>
+                onClick={() => setNovo({ email: "", nome: "", role: "vendedora" })}>
           <Plus className="mr-2 h-4 w-4" /> Liberar acesso
         </Button>
       </div>
 
       <div className="surface-card rounded-lg border border-border p-4">
         <p className="text-xs text-muted-foreground">
-          A pessoa cria a conta dela na tela de entrada com e-mail e senha. Depois você cola aqui o identificador dela
-          (aparece no perfil, em Empresa) e escolhe o papel.
+          A pessoa cria a conta dela na tela de entrada com e-mail e senha. Depois é só informar aqui o nome, o e-mail
+          que ela usou e escolher o papel.
         </p>
       </div>
 
@@ -75,7 +75,7 @@ export default function Equipe() {
                 {m.nome || "Sem nome"}
                 {m.user_id === session?.user?.id && <span className="text-xs text-muted-foreground">(você)</span>}
               </div>
-              <div className="truncate text-xs text-muted-foreground">{m.user_id}</div>
+              <div className="truncate text-xs text-muted-foreground">{m.email || "e-mail não informado"}</div>
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded bg-card px-2 py-1 text-xs">{PAPEIS.find((p) => p.id === m.role)?.nome}</span>
