@@ -105,7 +105,7 @@ export default function MinhasOrdens() {
   if (carregando) return <div className="py-16 text-center text-muted-foreground">Carregando ordens...</div>;
 
   return (
-    <div className="space-y-4">
+    <div className="container mx-auto space-y-4 px-4 py-6">
       <header className="flex items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl">{papel === "serralheiro" ? "Minhas ordens" : "Oficina"}</h1>
