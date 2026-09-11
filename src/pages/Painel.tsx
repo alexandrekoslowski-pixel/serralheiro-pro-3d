@@ -124,7 +124,7 @@ export default function Painel() {
       return d === null ? 9000 : d;
     };
     return [...filtrados].sort((a, b) => peso(a) - peso(b));
-  }, [base, busca, filtro]);
+  }, [base, busca, filtro, filtroPrazo, empresa]);
 
   const avancar = (p: ProjetoLocal) => {
     const prox = proximoStatus(p.status);
