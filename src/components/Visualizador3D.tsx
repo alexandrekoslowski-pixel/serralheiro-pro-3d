@@ -111,7 +111,7 @@ function GeometriaTipologia({
       const nVert = Math.max(2, Math.ceil((L_m * 1000) / 600) - 1);
       const verticais = Array.from({ length: nVert }, (_, i) => {
         const x = -halfL + (L_m * (i + 1)) / (nVert + 1);
-        return <Tubo key={`v${i}`} position={[x, H_m / 2, 0]} size={[tThin, H_m - 0.1, tThin]} color={cor} wireframe={wireframe} />;
+        return <Tubo key={`v${i}`} position={[x, H_m / 2, 0]} size={[tThin, H_m - 0.1, tThinP]} color={cor} wireframe={wireframe} />;
       });
 
       // Animação por tipologia
@@ -399,6 +399,8 @@ export default function Visualizador3D({
   showPessoa = false,
   showCarro = false,
   abertura = 0,
+  selecionadaId,
+  onSelecionar,
   onCanvasReady,
 }: Visualizador3DProps) {
   const controlsRef = useRef<OrbitControlsImpl | null>(null);
