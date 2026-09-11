@@ -195,6 +195,19 @@ export function linhasChecklistPeca(tipo: TipologiaId, respostas: RespostasCheck
     .map((pergunta) => ({ secao: titulo, pergunta: pergunta.label, resposta: respostas[pergunta.id] }));
 }
 
+export function linhasChecklistProjeto(
+  pecas: Array<{ nome: string; tipologia: TipologiaId; checklist_respostas?: RespostasChecklist }>,
+  respostasGerais: RespostasChecklist,
+  somenteComercial = false,
+) {
+  const gerais = COMUNS
+    .filter((pergunta) => respostasGerais[pergunta.id] && (!somenteComercial || pergunta.comercial))
+    .map((pergunta) => ({ secao: "Informações gerais", pergunta: pergunta.label, resposta: respostasGerais[pergunta.id] }));
+  const porPeca = pecas.flatMap((peca) => linhasChecklistPeca(peca.tipologia, peca.checklist_respostas ?? {}, somenteComercial)
+    .map((linha) => ({ ...linha, secao: peca.nome })));
+  return [...gerais, ...porPeca];
+}
+
 export const CHECKLIST_VERSAO = 1;
 const respostaSchema = z.record(z.string().max(500));
 

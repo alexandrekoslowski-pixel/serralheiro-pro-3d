@@ -18,7 +18,7 @@ import { resumoFixacao, fixacaoTipo } from "@/lib/fixacao";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import { DiagramaBarras } from "@/components/DiagramaBarras";
 import { cm } from "@/lib/medidas";
-import { linhasChecklist } from "@/lib/checklistPedido";
+import { linhasChecklistProjeto } from "@/lib/checklistPedido";
 
 export default function ModoOficina() {
   const { id = "", codigo } = useParams();
@@ -116,7 +116,7 @@ export default function ModoOficina() {
   const acab = acabamentoPorId(projeto.cor);
   const totalPecas = cortesAgrupados.reduce((s, c) => s + c.qtd, 0);
   const metragemTotal = cortesAgrupados.reduce((s, c) => s + (c.comprimento_mm * c.qtd) / 1000, 0);
-  const respostasTecnicas = linhasChecklist(projeto.pecas.map((p) => p.tipologia), projeto.checklist_respostas ?? {});
+  const respostasTecnicas = linhasChecklistProjeto(projeto.pecas, projeto.checklist_respostas ?? {});
 
   return (
     <div className="min-h-screen bg-black text-white print:bg-white print:text-black">

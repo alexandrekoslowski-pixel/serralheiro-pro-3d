@@ -6,7 +6,7 @@ import { ProjetoLocal } from "./storage";
 import { tipologiaPorId } from "./tipologias";
 import { PlanoCorte, PlanoProducao } from "./producao";
 import { cm } from "@/lib/medidas";
-import { linhasChecklist } from "./checklistPedido";
+import { linhasChecklistProjeto } from "./checklistPedido";
 
 const BLACK: [number, number, number] = [0, 0, 0];
 const GRAY: [number, number, number] = [110, 110, 110];
@@ -23,7 +23,7 @@ export function gerarOrdemProducaoPDF(
   const margin = 12;
   const p0 = projeto.pecas[0];
   const tip = tipologiaPorId(p0.tipologia);
-  const checklist = linhasChecklist(projeto.pecas.map((p) => p.tipologia), projeto.checklist_respostas ?? {});
+  const checklist = linhasChecklistProjeto(projeto.pecas, projeto.checklist_respostas ?? {});
 
   // ============ Helper: cabeçalho de página ============
   const drawHeader = (title: string, page: number, totalPages: number) => {
