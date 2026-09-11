@@ -120,6 +120,9 @@ export default function KanbanOficina() {
                           {acabamentoPorId(d.cor as never)?.nome ?? ""}
                         </div>
                         <div className="text-sm font-medium">{textoPrazoSimples(o.prazo_entrega)}</div>
+                        <div className="text-sm">
+                          Responsável: <strong>{o.responsavel || "—"}</strong>
+                        </div>
                         <div className="text-xs text-muted-foreground">
                           {ETAPA_LABEL[o.etapa]} {tempoNaEtapa(o.etapa_em)}
                         </div>
