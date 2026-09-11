@@ -118,7 +118,7 @@ export default function MinhasOrdens() {
           Nenhuma ordem na oficina no momento.
         </p>
       ) : (
-        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">
           {ETAPAS_OFICINA.map((etapa) => {
             const doGrupo = ordens.filter((o) => o.etapa === etapa);
             return (
