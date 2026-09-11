@@ -11,6 +11,7 @@ import { ETAPAS_OFICINA, ETAPA_LABEL, proximaEtapa, diasRestantes, tempoNaEtapa 
 import type { EtapaOficina } from "@/lib/storage";
 import { obterEmpresa } from "@/lib/storage";
 import { useDados } from "@/hooks/useDados";
+import { useSessao } from "@/lib/sessao";
 import { listarEquipe, MembroEquipe } from "@/lib/gestao";
 import { moverComResponsavel, etapaFotoDaOficina } from "@/lib/fotos";
 import { PainelFotos, FotosOrdemDialog } from "@/components/FotosOrdem";
