@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Plus, Search, Star, Trash2, Pencil, ClipboardList, MessageCircle } from "lucide-react";
+import { Plus, Search, Star, Trash2, Pencil, ClipboardList, MessageCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { cepOpcionalSchema, documentoOpcionalSchema, emailOpcionalSchema, primei
 import {
   Cliente, ORIGENS, listarClientes, salvarCliente, excluirCliente,
 } from "@/lib/gestao";
+import { buscarCep } from "@/lib/cep";
 
 const VAZIO: Partial<Cliente> = {
   nome: "", documento: "", email: "", telefone: "", whatsapp: "",
@@ -26,6 +27,18 @@ export default function Clientes() {
   const [busca, setBusca] = useState("");
   const [edit, setEdit] = useState<Partial<Cliente> | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [buscandoCep, setBuscandoCep] = useState(false);
+
+  const consultarCep = async (cep: string) => {
+    if (cep.replace(/\D/g, "").length !== 8) return;
+    setBuscandoCep(true);
+    try {
+      const endereco = await buscarCep(cep);
+      setEdit((atual) => ({ ...atual, endereco: endereco.logradouro || atual?.endereco, bairro: endereco.bairro || atual?.bairro, cidade: endereco.cidadeUf || atual?.cidade }));
+      toast.success("Endereço preenchido pelo CEP");
+    } catch (erro) { toast.error(erro instanceof Error ? erro.message : "CEP não encontrado"); }
+    finally { setBuscandoCep(false); }
+  };
 
   const recarregar = () =>
     listarClientes()
@@ -155,10 +168,16 @@ export default function Clientes() {
             {campo("email", "E-mail", "email")}
             {campo("telefone", "Telefone", "tel", "telefone")}
             {campo("whatsapp", "WhatsApp", "tel", "telefone")}
-            <div className="sm:col-span-2">{campo("endereco", "Endereço")}</div>
+            <div>
+              <Label>CEP</Label>
+              <div className="relative mt-1.5">
+                <Input mask="cep" value={edit?.cep ?? ""} onChange={(e) => setEdit((v) => ({ ...v, cep: e.target.value }))} onBlur={(e) => void consultarCep(e.target.value)} />
+                {buscandoCep && <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />}
+              </div>
+            </div>
+            <div className="sm:col-span-2">{campo("endereco", "Rua, número e complemento")}</div>
             {campo("bairro", "Bairro")}
-            {campo("cidade", "Cidade")}
-            {campo("cep", "CEP", "text", "cep")}
+            {campo("cidade", "Cidade/UF")}
             <div>
               <Label>Origem</Label>
               <Select value={edit?.origem ?? "whatsapp"} onValueChange={(v) => setEdit((c) => ({ ...c, origem: v }))}>
