@@ -22,6 +22,7 @@ import {
 } from "@/lib/ordens";
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
+import { useVendedores } from "@/hooks/useVendedores";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
@@ -82,11 +83,7 @@ export default function Painel() {
     return { atrasadas, urgentes };
   }, [projetos, empresa]);
 
-  const nomesVendedoras = useMemo(() => {
-    const set = new Set<string>((empresa.vendedoras ?? []).filter(Boolean));
-    projetos.forEach((p) => { if (p.vendedora) set.add(p.vendedora); });
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [projetos, empresa]);
+  const nomesVendedores = useVendedores();
 
   const lista = useMemo(() => {
     const q = busca.toLowerCase().trim();
@@ -98,8 +95,8 @@ export default function Painel() {
         p.status === filtro;
       const okVend =
         vendedora === "todas" ? true :
-        vendedora === "__sem__" ? !p.vendedora :
-        p.vendedora === vendedora;
+        vendedora === "__sem__" ? !(p.vendedora ?? "").trim() :
+        (p.vendedora ?? "").trim().toLowerCase() === vendedora.trim().toLowerCase();
       return okBusca && okStatus && okVend;
     });
     const peso = (p: ProjetoLocal) => {
@@ -220,11 +217,11 @@ export default function Painel() {
           </SelectContent>
         </Select>
         <Select value={vendedora} onValueChange={setVendedora}>
-          <SelectTrigger className="sm:w-56"><SelectValue placeholder="Vendedora" /></SelectTrigger>
+          <SelectTrigger className="sm:w-56"><SelectValue placeholder="Vendedor(a)" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="todas">Todas as vendedoras</SelectItem>
-            <SelectItem value="__sem__">Sem vendedora</SelectItem>
-            {nomesVendedoras.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+            <SelectItem value="todas">Todos os vendedores</SelectItem>
+            <SelectItem value="__sem__">Sem vendedor(a)</SelectItem>
+            {nomesVendedores.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>

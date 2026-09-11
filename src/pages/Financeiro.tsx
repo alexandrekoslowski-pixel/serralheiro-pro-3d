@@ -6,8 +6,9 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { useDados } from "@/hooks/useDados";
-import { listarProjetos, listarPagamentos, formatarBRL, obterEmpresa } from "@/lib/storage";
+import { listarProjetos, listarPagamentos, formatarBRL } from "@/lib/storage";
 import { STATUS_LABEL, corPrazo, CLASSES_PRAZO, textoPrazo } from "@/lib/ordens";
+import { useVendedores } from "@/hooks/useVendedores";
 
 const mesDe = (iso: string) => iso.slice(0, 7);
 const rotuloMes = (m: string) => {
@@ -18,19 +19,14 @@ const rotuloMes = (m: string) => {
 export default function Financeiro() {
   useDados();
   const todosProjetos = listarProjetos();
-  const empresa = obterEmpresa();
-  const [vendFiltro, setVendFiltro] = useState("todas");
+    const [vendFiltro, setVendFiltro] = useState("todas");
 
-  const nomesVendedoras = useMemo(() => {
-    const set = new Set<string>((empresa.vendedoras ?? []).filter(Boolean));
-    todosProjetos.forEach((p) => { if (p.vendedora) set.add(p.vendedora); });
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [todosProjetos, empresa]);
+  const nomesVendedores = useVendedores();
 
   const projetos = useMemo(() => todosProjetos.filter((p) =>
     vendFiltro === "todas" ? true :
-    vendFiltro === "__sem__" ? !p.vendedora :
-    p.vendedora === vendFiltro
+    vendFiltro === "__sem__" ? !(p.vendedora ?? "").trim() :
+    (p.vendedora ?? "").trim().toLowerCase() === vendFiltro.trim().toLowerCase()
   ), [todosProjetos, vendFiltro]);
 
   const idsFiltro = useMemo(() => new Set(projetos.map((p) => p.id)), [projetos]);
@@ -39,7 +35,7 @@ export default function Financeiro() {
   const porVendedora = useMemo(() => {
     const mapa = new Map<string, { orcado: number; faturado: number; recebido: number; qtd: number }>();
     todosProjetos.forEach((p) => {
-      const k = p.vendedora || "Sem vendedora";
+      const k = p.vendedora || "Sem vendedor(a)";
       if (!mapa.has(k)) mapa.set(k, { orcado: 0, faturado: 0, recebido: 0, qtd: 0 });
       const v = mapa.get(k)!;
       v.orcado += p.total;
@@ -105,11 +101,11 @@ export default function Financeiro() {
         </div>
         <div className="flex gap-2">
           <Select value={vendFiltro} onValueChange={setVendFiltro}>
-            <SelectTrigger className="w-52"><SelectValue placeholder="Vendedora" /></SelectTrigger>
+            <SelectTrigger className="w-52"><SelectValue placeholder="Vendedor(a)" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="todas">Todas as vendedoras</SelectItem>
-              <SelectItem value="__sem__">Sem vendedora</SelectItem>
-              {nomesVendedoras.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              <SelectItem value="todas">Todos os vendedores</SelectItem>
+              <SelectItem value="__sem__">Sem vendedor(a)</SelectItem>
+              {nomesVendedores.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
             </SelectContent>
           </Select>
           <Button variant="outline" onClick={exportarCSV}><Download className="mr-2 h-4 w-4" /> Exportar CSV</Button>
@@ -131,7 +127,7 @@ export default function Financeiro() {
       </div>
 
       <div className="surface-card rounded-lg border border-border p-5">
-        <h2 className="font-display text-lg mb-4">Por vendedora</h2>
+        <h2 className="font-display text-lg mb-4">Por vendedor(a)</h2>
         {porVendedora.length === 0 && <p className="text-sm text-muted-foreground">Ainda não há orçamentos.</p>}
         <div className="space-y-2">
           {porVendedora.map(([nome, v]) => (
