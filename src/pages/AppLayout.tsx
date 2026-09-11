@@ -84,7 +84,7 @@ export default function AppLayout() {
         </div>
 
         {open && (
-          <div className="border-t border-border bg-background md:hidden">
+          <div className="border-t border-border bg-background lg:hidden">
             <nav className="container flex flex-col gap-1 py-2">
               {navItems.map((it) => (
                 <NavLink
