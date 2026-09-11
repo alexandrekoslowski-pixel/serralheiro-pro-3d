@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Toggle } from "@/components/ui/toggle";
+import { PainelFotos } from "@/components/FotosOrdem";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 

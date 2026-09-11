@@ -17,6 +17,9 @@ interface OrdemOficina {
   etapa: EtapaOficina;
   etapa_em: string;
   prazo_entrega: string | null;
+  responsavel: string | null;
+  fotos: number | null;
+  endereco: string | null;
   dados: { tipologia?: string; largura_mm?: number; altura_mm?: number; cor?: string } | null;
 }
 
