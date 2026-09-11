@@ -101,7 +101,7 @@ export default function ModoOficina() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black text-white">
         <div className="text-center space-y-4">
-          <p className="text-2xl">Projeto não encontrado</p>
+          <p className="text-2xl">Ordem de serviço não encontrada</p>
           <Link to="/app" className="text-orange-400 underline">Voltar</Link>
         </div>
       </div>

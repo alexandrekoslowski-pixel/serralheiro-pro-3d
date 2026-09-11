@@ -80,7 +80,7 @@ export default function Financeiro() {
 
   const exportarCSV = () => {
     const linhas = [
-      ["Projeto", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
+      ["Ordem", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
       ...projetos.map((p) => {
         const rec = listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
         return [

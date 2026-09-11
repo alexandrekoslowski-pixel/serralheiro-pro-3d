@@ -46,7 +46,7 @@ export default function ProjetosLista() {
     const tip = tipologiaPorId(novoTipo);
     const novo: ProjetoLocal = {
       id: gerarId(),
-      nome: novoNome.trim() || "Novo projeto",
+      nome: novoNome.trim() || "Novo orçamento",
       cliente: novoCliente.trim(),
       vendedora: "",
       cliente_id: null,
@@ -103,34 +103,34 @@ export default function ProjetosLista() {
   };
 
   const duplicar = (id: string) => {
-    if (duplicarProjeto(id)) toast.success("Projeto duplicado");
+    if (duplicarProjeto(id)) toast.success("Orçamento duplicado");
   };
 
   const remover = (id: string) => {
     deletarProjeto(id);
-    toast.success("Projeto excluído");
+    toast.success("Orçamento excluído");
   };
 
   return (
     <section className="container py-6 md:py-10">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <h1 className="font-display text-2xl md:text-3xl">Meus projetos</h1>
+          <h1 className="font-display text-2xl md:text-3xl">Orçamentos</h1>
           <p className="text-sm text-muted-foreground">Tudo salvo localmente neste navegador.</p>
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-gradient-orange text-primary-foreground shadow-orange hover:opacity-90">
-              <Plus className="mr-2 h-4 w-4" /> Novo projeto
+              <Plus className="mr-2 h-4 w-4" /> Novo orçamento
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle className="font-display">Novo projeto</DialogTitle>
+              <DialogTitle className="font-display">Novo orçamento</DialogTitle>
             </DialogHeader>
             <div className="space-y-3">
               <div>
-                <Label>Nome do projeto</Label>
+                <Label>Nome do orçamento</Label>
                 <Input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} placeholder="Ex.: Portão D. Maria" />
               </div>
               <div>
@@ -166,8 +166,8 @@ export default function ProjetosLista() {
         {filtrados.length === 0 && (
           <div className="surface-card col-span-full grid place-items-center rounded-lg border border-dashed border-border p-12 text-center">
             <FolderOpen className="h-8 w-8 text-muted-foreground" />
-            <p className="mt-3 font-display">Nenhum projeto ainda</p>
-            <p className="mt-1 text-sm text-muted-foreground">Clique em "Novo projeto" para começar.</p>
+            <p className="mt-3 font-display">Nenhum orçamento ainda</p>
+            <p className="mt-1 text-sm text-muted-foreground">Clique em "Novo orçamento" para começar.</p>
           </div>
         )}
         {filtrados.map((p) => {
@@ -209,7 +209,7 @@ export default function ProjetosLista() {
                   </AlertDialogTrigger>
                   <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle>Excluir projeto?</AlertDialogTitle>
+                      <AlertDialogTitle>Excluir orçamento?</AlertDialogTitle>
                       <AlertDialogDescription>Esta ação não pode ser desfeita.</AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

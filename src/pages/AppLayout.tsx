@@ -19,8 +19,8 @@ export default function AppLayout() {
     try {
       const n = await importarLocaisParaNuvem();
       setPendentes(0);
-      toast.success(`${n} projeto(s) enviados para a sua conta`);
-    } catch { toast.error("Não foi possível enviar os projetos"); }
+      toast.success(`${n} orçamento(s) enviados para a sua conta`);
+    } catch { toast.error("Não foi possível enviar os orçamentos"); }
   };
 
   const todos: { to: string; end: boolean; label: string; icon: typeof Users; papeis: Papel[] }[] = [
@@ -108,7 +108,7 @@ export default function AppLayout() {
       {pendentes > 0 && (
         <div className="border-b border-border bg-card">
           <div className="container flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-            <span>{pendentes} projeto(s) antigos estão salvos só neste aparelho.</span>
+            <span>{pendentes} orçamento(s) antigos estão salvos só neste aparelho.</span>
             <div className="flex gap-2">
               <Button size="sm" onClick={importar} className="bg-gradient-orange text-primary-foreground">Enviar para minha conta</Button>
               <Button size="sm" variant="ghost" onClick={() => setPendentes(0)}>Agora não</Button>
