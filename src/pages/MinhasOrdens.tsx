@@ -127,7 +127,7 @@ export default function MinhasOrdens() {
             return (
               <section
                 key={etapa}
-                className={`w-[290px] shrink-0 rounded border p-2 transition ${alvo === etapa ? "border-primary bg-primary/10" : "border-border bg-card/40"}`}
+                className={`w-[290px] shrink-0 rounded border p-2 transition xl:w-auto xl:min-w-0 ${alvo === etapa ? "border-primary bg-primary/10" : "border-border bg-card/40"}`}
                 onDragOver={(e) => { e.preventDefault(); setAlvo(etapa); }}
                 onDragLeave={() => setAlvo((a) => (a === etapa ? null : a))}
                 onDrop={(e) => {

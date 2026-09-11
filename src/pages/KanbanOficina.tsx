@@ -80,13 +80,13 @@ export default function KanbanOficina() {
         </Button>
       </header>
 
-      <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+      <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 xl:mx-0 xl:grid xl:grid-cols-7 xl:overflow-visible xl:px-0">
         {ETAPAS_OFICINA.map((etapa) => {
           const doGrupo = ordens.filter((o) => o.etapa === etapa);
           return (
             <div
               key={etapa}
-              className="w-[290px] shrink-0 rounded-lg border border-border bg-card/40 p-2"
+              className="w-[290px] shrink-0 rounded-lg border border-border bg-card/40 p-2 xl:w-auto xl:min-w-0"
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 const id = e.dataTransfer.getData("text/plain");
