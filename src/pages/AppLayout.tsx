@@ -40,8 +40,8 @@ export default function AppLayout() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
-        <div className="container flex h-14 items-center justify-between gap-2">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
+        <div className="container flex min-h-14 items-center justify-between gap-3 py-2">
           <div className="flex shrink-0 items-center gap-2">
             <button
               className="grid h-9 w-9 shrink-0 place-items-center rounded border border-border lg:hidden"
@@ -58,30 +58,32 @@ export default function AppLayout() {
             </Link>
           </div>
 
-          <nav className="hidden min-w-0 flex-1 items-center gap-0.5 overflow-x-auto lg:flex [&::-webkit-scrollbar]:hidden">
-            {navItems.map((it) => (
-              <NavLink
-                key={it.to}
-                to={it.to}
-                end={it.end}
-                className={({ isActive }) =>
-                  cn(
-                    "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded px-2 py-1.5 text-sm transition",
-                    isActive ? "bg-card text-foreground" : "text-muted-foreground hover:bg-card hover:text-foreground",
-                  )
-                }
-              >
-                <it.icon className="h-4 w-4" />
-                {it.label}
-              </NavLink>
-            ))}
-          </nav>
-
           <Button variant="outline" size="sm" className="shrink-0" onClick={sair}>
             <LogOut className="mr-2 h-3.5 w-3.5" />
             Sair
           </Button>
         </div>
+
+        <nav className="container hidden items-center gap-1 overflow-x-auto border-t border-border py-2 lg:flex [&::-webkit-scrollbar]:hidden">
+          {navItems.map((it) => (
+            <NavLink
+              key={it.to}
+              to={it.to}
+              end={it.end}
+              className={({ isActive }) =>
+                cn(
+                  "flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-3 text-sm font-medium transition",
+                  isActive
+                    ? "border-primary bg-primary/10 text-foreground"
+                    : "border-transparent text-muted-foreground hover:border-border hover:bg-card hover:text-foreground",
+                )
+              }
+            >
+              <it.icon className="h-4 w-4" />
+              {it.label}
+            </NavLink>
+          ))}
+        </nav>
 
         {open && (
           <div className="border-t border-border bg-background lg:hidden">
