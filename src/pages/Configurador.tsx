@@ -519,16 +519,16 @@ export default function Configurador() {
             <p className="mt-1 text-[11px] text-muted-foreground">{tip.descricao}</p>
           </div>
 
-          <div className="sm:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-4 min-w-0">
             <Label>Acabamento / cor</Label>
-            <div className="mt-2 flex gap-2 overflow-x-auto pb-2">
+            <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
               {ACABAMENTOS.map((a) => (
                 <button
                   key={a.id}
                   type="button"
                   onClick={() => updPeca({ cor: a.id as AcabamentoId })}
                   className={cn(
-                    "h-9 w-9 shrink-0 rounded-full border-2 transition",
+                    "h-8 w-8 shrink-0 rounded-full border-2 transition",
                     pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
                   )}
                   style={{ backgroundColor: a.hex }}
