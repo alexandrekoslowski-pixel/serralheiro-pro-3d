@@ -181,6 +181,8 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
 
 // ---------- estado em memória ----------
 let userId: string | null = null;
+/** Dono do cadastro único da serralheria (a linha de empresa usada por toda a equipe). */
+let empresaUserId: string | null = null;
 let projetos: ProjetoLocal[] = [];
 let pagamentos: Pagamento[] = [];
 let empresa: DadosEmpresa = { ...EMPRESA_PADRAO };
@@ -340,7 +342,7 @@ export async function hidratarNuvem(uid: string): Promise<void> {
   const [proj, pag, emp, cat] = await Promise.all([
     supabase.from("projetos").select("*").order("updated_at", { ascending: false }),
     supabase.from("pagamentos").select("*").order("data", { ascending: false }),
-    supabase.from("empresa").select("*").maybeSingle(),
+    supabase.from("empresa").select("*").order("updated_at", { ascending: false }).limit(1),
     supabase.from("catalogo").select("*").maybeSingle(),
   ]);
 
@@ -354,15 +356,17 @@ export async function hidratarNuvem(uid: string): Promise<void> {
     observacao: (r.observacao as string) ?? "",
   }));
 
-  if (emp.data) {
-    const d = (emp.data.dados ?? {}) as Partial<DadosEmpresa>;
+  const linhaEmpresa = (emp.data ?? [])[0];
+  empresaUserId = (linhaEmpresa as { user_id?: string } | undefined)?.user_id ?? uid;
+  if (linhaEmpresa) {
+    const d = (linhaEmpresa.dados ?? {}) as Partial<DadosEmpresa>;
     empresa = {
       ...EMPRESA_PADRAO,
       ...d,
-      prazoPadraoDias: emp.data.prazo_padrao_dias ?? 15,
-      limiteVermelhoDias: emp.data.limite_vermelho_dias ?? 3,
-      limiteAmareloDias: emp.data.limite_amarelo_dias ?? 7,
-      codigoOficina: (emp.data as { codigo_oficina?: string }).codigo_oficina ?? "",
+      prazoPadraoDias: linhaEmpresa.prazo_padrao_dias ?? 15,
+      limiteVermelhoDias: linhaEmpresa.limite_vermelho_dias ?? 3,
+      limiteAmareloDias: linhaEmpresa.limite_amarelo_dias ?? 7,
+      codigoOficina: (linhaEmpresa as { codigo_oficina?: string }).codigo_oficina ?? "",
     };
   } else {
     empresa = safe(() => {
@@ -515,7 +519,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
   notificar();
   if (userId) {
     void supabase.from("empresa").upsert({
-      user_id: userId,
+      user_id: empresaUserId ?? userId,
       dados: {
         nome: empresa.nome, cnpj: empresa.cnpj, telefone: empresa.telefone,
         email: empresa.email, endereco: empresa.endereco,
