@@ -121,13 +121,13 @@ export default function MinhasOrdens() {
           Nenhuma ordem na oficina no momento.
         </p>
       ) : (
-        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-7">
+        <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
           {ETAPAS_OFICINA.map((etapa) => {
             const doGrupo = ordens.filter((o) => o.etapa === etapa);
             return (
               <section
                 key={etapa}
-                className={`rounded border p-2 transition ${alvo === etapa ? "border-primary bg-primary/10" : "border-border bg-card/40"}`}
+                className={`w-[290px] shrink-0 rounded border p-2 transition ${alvo === etapa ? "border-primary bg-primary/10" : "border-border bg-card/40"}`}
                 onDragOver={(e) => { e.preventDefault(); setAlvo(etapa); }}
                 onDragLeave={() => setAlvo((a) => (a === etapa ? null : a))}
                 onDrop={(e) => {
