@@ -675,6 +675,8 @@ export default function Configurador() {
                 showPessoa={showPessoa}
                 showCarro={showCarro}
                 abertura={aberto ? 1 : 0}
+                selecionadaId={pecaSel?.id}
+                onSelecionar={(id) => setPecaSelId(id)}
                 onCanvasReady={(c) => { canvasRef.current = c; }}
               />
             </div>
