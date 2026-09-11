@@ -112,10 +112,16 @@ export function Muro({ larguraCena, altura }: { larguraCena: number; altura: num
         <boxGeometry args={[larg / 2, h, 0.2]} />
         <meshStandardMaterial color="#a79f92" roughness={0.95} />
       </mesh>
-      {/* rufo / acabamento superior */}
-      <mesh position={[0, h + 0.04, 0]} material={materialAco("#b8b2a6", 0.85)}>
-        <boxGeometry args={[larg + larguraCena, 0.08, 0.26]} />
-      </mesh>
+      {/* rufo / acabamento superior (só sobre a alvenaria) */}
+      {[-1, 1].map((sgn) => (
+        <mesh
+          key={sgn}
+          position={[sgn * (larguraCena / 2 + larg / 4 + 0.1), h + 0.04, 0]}
+          material={materialAco("#9a9184", 0.9)}
+        >
+          <boxGeometry args={[larg / 2 + 0.1, 0.08, 0.26]} />
+        </mesh>
+      ))}
     </group>
   );
 }
