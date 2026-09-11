@@ -742,6 +742,7 @@ export type Database = {
         | "producao"
         | "pintura"
         | "acabamento"
+        | "entrega"
         | "pos_venda"
         | "pronto"
       ordem_status:
@@ -883,6 +884,7 @@ export const Constants = {
         "producao",
         "pintura",
         "acabamento",
+        "entrega",
         "pos_venda",
         "pronto",
       ],
