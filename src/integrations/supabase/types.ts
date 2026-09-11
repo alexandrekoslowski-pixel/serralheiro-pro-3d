@@ -512,16 +512,19 @@ export type Database = {
       profiles: {
         Row: {
           created_at: string
+          email: string | null
           id: string
           nome: string | null
         }
         Insert: {
           created_at?: string
+          email?: string | null
           id: string
           nome?: string | null
         }
         Update: {
           created_at?: string
+          email?: string | null
           id?: string
           nome?: string | null
         }
@@ -694,6 +697,18 @@ export type Database = {
     }
     Functions: {
       dono_atual: { Args: { _user_id: string }; Returns: string }
+      equipe_detalhada: {
+        Args: never
+        Returns: {
+          created_at: string
+          dono_id: string
+          email: string
+          id: string
+          nome: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -734,6 +749,7 @@ export type Database = {
           status: Database["public"]["Enums"]["ordem_status"]
         }[]
       }
+      usuario_por_email: { Args: { _email: string }; Returns: string }
     }
     Enums: {
       app_role: "gestor" | "vendedora" | "serralheiro"
