@@ -54,12 +54,13 @@ export default function Clientes() {
     try { await excluirCliente(c.id); await recarregar(); } catch { toast.error("Não foi possível excluir"); }
   };
 
-  const campo = (k: keyof Cliente, label: string, tipo = "text") => (
+  const campo = (k: keyof Cliente, label: string, tipo = "text", mask?: "cpfCnpj" | "telefone" | "cep") => (
     <div>
       <Label>{label}</Label>
       <Input
         className="mt-1.5"
         type={tipo}
+        mask={mask}
         value={(edit?.[k] as string) ?? ""}
         onChange={(e) => setEdit((v) => ({ ...v, [k]: e.target.value }))}
       />
@@ -139,14 +140,14 @@ export default function Clientes() {
           <DialogHeader><DialogTitle>{edit?.id ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">{campo("nome", "Nome / razão social")}</div>
-            {campo("documento", "CPF / CNPJ")}
+            {campo("documento", "CPF / CNPJ", "text", "cpfCnpj")}
             {campo("email", "E-mail", "email")}
-            {campo("telefone", "Telefone")}
-            {campo("whatsapp", "WhatsApp")}
+            {campo("telefone", "Telefone", "tel", "telefone")}
+            {campo("whatsapp", "WhatsApp", "tel", "telefone")}
             <div className="sm:col-span-2">{campo("endereco", "Endereço")}</div>
             {campo("bairro", "Bairro")}
             {campo("cidade", "Cidade")}
-            {campo("cep", "CEP")}
+            {campo("cep", "CEP", "text", "cep")}
             <div>
               <Label>Origem</Label>
               <Select value={edit?.origem ?? "whatsapp"} onValueChange={(v) => setEdit((c) => ({ ...c, origem: v }))}>
@@ -158,7 +159,7 @@ export default function Clientes() {
             </div>
             <div className="sm:col-span-2">
               <Label>Observações</Label>
-              <Textarea className="mt-1.5" rows={3} value={edit?.observacoes ?? ""}
+              <Textarea className="mt-1.5" rows={3} maxLength={1000} value={edit?.observacoes ?? ""}
                         onChange={(e) => setEdit((c) => ({ ...c, observacoes: e.target.value }))} />
             </div>
             <button

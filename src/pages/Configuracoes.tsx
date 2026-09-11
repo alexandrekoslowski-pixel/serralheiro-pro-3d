@@ -71,8 +71,8 @@ export default function Configuracoes() {
         <h2 className="font-display text-lg mb-4">Dados da empresa</h2>
         <div className="grid gap-4 md:grid-cols-2">
           <div><Label>Nome</Label><Input value={empresa.nome} onChange={(e) => setEmpresa({ ...empresa, nome: e.target.value })} /></div>
-          <div><Label>CNPJ</Label><Input value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} /></div>
-          <div><Label>Telefone</Label><Input value={empresa.telefone} onChange={(e) => setEmpresa({ ...empresa, telefone: e.target.value })} /></div>
+          <div><Label>CNPJ</Label><Input mask="cpfCnpj" value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} /></div>
+          <div><Label>Telefone</Label><Input type="tel" mask="telefone" value={empresa.telefone} onChange={(e) => setEmpresa({ ...empresa, telefone: e.target.value })} /></div>
           <div><Label>E-mail</Label><Input type="email" value={empresa.email} onChange={(e) => setEmpresa({ ...empresa, email: e.target.value })} /></div>
           <div className="md:col-span-2"><Label>Endereço</Label><Input value={empresa.endereco} onChange={(e) => setEmpresa({ ...empresa, endereco: e.target.value })} /></div>
         </div>
@@ -186,12 +186,12 @@ export default function Configuracoes() {
         <div className="grid gap-4 md:grid-cols-2 mt-4">
           <div>
             <Label>Formas de pagamento (uma por linha)</Label>
-            <Textarea rows={7} value={empresa.textoPagamento}
+            <Textarea rows={7} maxLength={5000} value={empresa.textoPagamento}
               onChange={(e) => setEmpresa({ ...empresa, textoPagamento: e.target.value })} />
           </div>
           <div>
             <Label>Informações técnicas (uma por linha)</Label>
-            <Textarea rows={7} value={empresa.textoTecnico}
+            <Textarea rows={7} maxLength={5000} value={empresa.textoTecnico}
               onChange={(e) => setEmpresa({ ...empresa, textoTecnico: e.target.value })} />
           </div>
         </div>
@@ -212,7 +212,7 @@ export default function Configuracoes() {
                   Copiar
                 </Button>
               </div>
-              <Textarea rows={5} value={empresa[campo]}
+              <Textarea rows={5} maxLength={3000} value={empresa[campo]}
                 onChange={(e) => setEmpresa({ ...empresa, [campo]: e.target.value })} />
             </div>
           ))}

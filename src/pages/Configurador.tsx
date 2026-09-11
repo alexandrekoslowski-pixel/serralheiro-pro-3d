@@ -366,11 +366,11 @@ export default function Configurador() {
               </div>
               <div>
                 <Label className="text-xs">RG ou CPF</Label>
-                <Input className="h-9" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} />
+                <Input className="h-9" mask="rgCpf" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} placeholder="RG ou CPF" />
               </div>
               <div>
                 <Label className="text-xs">Telefone / WhatsApp</Label>
-                <Input className="h-9" inputMode="tel" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
+                <Input className="h-9" type="tel" mask="telefone" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">E-mail</Label>
@@ -390,7 +390,7 @@ export default function Configurador() {
               </div>
               <div>
                 <Label className="text-xs">CEP</Label>
-                <Input className="h-9" inputMode="numeric" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} />
+                <Input className="h-9" mask="cep" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} placeholder="00000-000" />
               </div>
               <div>
                 <Label className="text-xs">Local de instalação</Label>
@@ -464,6 +464,7 @@ export default function Configurador() {
                 <Label className="text-xs">Observações da proposta</Label>
                 <Textarea
                   rows={3}
+                  maxLength={2000}
                   value={projeto.observacoes_proposta ?? ""}
                   onChange={(e) => upd("observacoes_proposta", e.target.value)}
                 />
