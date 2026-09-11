@@ -203,6 +203,11 @@ export default function Configuracoes() {
           </div>
         </div>
 
+        <h2 className="font-display text-lg mt-6 mb-2">Contrato de prestação de serviço</h2>
+        <p className="text-sm text-muted-foreground mb-3">Texto usado no contrato, sem lista de materiais ou custos internos.</p>
+        <Textarea rows={7} maxLength={6000} value={empresa.clausulasContrato}
+          onChange={(e) => setEmpresa({ ...empresa, clausulasContrato: e.target.value })} />
+
         <h2 className="font-display text-lg mt-6 mb-2">Mensagens para o cliente</h2>
         <p className="text-sm text-muted-foreground mb-3">Modelos prontos para copiar e enviar no WhatsApp.</p>
         <div className="grid gap-4 md:grid-cols-3">

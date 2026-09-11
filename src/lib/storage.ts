@@ -73,6 +73,12 @@ export interface ProjetoLocal {
   aprovado_em: string | null;
   entregue_em: string | null;
   faturado_em: string | null;
+  enviado_em: string | null;
+  enviado_por_nome: string;
+  followup_status: "aguardando" | "pendente" | "feito" | "erro";
+  followup_em: string | null;
+  followup_tentativa_em: string | null;
+  followup_erro: string;
   created_at: string;
   updated_at: string;
 }
@@ -84,6 +90,10 @@ export interface Pagamento {
   valor: number;
   forma: string;
   observacao: string;
+  comprovante_caminho: string | null;
+  comprovante_nome: string | null;
+  comprovante_tipo: string | null;
+  comprovante_enviado_em: string | null;
 }
 
 export interface DadosEmpresa {
@@ -112,6 +122,7 @@ export interface DadosEmpresa {
   msgSolicitarDados: string;
   msgFollowUp: string;
   msgVisitaTecnica: string;
+  clausulasContrato: string;
 }
 
 export const TEXTO_PAGAMENTO_PADRAO = [
@@ -181,6 +192,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   msgSolicitarDados: MSG_SOLICITAR_DADOS_PADRAO,
   msgFollowUp: MSG_FOLLOWUP_PADRAO,
   msgVisitaTecnica: MSG_VISITA_PADRAO,
+  clausulasContrato: "A contratada executará os serviços conforme as especificações aprovadas. O contratante deverá garantir acesso ao local, condições adequadas para instalação e os pagamentos acordados. Alterações solicitadas após a aprovação poderão mudar valor e prazo. A garantia não cobre mau uso, intervenção de terceiros ou alterações no local.",
 };
 
 // ---------- estado em memória ----------
@@ -213,6 +225,12 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   aprovado_em: null,
   entregue_em: null,
   faturado_em: null,
+  enviado_em: null,
+  enviado_por_nome: "",
+  followup_status: "aguardando",
+  followup_em: null,
+  followup_tentativa_em: null,
+  followup_erro: "",
   overrides: {},
   extras: [],
   checklist_versao: CHECKLIST_VERSAO,
@@ -294,6 +312,12 @@ const linhaParaProjeto = (row: Record<string, unknown>): ProjetoLocal =>
     aprovado_em: (row.aprovado_em as string) ?? null,
     entregue_em: (row.entregue_em as string) ?? null,
     faturado_em: (row.faturado_em as string) ?? null,
+    enviado_em: (row.enviado_em as string) ?? null,
+    enviado_por_nome: (row.enviado_por_nome as string) ?? "",
+    followup_status: (row.followup_status as ProjetoLocal["followup_status"]) ?? "aguardando",
+    followup_em: (row.followup_em as string) ?? null,
+    followup_tentativa_em: (row.followup_tentativa_em as string) ?? null,
+    followup_erro: (row.followup_erro as string) ?? "",
     cliente_id: (row.cliente_id as string) ?? null,
     briefing_id: (row.briefing_id as string) ?? null,
     responsavel_id: (row.responsavel_id as string) ?? null,
@@ -316,6 +340,12 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
   aprovado_em: p.aprovado_em,
   entregue_em: p.entregue_em,
   faturado_em: p.faturado_em,
+  enviado_em: p.enviado_em,
+  enviado_por_nome: p.enviado_por_nome,
+  followup_status: p.followup_status,
+  followup_em: p.followup_em,
+  followup_tentativa_em: p.followup_tentativa_em,
+  followup_erro: p.followup_erro,
   cliente_id: p.cliente_id,
   briefing_id: p.briefing_id,
   responsavel_id: p.responsavel_id,
@@ -375,6 +405,10 @@ export async function hidratarNuvem(uid: string): Promise<void> {
     valor: Number(r.valor ?? 0),
     forma: r.forma as string,
     observacao: (r.observacao as string) ?? "",
+    comprovante_caminho: (r.comprovante_caminho as string) ?? null,
+    comprovante_nome: (r.comprovante_nome as string) ?? null,
+    comprovante_tipo: (r.comprovante_tipo as string) ?? null,
+    comprovante_enviado_em: (r.comprovante_enviado_em as string) ?? null,
   }));
 
   const linhaEmpresa = (emp.data ?? [])[0];
@@ -517,6 +551,12 @@ export function criarOrcamentoRapido(): ProjetoLocal {
     aprovado_em: null,
     entregue_em: null,
     faturado_em: null,
+    enviado_em: null,
+    enviado_por_nome: "",
+    followup_status: "aguardando",
+    followup_em: null,
+    followup_tentativa_em: null,
+    followup_erro: "",
     created_at: agora,
     updated_at: agora,
   };
@@ -560,6 +600,12 @@ export function duplicarProjeto(id: string): ProjetoLocal | undefined {
     aprovado_em: null,
     entregue_em: null,
     faturado_em: null,
+    enviado_em: null,
+    enviado_por_nome: "",
+    followup_status: "aguardando",
+    followup_em: null,
+    followup_tentativa_em: null,
+    followup_erro: "",
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   };
@@ -576,7 +622,7 @@ export function totalRecebido(projetoId: string): number {
   return listarPagamentos(projetoId).reduce((s, p) => s + p.valor, 0);
 }
 
-export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<void> {
+export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<Pagamento> {
   if (!userId) return;
   const { data, error } = await supabase
     .from("pagamentos")
@@ -584,14 +630,27 @@ export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<void
     .select()
     .single();
   if (error) throw error;
-  pagamentos = [{ ...p, id: (data as { id: string }).id }, ...pagamentos];
+  const criado = { ...p, id: (data as { id: string }).id };
+  pagamentos = [criado, ...pagamentos];
   notificar();
+  return criado;
 }
 
 export async function removerPagamento(id: string): Promise<void> {
   pagamentos = pagamentos.filter((p) => p.id !== id);
   notificar();
   await supabase.from("pagamentos").delete().eq("id", id);
+}
+
+export function registrarComprovanteLocal(id: string, caminho: string, nome: string, tipo: string): void {
+  pagamentos = pagamentos.map((p) => p.id === id ? {
+    ...p,
+    comprovante_caminho: caminho,
+    comprovante_nome: nome,
+    comprovante_tipo: tipo,
+    comprovante_enviado_em: new Date().toISOString(),
+  } : p);
+  notificar();
 }
 
 // ----- Empresa -----
@@ -621,6 +680,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
         msgSolicitarDados: empresa.msgSolicitarDados,
         msgFollowUp: empresa.msgFollowUp,
         msgVisitaTecnica: empresa.msgVisitaTecnica,
+        clausulasContrato: empresa.clausulasContrato,
       },
       prazo_padrao_dias: empresa.prazoPadraoDias,
       limite_vermelho_dias: empresa.limiteVermelhoDias,

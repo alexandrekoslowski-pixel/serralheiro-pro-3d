@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Upload, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useDados } from "@/hooks/useDados";
 import {
   ProjetoLocal, listarProjetos, obterEmpresa, salvarProjeto, criarOrcamentoRapido, formatarBRL,
-  listarPagamentos, totalRecebido, adicionarPagamento, removerPagamento, OrdemStatus,
+  listarPagamentos, totalRecebido, adicionarPagamento, removerPagamento, registrarComprovanteLocal, OrdemStatus,
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
@@ -25,6 +25,7 @@ import CalendarioEntregas from "@/components/CalendarioEntregas";
 import { useVendedores } from "@/hooks/useVendedores";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 import { numeroMascarado } from "@/lib/mascaras";
+import { anexarComprovante, abrirComprovante } from "@/lib/comprovantes";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
@@ -38,6 +39,15 @@ export default function Painel() {
   const [vendedora, setVendedora] = useState("todas");
   const [filtroPrazo, setFiltroPrazo] = useState<"todos" | "atrasadas" | "urgentes">("todos");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
+
+  const precisaFollowup = (p: ProjetoLocal) => p.status === "orcamento" && !!p.enviado_em && p.followup_status !== "feito" && Date.now() - new Date(p.enviado_em).getTime() >= 3 * 86400000;
+
+  const abrirFollowup = (p: ProjetoLocal) => {
+    const telefone = p.cliente_telefone.replace(/\D/g, "");
+    if (!telefone) { toast.error("Cadastre o WhatsApp do cliente"); return; }
+    window.open(`https://wa.me/55${telefone}?text=${encodeURIComponent(empresa.msgFollowUp)}`, "_blank", "noopener,noreferrer");
+    salvarProjeto({ ...p, followup_status: "feito", followup_em: new Date().toISOString(), followup_tentativa_em: new Date().toISOString(), followup_erro: "" });
+  };
 
   const pagamentos = listarPagamentos();
 
@@ -340,6 +350,8 @@ export default function Painel() {
                     <Link to={`/app/projeto/${p.id}`} className="after:absolute after:inset-0 font-display text-sm hover:underline">{p.nome}</Link>
                     <p className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {tipologiaPorId(p.tipologia).nome}</p>
                     {p.vendedora && <p className="truncate text-[11px] text-muted-foreground">Venda: {p.vendedora}</p>}
+                    {p.enviado_em && <p className="truncate text-[11px] text-muted-foreground">Enviado em {new Date(p.enviado_em).toLocaleDateString("pt-BR")}</p>}
+                  {p.status !== "orcamento" && totalRecebido(p.id) <= 0 && <p className="text-[11px] font-medium text-amber-500">Comprovante pendente</p>}
                   </div>
                   <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-medium uppercase ${STATUS_CORES[p.status].badge}`}>
                     {STATUS_LABEL[p.status]}
@@ -390,6 +402,11 @@ export default function Painel() {
                   <Button size="sm" variant="soft" onClick={() => window.open(`/op/${p.id}`, "_blank")}>
                     <Monitor className="mr-1 h-3.5 w-3.5" /> Oficina
                   </Button>
+                  {precisaFollowup(p) && (
+                    <Button size="sm" variant="outline" onClick={() => abrirFollowup(p)}>
+                      <MessageCircle className="mr-1 h-3.5 w-3.5" /> Retomar no WhatsApp
+                    </Button>
+                  )}
                 </div>
               </div>
             </div>
@@ -412,6 +429,7 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
   const [data, setData] = useState(dataISO(new Date()));
   const [forma, setForma] = useState("pix");
   const [obs, setObs] = useState("");
+  const [arquivo, setArquivo] = useState<File | null>(null);
 
   if (!projeto) return null;
   const atual = listarProjetos().find((p) => p.id === projeto.id) ?? projeto;
@@ -423,8 +441,13 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
     const v = numeroMascarado(valor);
     if (!v || v <= 0) { toast.error("Informe o valor recebido"); return; }
     try {
-      await adicionarPagamento({ projeto_id: atual.id, data, valor: v, forma, observacao: obs });
+      const pagamento = await adicionarPagamento({ projeto_id: atual.id, data, valor: v, forma, observacao: obs, comprovante_caminho: null, comprovante_nome: null, comprovante_tipo: null, comprovante_enviado_em: null });
+      if (arquivo) {
+        const caminho = await anexarComprovante(pagamento.id, atual.id, arquivo);
+        registrarComprovanteLocal(pagamento.id, caminho, arquivo.name, arquivo.type);
+      }
       setValor(""); setObs("");
+      setArquivo(null);
       toast.success("Pagamento lançado");
     } catch { toast.error("Não foi possível lançar o pagamento"); }
   };
@@ -478,6 +501,10 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
             <Button onClick={lancar} className="bg-gradient-orange text-primary-foreground">Lançar</Button>
           </div>
           <Input maxLength={500} placeholder="Observação (opcional)" value={obs} onChange={(e) => setObs(e.target.value)} />
+          <div>
+            <Label htmlFor="comprovante">Comprovante de pagamento (pode anexar depois)</Label>
+            <Input id="comprovante" type="file" accept="image/*,application/pdf" onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
+          </div>
         </div>
 
         {pagos.length > 0 && (
@@ -487,7 +514,15 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
                 <span>{new Date(p.data + "T00:00:00").toLocaleDateString("pt-BR")} · {p.forma}{p.observacao ? ` · ${p.observacao}` : ""}</span>
                 <span className="flex items-center gap-2">
                   <strong>{formatarBRL(p.valor)}</strong>
-                  <button className="text-xs text-destructive" onClick={() => removerPagamento(p.id)}>excluir</button>
+                  {p.comprovante_caminho ? (
+                    <Button size="sm" variant="outline" onClick={() => void abrirComprovante(p.comprovante_caminho ?? "")}><ExternalLink className="mr-1 h-3.5 w-3.5" /> Ver</Button>
+                  ) : (
+                    <label className="inline-flex min-h-9 cursor-pointer items-center rounded border border-border px-2 text-xs font-medium hover:border-primary">
+                      <Upload className="mr-1 h-3.5 w-3.5" /> Anexar
+                      <input className="sr-only" type="file" accept="image/*,application/pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) void anexarComprovante(p.id, atual.id, f).then((caminho) => { registrarComprovanteLocal(p.id, caminho, f.name, f.type); toast.success("Comprovante anexado"); }).catch((erro) => toast.error(erro instanceof Error ? erro.message : "Não foi possível anexar")); }} />
+                    </label>
+                  )}
+                  <Button size="sm" variant="dangerOutline" onClick={() => removerPagamento(p.id)}>Excluir</Button>
                 </span>
               </div>
             ))}

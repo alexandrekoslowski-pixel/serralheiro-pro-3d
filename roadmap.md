@@ -17,3 +17,8 @@
 - [x] Validação antes de aprovar e envio das respostas para oficina/PDFs
 - [x] Checklist técnico por peça refletido nos movimentos, folhas, preenchimentos, motores e acessórios do desenho 3D
 - [x] Revisar e padronizar máscaras, limites e validações em todos os campos editáveis
+- [x] CEP automático no cadastro e orçamento
+- [x] Marcação de envio e retorno manual de WhatsApp após 3 dias
+- [ ] Envio automático oficial no WhatsApp (bloqueado: falta conta/API oficial do WhatsApp Business)
+- [x] Contrato de prestação de serviço sem materiais
+- [x] Comprovante de pagamento e aviso de entrada pendente

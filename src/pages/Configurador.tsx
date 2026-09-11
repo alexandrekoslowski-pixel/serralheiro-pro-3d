@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, Save, Copy, Download, Settings2, DollarSign,
+  ArrowLeft, Save, Copy, Download, Settings2, DollarSign, Send, FileSignature, Loader2,
   RotateCw, Box as BoxIcon, Grid3x3, Ruler, Plus, Trash2, RefreshCw, EyeOff, Eye,
   Wrench, FileText, FileSpreadsheet, Smartphone, Sun, Moon, User, Car, Play,
 } from "lucide-react";
@@ -45,6 +45,9 @@ import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 import { numeroMascarado } from "@/lib/mascaras";
+import { buscarCep } from "@/lib/cep";
+import { gerarContratoPDF } from "@/lib/pdfContrato";
+import { useSessao } from "@/lib/sessao";
 
 const PALETA_BARRAS = [
   "hsl(18 78% 52%)", "hsl(210 60% 55%)", "hsl(140 50% 50%)",
@@ -79,6 +82,8 @@ export default function Configurador() {
   const abrirChecklist = Boolean((location.state as { abrirChecklist?: boolean } | null)?.abrirChecklist);
   const [abaCadastro, setAbaCadastro] = useState(abrirChecklist ? "checklist" : "cliente");
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
+  const [buscandoCep, setBuscandoCep] = useState(false);
+  const { session } = useSessao();
 
   useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
 
@@ -259,6 +264,26 @@ export default function Configurador() {
     toast.success("Orçamento gerado");
   };
 
+  const marcarEnviado = () => {
+    const agora = new Date().toISOString();
+    const nome = (session?.user.user_metadata?.nome as string) || session?.user.email || projeto.vendedora || "";
+    const atualizado = { ...projeto, total: resultado.totalGeral, enviado_em: agora, enviado_por_nome: nome, followup_status: "aguardando" as const, followup_em: null };
+    setProjeto(atualizado);
+    salvarProjeto(atualizado);
+    toast.success("Envio registrado; retorno em 3 dias se necessário");
+  };
+
+  const consultarCep = async (cep: string) => {
+    if (cep.replace(/\D/g, "").length !== 8) return;
+    setBuscandoCep(true);
+    try {
+      const endereco = await buscarCep(cep);
+      setProjeto({ ...projeto, cliente_endereco: endereco.logradouro || projeto.cliente_endereco, cliente_bairro: endereco.bairro || projeto.cliente_bairro, cliente_cidade: endereco.cidadeUf || projeto.cliente_cidade });
+      toast.success("Endereço preenchido pelo CEP");
+    } catch (erro) { toast.error(erro instanceof Error ? erro.message : "CEP não encontrado"); }
+    finally { setBuscandoCep(false); }
+  };
+
 
 
   const exportarOP = () => {
@@ -307,6 +332,14 @@ export default function Configurador() {
           <Button size="sm" variant="outline" className="shrink-0" onClick={exportarOrcamento}>
             <Download className="mr-1 h-4 w-4" /> Orçamento
           </Button>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={() => gerarContratoPDF({ ...projeto, total: resultado.totalGeral }, empresa)}>
+            <FileSignature className="mr-1 h-4 w-4" /> Contrato
+          </Button>
+          {projeto.status === "orcamento" && (
+            <Button size="sm" variant="soft" className="shrink-0" onClick={marcarEnviado}>
+              <Send className="mr-1 h-4 w-4" /> {projeto.enviado_em ? "Registrar novo envio" : "Marcar como enviado"}
+            </Button>
+          )}
           {projeto.status === "orcamento" && (
             <Button size="sm" className="shrink-0 bg-gradient-orange text-primary-foreground shadow-orange" onClick={aprovarParaOficina}>
               <Wrench className="mr-1 h-4 w-4" /> Aprovar e mandar para a oficina
@@ -377,6 +410,13 @@ export default function Configurador() {
                 <Label className="text-xs">E-mail</Label>
                 <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} />
               </div>
+              <div>
+                <Label className="text-xs">CEP</Label>
+                <div className="relative">
+                  <Input className="h-9" mask="cep" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} onBlur={(e) => void consultarCep(e.target.value)} placeholder="00000-000" />
+                  {buscandoCep && <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />}
+                </div>
+              </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Endereço (rua, número, complemento)</Label>
                 <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} />
@@ -388,10 +428,6 @@ export default function Configurador() {
               <div>
                 <Label className="text-xs">Cidade/UF</Label>
                 <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} />
-              </div>
-              <div>
-                <Label className="text-xs">CEP</Label>
-                <Input className="h-9" mask="cep" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} placeholder="00000-000" />
               </div>
               <div>
                 <Label className="text-xs">Local de instalação</Label>
