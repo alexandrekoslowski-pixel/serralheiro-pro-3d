@@ -11,6 +11,7 @@ import {
 } from "@/lib/storage";
 import { Catalogo, Perfil, Acessorio } from "@/lib/catalogo";
 import { numeroMascarado } from "@/lib/mascaras";
+import { documentoOpcionalSchema, emailOpcionalSchema, primeiraMensagem, telefoneOpcionalSchema } from "@/lib/validacao";
 
 export default function Configuracoes() {
   const [empresa, setEmpresa] = useState<DadosEmpresa>(obterEmpresa());
@@ -22,7 +23,12 @@ export default function Configuracoes() {
   }, []);
 
   const salvarTudo = () => {
-    salvarEmpresa(empresa);
+    const campos = [documentoOpcionalSchema.safeParse(empresa.cnpj), telefoneOpcionalSchema.safeParse(empresa.telefone), emailOpcionalSchema.safeParse(empresa.email)];
+    const mensagem = campos.map(primeiraMensagem).find(Boolean);
+    if (mensagem) { toast.error(mensagem); return; }
+    if (!empresa.nome.trim()) { toast.error("Informe o nome da empresa"); return; }
+    const empresaLimpa = { ...empresa, nome: empresa.nome.trim(), email: empresa.email.trim().toLowerCase() };
+    salvarEmpresa(empresaLimpa);
     salvarCatalogo(cat);
     toast.success("Configurações salvas");
   };

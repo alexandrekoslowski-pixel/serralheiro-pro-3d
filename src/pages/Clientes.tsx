@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { z } from "zod";
+import { cepOpcionalSchema, documentoOpcionalSchema, emailOpcionalSchema, primeiraMensagem, telefoneOpcionalSchema } from "@/lib/validacao";
 import {
   Cliente, ORIGENS, listarClientes, salvarCliente, excluirCliente,
 } from "@/lib/gestao";
@@ -40,9 +42,18 @@ export default function Clientes() {
   }, [clientes, busca]);
 
   const salvar = async () => {
-    if (!edit?.nome?.trim()) { toast.error("Informe o nome do cliente"); return; }
+    const resultado = z.object({
+      nome: z.string().trim().min(2, "Informe o nome completo").max(120),
+      documento: documentoOpcionalSchema,
+      email: emailOpcionalSchema,
+      telefone: telefoneOpcionalSchema,
+      whatsapp: telefoneOpcionalSchema,
+      cep: cepOpcionalSchema,
+    }).safeParse({ nome: edit?.nome ?? "", documento: edit?.documento ?? "", email: edit?.email ?? "", telefone: edit?.telefone ?? "", whatsapp: edit?.whatsapp ?? "", cep: edit?.cep ?? "" });
+    const mensagem = primeiraMensagem(resultado);
+    if (mensagem) { toast.error(mensagem); return; }
     try {
-      await salvarCliente(edit);
+      await salvarCliente({ ...edit, nome: edit?.nome?.trim(), email: edit?.email?.trim().toLowerCase() });
       setEdit(null);
       await recarregar();
       toast.success("Cliente salvo");
