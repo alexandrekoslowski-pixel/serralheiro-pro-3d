@@ -77,7 +77,7 @@ export default function AppLayout() {
             ))}
           </nav>
 
-          <Button variant="outline" size="sm" onClick={sair}>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={sair}>
             <LogOut className="mr-2 h-3.5 w-3.5" />
             Sair
           </Button>
