@@ -87,6 +87,8 @@ export interface DadosEmpresa {
   codigoOficina: string;
   /** Equipe de vendas */
   vendedoras: string[];
+  /** Empresas parceiras de pintura */
+  empresasPintura: string[];
   /** Proposta comercial */
   prazoDiasUteis: number;
   validadeDias: number;
@@ -156,6 +158,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   limiteAmareloDias: 7,
   codigoOficina: "",
   vendedoras: [],
+  empresasPintura: [],
   prazoDiasUteis: 22,
   validadeDias: 5,
   garantiaDias: 90,
