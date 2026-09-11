@@ -270,9 +270,14 @@ export default function Configurador() {
           <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); window.open(`/op/${projeto.id}`, "_blank"); }} title="Abrir modo TV (oficina, sem preços)">
             <Wrench className="mr-1 h-4 w-4" /> Modo TV
           </Button>
-          <Button size="sm" className="shrink-0 bg-gradient-orange text-primary-foreground shadow-orange" onClick={exportarOrcamento}>
+          <Button size="sm" variant="outline" className="shrink-0" onClick={exportarOrcamento}>
             <Download className="mr-1 h-4 w-4" /> Orçamento
           </Button>
+          {projeto.status === "orcamento" && (
+            <Button size="sm" className="shrink-0 bg-gradient-orange text-primary-foreground shadow-orange" onClick={aprovarParaOficina}>
+              <Wrench className="mr-1 h-4 w-4" /> Aprovar e mandar para a oficina
+            </Button>
+          )}
         </div>
       </div>
 
