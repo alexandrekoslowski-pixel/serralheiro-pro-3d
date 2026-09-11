@@ -15,3 +15,4 @@
 - Fases seguintes: OS congelada, medição com fotos, materiais planejados x usados, novo kanban, entrega e pós-venda, metas do painel
 - [x] Checklist técnico obrigatório e condicional no orçamento
 - [x] Validação antes de aprovar e envio das respostas para oficina/PDFs
+- [x] Checklist técnico por peça refletido nos movimentos, folhas, preenchimentos, motores e acessórios do desenho 3D
