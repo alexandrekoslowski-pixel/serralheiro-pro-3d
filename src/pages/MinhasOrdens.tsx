@@ -59,6 +59,7 @@ export default function MinhasOrdens() {
   const [alvo, setAlvo] = useState<EtapaOficina | null>(null);
   const [mover, setMover] = useState<{ ordem: OrdemOficina; etapa: EtapaOficina } | null>(null);
   const [responsavel, setResponsavel] = useState("");
+  const [retorno, setRetorno] = useState("");
 
   const carregar = useCallback(async () => {
     if (!codigo) { setCarregando(false); return; }
@@ -76,6 +77,7 @@ export default function MinhasOrdens() {
 
   const abrirMover = (o: OrdemOficina, etapa: EtapaOficina) => {
     setResponsavel(o.responsavel ?? "");
+    setRetorno("");
     setMover({ ordem: o, etapa });
   };
 
@@ -88,12 +90,13 @@ export default function MinhasOrdens() {
       ),
     );
     setMover(null);
-    await moverComResponsavel(codigo, ordem.id, etapa, responsavel.trim());
+    await moverComResponsavel(codigo, ordem.id, etapa, responsavel.trim(), retorno);
     void carregar();
   };
 
   const sugestoes = mover?.etapa === "pintura" ? (empresa.empresasPintura ?? []) : equipe.map((m) => m.nome).filter(Boolean);
-  const pedirFoto = mover ? ["pos_venda", "pronto"].includes(mover.etapa) : false;
+  const pedirFoto = mover?.etapa === "entrega";
+  const pedirRetorno = mover?.etapa === "pos_venda";
 
   if (carregando) return <div className="py-16 text-center text-muted-foreground">Carregando ordens...</div>;
 
