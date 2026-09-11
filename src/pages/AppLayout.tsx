@@ -44,7 +44,7 @@ export default function AppLayout() {
         <div className="container flex h-14 items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <button
-              className="grid h-9 w-9 place-items-center rounded border border-border md:hidden"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded border border-border lg:hidden"
               onClick={() => setOpen((v) => !v)}
               aria-label="Abrir menu"
             >
