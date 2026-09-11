@@ -126,9 +126,10 @@ export default function Equipe() {
               <Input className="mt-1.5" value={novo?.nome ?? ""} onChange={(e) => setNovo((n) => n && { ...n, nome: e.target.value })} />
             </div>
             <div>
-              <Label>Identificador da conta</Label>
-              <Input className="mt-1.5" placeholder="cole aqui o identificador" value={novo?.user_id ?? ""}
-                     onChange={(e) => setNovo((n) => n && { ...n, user_id: e.target.value.trim() })} />
+              <Label>E-mail da conta</Label>
+              <Input className="mt-1.5" type="email" placeholder="nome@email.com" value={novo?.email ?? ""}
+                     onChange={(e) => setNovo((n) => n && { ...n, email: e.target.value })} />
+              <p className="mt-1 text-xs text-muted-foreground">Use o mesmo e-mail com que a pessoa entra no sistema.</p>
             </div>
             <div>
               <Label>Papel</Label>
