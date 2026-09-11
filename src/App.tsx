@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { SessaoProvider, ExigirLogin } from "@/lib/sessao";
+import { SessaoProvider, ExigirLogin, ExigirGestao } from "@/lib/sessao";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import AppLayout from "./pages/AppLayout";
