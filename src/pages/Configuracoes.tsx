@@ -10,6 +10,7 @@ import {
   restaurarCatalogoPadrao, DadosEmpresa,
 } from "@/lib/storage";
 import { Catalogo, Perfil, Acessorio } from "@/lib/catalogo";
+import { numeroMascarado } from "@/lib/mascaras";
 
 export default function Configuracoes() {
   const [empresa, setEmpresa] = useState<DadosEmpresa>(obterEmpresa());
@@ -137,17 +138,17 @@ export default function Configuracoes() {
         <div className="grid gap-4 md:grid-cols-3">
           <div>
             <Label>Prazo padrão ao aprovar (dias)</Label>
-            <Input type="number" min={1} value={empresa.prazoPadraoDias}
-              onChange={(e) => setEmpresa({ ...empresa, prazoPadraoDias: Number(e.target.value) })} />
+            <Input mask="inteiro" value={empresa.prazoPadraoDias}
+              onChange={(e) => setEmpresa({ ...empresa, prazoPadraoDias: Math.max(1, Number(e.target.value)) })} />
           </div>
           <div>
             <Label>Vermelho quando faltar até (dias)</Label>
-            <Input type="number" min={0} value={empresa.limiteVermelhoDias}
+            <Input mask="inteiro" value={empresa.limiteVermelhoDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteVermelhoDias: Number(e.target.value) })} />
           </div>
           <div>
             <Label>Amarelo quando faltar até (dias)</Label>
-            <Input type="number" min={0} value={empresa.limiteAmareloDias}
+            <Input mask="inteiro" value={empresa.limiteAmareloDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteAmareloDias: Number(e.target.value) })} />
           </div>
         </div>
@@ -156,17 +157,17 @@ export default function Configuracoes() {
         <div className="grid gap-4 md:grid-cols-3">
           <div>
             <Label>Prazo padrão (dias úteis)</Label>
-            <Input type="number" min={1} value={empresa.prazoDiasUteis}
-              onChange={(e) => setEmpresa({ ...empresa, prazoDiasUteis: Number(e.target.value) })} />
+            <Input mask="inteiro" value={empresa.prazoDiasUteis}
+              onChange={(e) => setEmpresa({ ...empresa, prazoDiasUteis: Math.max(1, Number(e.target.value)) })} />
           </div>
           <div>
             <Label>Validade do orçamento (dias)</Label>
-            <Input type="number" min={1} value={empresa.validadeDias}
-              onChange={(e) => setEmpresa({ ...empresa, validadeDias: Number(e.target.value) })} />
+            <Input mask="inteiro" value={empresa.validadeDias}
+              onChange={(e) => setEmpresa({ ...empresa, validadeDias: Math.max(1, Number(e.target.value)) })} />
           </div>
           <div>
             <Label>Garantia (dias)</Label>
-            <Input type="number" min={0} value={empresa.garantiaDias}
+            <Input mask="inteiro" value={empresa.garantiaDias}
               onChange={(e) => setEmpresa({ ...empresa, garantiaDias: Number(e.target.value) })} />
           </div>
           <div>
@@ -179,8 +180,8 @@ export default function Configuracoes() {
           </div>
           <div>
             <Label>Visita técnica (R$)</Label>
-            <Input type="number" step="0.01" min={0} value={empresa.visitaTecnica}
-              onChange={(e) => setEmpresa({ ...empresa, visitaTecnica: Number(e.target.value) })} />
+            <Input mask="moeda" value={String(empresa.visitaTecnica).replace(".", ",")}
+              onChange={(e) => setEmpresa({ ...empresa, visitaTecnica: numeroMascarado(e.target.value) })} />
           </div>
         </div>
         <div className="grid gap-4 md:grid-cols-2 mt-4">
@@ -270,10 +271,10 @@ export default function Configuracoes() {
             <tbody>
               {cat.perfis.map((p, i) => (
                 <tr key={i} className="border-b border-border/50">
-                  <td className="py-1 pr-2"><Input className="h-8" value={p.codigo} onChange={(e) => updPerfil(i, { codigo: e.target.value })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8" mask="codigo" value={p.codigo} onChange={(e) => updPerfil(i, { codigo: e.target.value })} /></td>
                   <td className="py-1 pr-2"><Input className="h-8" value={p.descricao} onChange={(e) => updPerfil(i, { descricao: e.target.value })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={p.precoPorMetro} onChange={(e) => updPerfil(i, { precoPorMetro: Number(e.target.value) })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={p.pesoLinear} onChange={(e) => updPerfil(i, { pesoLinear: Number(e.target.value) })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8 text-right" mask="moeda" value={String(p.precoPorMetro).replace(".", ",")} onChange={(e) => updPerfil(i, { precoPorMetro: numeroMascarado(e.target.value) })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8 text-right" mask="decimal" value={String(p.pesoLinear).replace(".", ",")} onChange={(e) => updPerfil(i, { pesoLinear: numeroMascarado(e.target.value) })} /></td>
                   <td className="py-1"><Button size="icon" variant="dangerOutline" title="Excluir" onClick={() => delPerfil(i)}><Trash2 className="h-4 w-4" /></Button></td>
                 </tr>
               ))}
@@ -304,9 +305,9 @@ export default function Configuracoes() {
             <tbody>
               {cat.acessorios.map((a, i) => (
                 <tr key={i} className="border-b border-border/50">
-                  <td className="py-1 pr-2"><Input className="h-8" value={a.codigo} onChange={(e) => updAce(i, { codigo: e.target.value })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8" mask="codigo" value={a.codigo} onChange={(e) => updAce(i, { codigo: e.target.value })} /></td>
                   <td className="py-1 pr-2"><Input className="h-8" value={a.descricao} onChange={(e) => updAce(i, { descricao: e.target.value })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={a.preco} onChange={(e) => updAce(i, { preco: Number(e.target.value) })} /></td>
+                  <td className="py-1 pr-2"><Input className="h-8 text-right" mask="moeda" value={String(a.preco).replace(".", ",")} onChange={(e) => updAce(i, { preco: numeroMascarado(e.target.value) })} /></td>
                   <td className="py-1 pr-2"><Input className="h-8" value={a.unidade} onChange={(e) => updAce(i, { unidade: e.target.value })} /></td>
                   <td className="py-1"><Button size="icon" variant="dangerOutline" title="Excluir" onClick={() => delAce(i)}><Trash2 className="h-4 w-4" /></Button></td>
                 </tr>
@@ -320,7 +321,7 @@ export default function Configuracoes() {
       <div className="surface-card rounded-lg border border-border p-5 md:max-w-md">
         <h2 className="font-display text-lg mb-3">Vidro temperado</h2>
         <Label>Preço por m² (R$)</Label>
-        <Input type="number" step="0.01" value={cat.vidroPorM2} onChange={(e) => setCat({ ...cat, vidroPorM2: Number(e.target.value) })} />
+        <Input mask="moeda" value={String(cat.vidroPorM2).replace(".", ",")} onChange={(e) => setCat({ ...cat, vidroPorM2: numeroMascarado(e.target.value) })} />
       </div>
     </section>
   );

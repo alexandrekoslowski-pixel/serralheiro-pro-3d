@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { ServicoCatalogo, listarServicos, salvarServico, excluirServico } from "@/lib/gestao";
 import { TIPOS_SERVICO } from "@/lib/briefing";
 import { formatarBRL } from "@/lib/storage";
+import { numeroMascarado } from "@/lib/mascaras";
 
 const CAMPOS_SUGERIDOS = [
   "Largura", "Altura", "Quantidade", "Tipo de fechamento", "Maçaneta",
@@ -104,13 +105,13 @@ export default function Catalogo() {
               </div>
               <div>
                 <Label>Preço base (R$)</Label>
-                <Input className="mt-1.5" type="number" value={edit?.preco_base ?? 0}
-                       onChange={(e) => setEdit((s) => ({ ...s, preco_base: Number(e.target.value) }))} />
+                <Input className="mt-1.5" mask="moeda" value={String(edit?.preco_base ?? 0).replace(".", ",")}
+                       onChange={(e) => setEdit((s) => ({ ...s, preco_base: numeroMascarado(e.target.value) }))} />
               </div>
             </div>
             <div>
               <Label>Descrição</Label>
-              <Textarea className="mt-1.5" rows={2} value={edit?.descricao ?? ""}
+              <Textarea className="mt-1.5" rows={2} maxLength={1000} value={edit?.descricao ?? ""}
                         onChange={(e) => setEdit((s) => ({ ...s, descricao: e.target.value }))} />
             </div>
             <div>
