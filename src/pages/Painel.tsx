@@ -134,7 +134,7 @@ export default function Painel() {
       const pendentes = perguntasPendentes(p.pecas.map((peca) => peca.tipologia), p.checklist_respostas ?? {});
       if (pendentes.length > 0) {
         toast.error(`Complete o checklist antes de aprovar (${pendentes.length} pendente${pendentes.length === 1 ? "" : "s"})`);
-        navigate(`/app/projeto/${p.id}`);
+        navigate(`/app/projeto/${p.id}`, { state: { abrirChecklist: true } });
         return;
       }
     }
