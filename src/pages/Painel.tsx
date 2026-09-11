@@ -263,15 +263,15 @@ export default function Painel() {
                       Aprovar e mandar para a oficina <ArrowRight className="ml-1 h-3.5 w-3.5" />
                     </Button>
                   ) : prox ? (
-                    <Button size="sm" variant="ghost" onClick={() => avancar(p)}>
+                    <Button size="sm" variant="soft" onClick={() => avancar(p)}>
                       {STATUS_LABEL[prox]} <ArrowRight className="ml-1 h-3.5 w-3.5" />
                     </Button>
                   ) : null}
 
-                  <Button size="sm" variant="ghost" onClick={() => setDetalhe(p)}>
+                  <Button size="sm" variant="soft" onClick={() => setDetalhe(p)}>
                     <Wallet className="mr-1 h-3.5 w-3.5" /> Financeiro
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => window.open(`/op/${p.id}`, "_blank")}>
+                  <Button size="sm" variant="soft" onClick={() => window.open(`/op/${p.id}`, "_blank")}>
                     <Monitor className="mr-1 h-3.5 w-3.5" /> Oficina
                   </Button>
                 </div>

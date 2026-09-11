@@ -74,8 +74,8 @@ export default function Catalogo() {
                 ))}
               </div>
               <div className="mt-3 flex gap-1.5">
-                <Button size="sm" variant="ghost" onClick={() => setEdit(s)}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button size="sm" variant="ghost" onClick={async () => { await excluirServico(s.id); await recarregar(); }}>
+                <Button size="sm" variant="soft" onClick={() => setEdit(s)}><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button size="sm" variant="soft" onClick={async () => { await excluirServico(s.id); await recarregar(); }}>
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
                 </Button>
               </div>

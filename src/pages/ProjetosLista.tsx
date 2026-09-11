@@ -198,12 +198,12 @@ export default function ProjetosLista() {
                 </div>
               </Link>
               <div className="mt-3 flex gap-1 border-t border-border pt-3">
-                <Button size="sm" variant="ghost" onClick={() => duplicar(p.id)}>
+                <Button size="sm" variant="soft" onClick={() => duplicar(p.id)}>
                   <Copy className="mr-1 h-3.5 w-3.5" /> Duplicar
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                    <Button size="sm" variant="soft" className="text-destructive hover:text-destructive">
                       <Trash2 className="mr-1 h-3.5 w-3.5" /> Excluir
                     </Button>
                   </AlertDialogTrigger>

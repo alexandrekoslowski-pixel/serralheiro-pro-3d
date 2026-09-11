@@ -47,7 +47,7 @@ export default function ClienteDetalhe() {
 
   return (
     <div className="container space-y-4 py-6">
-      <Button variant="ghost" size="sm" asChild><Link to="/app/clientes"><ArrowLeft className="mr-2 h-4 w-4" /> Clientes</Link></Button>
+      <Button variant="soft" size="sm" asChild><Link to="/app/clientes"><ArrowLeft className="mr-2 h-4 w-4" /> Clientes</Link></Button>
 
       <div className="surface-card rounded-lg border border-border p-4">
         <h1 className="font-display text-xl">{cliente.nome}</h1>
@@ -134,7 +134,7 @@ export default function ClienteDetalhe() {
                   <span className="text-xs text-muted-foreground">
                     {new Date(b.created_at).toLocaleDateString("pt-BR")}
                   </span>
-                  <Button size="sm" variant="ghost" onClick={async () => { await excluirBriefing(b.id); await recarregar(); }}>
+                  <Button size="sm" variant="soft" onClick={async () => { await excluirBriefing(b.id); await recarregar(); }}>
                     <Trash2 className="h-3.5 w-3.5 text-destructive" />
                   </Button>
                 </div>

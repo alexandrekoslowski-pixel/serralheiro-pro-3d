@@ -237,7 +237,7 @@ export default function Configurador() {
       {/* Top bar */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-3 min-w-0">
-          <Button asChild variant="ghost" size="sm" className="shrink-0">
+          <Button asChild variant="soft" size="sm" className="shrink-0">
             <Link to="/app"><ArrowLeft className="mr-1 h-4 w-4" /> Orçamentos</Link>
           </Button>
           <div className="min-w-0">
@@ -735,11 +735,11 @@ export default function Configurador() {
                         <td className="py-1.5 pr-2"><Input className="h-8 text-right" type="number" step="1" value={it.descontoPct} onChange={(e) => setOverride(it.key, { descontoPct: Number(e.target.value) })} /></td>
                         <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(it.total)}</td>
                         <td className="py-1.5 text-right">
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => setOverride(it.key, { oculto: !it.oculto })} title={it.oculto ? "Mostrar" : "Ocultar"}>
+                          <Button size="icon" variant="soft" className="h-7 w-7" onClick={() => setOverride(it.key, { oculto: !it.oculto })} title={it.oculto ? "Mostrar" : "Ocultar"}>
                             {it.oculto ? <Eye className="h-3.5 w-3.5" /> : <EyeOff className="h-3.5 w-3.5" />}
                           </Button>
                           {it.override && (
-                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => resetOverride(it.key)} title="Resetar override">
+                            <Button size="icon" variant="soft" className="h-7 w-7" onClick={() => resetOverride(it.key)} title="Resetar override">
                               <RefreshCw className="h-3.5 w-3.5 text-warning" />
                             </Button>
                           )}
@@ -768,7 +768,7 @@ export default function Configurador() {
                       <Input className="h-8 col-span-3 sm:col-span-2 text-right" type="number" step="0.01" value={ex.qtd} onChange={(e) => updExtra(ex.id, { qtd: Number(e.target.value) })} />
                       <Input className="h-8 col-span-3 sm:col-span-1" placeholder="un" value={ex.unidade} onChange={(e) => updExtra(ex.id, { unidade: e.target.value })} />
                       <Input className="h-8 col-span-4 sm:col-span-3 text-right" type="number" step="0.01" placeholder="Preço" value={ex.precoUnit} onChange={(e) => updExtra(ex.id, { precoUnit: Number(e.target.value) })} />
-                      <Button size="icon" variant="ghost" className="col-span-2 sm:col-span-1" onClick={() => delExtra(ex.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                      <Button size="icon" variant="soft" className="col-span-2 sm:col-span-1" onClick={() => delExtra(ex.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                     </div>
                   ))}
                 </div>

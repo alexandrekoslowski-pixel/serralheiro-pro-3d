@@ -126,8 +126,8 @@ export default function Clientes() {
                     </a>
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => setEdit(c)}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => remover(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                <Button size="sm" variant="soft" onClick={() => setEdit(c)}><Pencil className="h-3.5 w-3.5" /></Button>
+                <Button size="sm" variant="soft" onClick={() => remover(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
               </div>
             </div>
           ))}
