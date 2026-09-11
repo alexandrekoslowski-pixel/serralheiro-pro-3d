@@ -173,7 +173,7 @@ export default function ProjetosLista() {
         {filtrados.map((p) => {
           const tip = tipologiaPorId(p.tipologia);
           return (
-            <div key={p.id} className="surface-card rounded-lg border border-border p-4 transition hover:border-primary/50">
+            <div key={p.id} className="surface-card rounded-lg border border-border p-4 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg">
               <Link to={`/app/projeto/${p.id}`} className="block">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

@@ -93,9 +93,9 @@ export default function Configuracoes() {
                   setEmpresa({ ...empresa, vendedoras: next });
                 }}
               />
-              <Button size="icon" variant="soft"
+              <Button size="icon" variant="dangerOutline" title="Excluir"
                 onClick={() => setEmpresa({ ...empresa, vendedoras: (empresa.vendedoras ?? []).filter((_, idx) => idx !== i) })}>
-                <Trash2 className="h-4 w-4 text-destructive" />
+                <Trash2 className="h-4 w-4" />
               </Button>
             </div>
           ))}

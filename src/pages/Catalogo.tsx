@@ -57,7 +57,7 @@ export default function Catalogo() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {servicos.map((s) => (
-            <div key={s.id} className="surface-card rounded-lg border border-border p-4">
+            <div key={s.id} className="surface-card rounded-lg border border-border p-4 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="truncate font-medium">{s.nome}</div>
