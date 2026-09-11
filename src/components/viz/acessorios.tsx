@@ -1,6 +1,6 @@
 // Acessórios e fixação desenhados conforme o cadastro da peça.
 import { TipologiaId } from "@/lib/tipologias";
-import { TipoFixacao, LadosFixacao } from "@/lib/fixacao";
+import { FixacaoTipo, FixacaoLados } from "@/lib/fixacao";
 import { GEO_CIL } from "./perfis";
 import { materialAco } from "./materiais";
 
@@ -106,8 +106,8 @@ export function Fixacoes({
   H,
   prof,
 }: {
-  tipo: TipoFixacao;
-  lados: LadosFixacao;
+  tipo: FixacaoTipo;
+  lados: FixacaoLados;
   L: number;
   H: number;
   prof: number;

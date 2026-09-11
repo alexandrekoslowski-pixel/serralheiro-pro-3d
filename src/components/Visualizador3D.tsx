@@ -6,7 +6,7 @@ import { OrbitControls, Grid, Html, AdaptiveDpr, AdaptiveEvents, Bvh } from "@re
 import { OrbitControls as OrbitControlsImpl } from "three-stdlib";
 import * as THREE from "three";
 import { TipologiaId, AcabamentoId, acabamentoPorId } from "@/lib/tipologias";
-import { TipoFixacao, LadosFixacao } from "@/lib/fixacao";
+import { FixacaoTipo, FixacaoLados } from "@/lib/fixacao";
 import { Tubo, TuboMoldura, perfisTipologia } from "./viz/perfis";
 import { materialVidro } from "./viz/materiais";
 import { Ambiente as AmbienteHDR, LuzesDia, LuzesNoite, Chao, Muro } from "./viz/cena";
@@ -24,8 +24,8 @@ export interface PecaVisual {
   largura_mm: number;
   altura_mm: number;
   cor: AcabamentoId;
-  fixacao?: TipoFixacao;
-  fixacaoLados?: LadosFixacao;
+  fixacao?: FixacaoTipo;
+  fixacaoLados?: FixacaoLados;
 }
 
 export interface Visualizador3DProps {
