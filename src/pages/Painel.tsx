@@ -333,7 +333,26 @@ export default function Painel() {
                   </span>
                 </div>
 
-                <div className={`mt-3 text-xs font-medium ${cls.texto}`}>{textoPrazo(p)}</div>
+                <div className="mt-3 flex items-center gap-2">
+                  <span className={`text-xs font-medium ${cls.texto}`}>{textoPrazo(p)}</span>
+                  {(() => {
+                    const d = diasRestantes(p.prazo_entrega);
+                    if (d === null || p.status === "entregue" || p.status === "faturado") return null;
+                    if (d < 0)
+                      return (
+                        <span className="rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold uppercase text-destructive-foreground">
+                          {Math.abs(d)} d de atraso
+                        </span>
+                      );
+                    if (d <= empresa.limiteVermelhoDias)
+                      return (
+                        <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
+                          {d === 0 ? "vence hoje" : `faltam ${d} d`}
+                        </span>
+                      );
+                    return null;
+                  })()}
+                </div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                   <div><div className="text-[10px] uppercase text-muted-foreground">Orçado</div><div>{formatarBRL(p.total)}</div></div>
