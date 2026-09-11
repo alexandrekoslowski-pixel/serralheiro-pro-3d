@@ -27,6 +27,7 @@ export interface Peca {
   cor: AcabamentoId;
   fixacao: FixacaoTipo;
   fixacaoLados: FixacaoLados;
+  checklist_respostas: RespostasChecklist;
 }
 
 export interface ProjetoLocal {
@@ -247,8 +248,19 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
       cor: base.cor,
       fixacao: FIXACAO_PADRAO,
       fixacaoLados: FIXACAO_LADOS_PADRAO,
+      checklist_respostas: {},
     }];
   }
+  base.pecas = base.pecas.map((peca, index) => {
+    const respostas = normalizarRespostasChecklist(peca.checklist_respostas);
+    if (index === 0 && Object.keys(respostas).length === 0) {
+      const prefixo = `${peca.tipologia}.`;
+      Object.entries(base.checklist_respostas ?? {}).forEach(([chave, valor]) => {
+        if (chave.startsWith(prefixo)) respostas[chave.slice(prefixo.length)] = valor;
+      });
+    }
+    return { ...peca, checklist_respostas: respostas };
+  });
   // Peças antigas sem sistema de fixação recebem o padrão.
   base.pecas = base.pecas.map((pc) => ({
     ...pc,

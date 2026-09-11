@@ -171,13 +171,14 @@ export default function Configurador() {
       cor: pecaSel.cor,
       fixacao: pecaSel.fixacao ?? FIXACAO_PADRAO,
       fixacaoLados: pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO,
+      checklist_respostas: {},
     };
     setProjeto({ ...projeto, pecas: [...projeto.pecas, nova] });
     setPecaSelId(nova.id);
   };
 
   const duplicarPeca = () => {
-    const nova: Peca = { ...pecaSel, id: gerarId(), nome: `${pecaSel.nome} (cópia)` };
+    const nova: Peca = { ...pecaSel, id: gerarId(), nome: `${pecaSel.nome} (cópia)`, checklist_respostas: { ...pecaSel.checklist_respostas } };
     setProjeto({ ...projeto, pecas: [...projeto.pecas, nova] });
     setPecaSelId(nova.id);
   };
