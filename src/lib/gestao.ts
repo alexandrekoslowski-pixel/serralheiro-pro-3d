@@ -219,6 +219,8 @@ export async function excluirMaterial(id: string): Promise<void> {
 
 // ---------- equipe ----------
 export async function listarEquipe(): Promise<MembroEquipe[]> {
+  const detalhada = await supabase.rpc("equipe_detalhada");
+  if (!detalhada.error) return (detalhada.data ?? []) as MembroEquipe[];
   const { data, error } = await supabase.from("user_roles").select("*").order("created_at");
   if (error) throw error;
   return (data ?? []) as MembroEquipe[];
@@ -229,11 +231,16 @@ export async function meuPapel(uid: string): Promise<Papel> {
   return ((data as { role?: Papel } | null)?.role ?? "gestor") as Papel;
 }
 
-export async function definirPapel(m: { user_id: string; role: Papel; nome: string }): Promise<void> {
+export class ContaNaoEncontrada extends Error {}
+
+export async function definirPapel(m: { email: string; role: Papel; nome: string }): Promise<void> {
   const donoId = (await supabase.auth.getUser()).data.user?.id as string;
+  const { data: encontrado, error: buscaErro } = await supabase.rpc("usuario_por_email", { _email: m.email });
+  if (buscaErro) throw buscaErro;
+  if (!encontrado) throw new ContaNaoEncontrada();
   const { error } = await supabase
     .from("user_roles")
-    .upsert({ ...m, dono_id: donoId } as never, { onConflict: "user_id,role" });
+    .upsert({ user_id: encontrado as string, nome: m.nome, role: m.role, dono_id: donoId } as never, { onConflict: "user_id,role" });
   if (error) throw error;
 }
 
