@@ -175,18 +175,33 @@ export async function excluirServico(id: string): Promise<void> {
 }
 
 // ---------- materiais ----------
+async function buscarTudo<T>(tabela: string, ordem?: string): Promise<T[]> {
+  const passo = 1000;
+  const todos: T[] = [];
+  for (let inicio = 0; ; inicio += passo) {
+    let q = supabase.from(tabela).select("*").range(inicio, inicio + passo - 1);
+    if (ordem) q = q.order(ordem);
+    const { data, error } = await q;
+    if (error) throw error;
+    const lote = (data ?? []) as T[];
+    todos.push(...lote);
+    if (lote.length < passo) break;
+  }
+  return todos;
+}
+
 export async function listarMateriais(): Promise<Material[]> {
-  const [{ data, error }, precos] = await Promise.all([
-    supabase.from("materiais").select("*").order("nome"),
-    supabase.from("materiais_precos_atuais").select("*"),
+  const [linhas, precos] = await Promise.all([
+    buscarTudo<any>("materiais", "nome"),
+    buscarTudo<any>("materiais_precos_atuais"),
   ]);
-  if (error) throw error;
-  const porMaterial = new Map((precos.data ?? []).map((p) => [p.material_id, p]));
-  return (data ?? []).map((m) => {
+  const porMaterial = new Map(precos.map((p) => [p.material_id, p]));
+  return linhas.map((m) => {
     const p = porMaterial.get(m.id);
     return { ...m, preco_atual: Number(p?.valor ?? m.custo), preco_referencia: p?.referencia, preco_unidade: p?.unidade };
   }) as Material[];
 }
+
 
 export async function salvarMaterial(m: Partial<Material>): Promise<void> {
   const { preco_atual, preco_referencia, preco_unidade, ...campos } = m;
