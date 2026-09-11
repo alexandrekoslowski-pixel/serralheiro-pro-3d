@@ -17,3 +17,7 @@
 - [x] Validação antes de aprovar e envio das respostas para oficina/PDFs
 - [x] Checklist técnico por peça refletido nos movimentos, folhas, preenchimentos, motores e acessórios do desenho 3D
 - [x] Revisar e padronizar máscaras, limites e validações em todos os campos editáveis
+- [ ] CEP automático no cadastro e orçamento
+- [ ] Marcação de envio e retorno de WhatsApp após 3 dias
+- [ ] Contrato de prestação de serviço sem materiais
+- [ ] Comprovante de pagamento e aviso de entrada pendente
