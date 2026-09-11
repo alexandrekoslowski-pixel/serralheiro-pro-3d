@@ -275,11 +275,11 @@ export default function Painel() {
           <button
             key={s}
             onClick={() => setFiltro(s)}
-            className={`rounded-md border px-3 py-1.5 text-xs transition ${
-              filtro === s ? "border-primary bg-card" : "border-border text-muted-foreground hover:bg-card"
+            className={`rounded-md border px-3 py-1.5 text-xs font-medium transition ${
+              filtro === s ? STATUS_CORES[s].chipAtivo : `${STATUS_CORES[s].chip} hover:bg-card`
             }`}
           >
-            {STATUS_LABEL[s]} <strong className="ml-1 text-foreground">{contagem[s] ?? 0}</strong>
+            {STATUS_LABEL[s]} <strong className="ml-1">{contagem[s] ?? 0}</strong>
           </button>
         ))}
       </div>
@@ -328,7 +328,7 @@ export default function Painel() {
                     <p className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {tipologiaPorId(p.tipologia).nome}</p>
                     {p.vendedora && <p className="truncate text-[11px] text-muted-foreground">Venda: {p.vendedora}</p>}
                   </div>
-                  <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-medium uppercase ${cls.badge}`}>
+                  <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-medium uppercase ${STATUS_CORES[p.status].badge}`}>
                     {STATUS_LABEL[p.status]}
                   </span>
                 </div>
