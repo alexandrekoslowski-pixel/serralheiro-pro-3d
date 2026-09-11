@@ -12,18 +12,25 @@ import { useSessao } from "@/lib/sessao";
 export default function Equipe() {
   const { session, papel } = useSessao();
   const [equipe, setEquipe] = useState<MembroEquipe[]>([]);
-  const [novo, setNovo] = useState<{ user_id: string; nome: string; role: Papel } | null>(null);
+  const [novo, setNovo] = useState<{ email: string; nome: string; role: Papel } | null>(null);
   const [edicao, setEdicao] = useState<{ id: string; nome: string; role: Papel } | null>(null);
 
   const recarregar = () => listarEquipe().then(setEquipe).catch(() => toast.error("Não foi possível carregar a equipe"));
   useEffect(() => { void recarregar(); }, []);
 
   const salvar = async () => {
-    if (!novo?.user_id.trim()) { toast.error("Informe o identificador da pessoa"); return; }
+    if (!novo?.nome.trim()) { toast.error("Informe o nome da pessoa"); return; }
+    if (!novo?.email.trim()) { toast.error("Informe o e-mail da pessoa"); return; }
     try {
-      await definirPapel(novo);
+      await definirPapel({ ...novo, nome: novo.nome.trim(), email: novo.email.trim() });
       setNovo(null); await recarregar(); toast.success("Acesso liberado");
-    } catch { toast.error("Não foi possível salvar o acesso"); }
+    } catch (e) {
+      if (e instanceof ContaNaoEncontrada) {
+        toast.error("Essa pessoa ainda não criou a conta. Peça para ela entrar com e-mail e senha e tente de novo.");
+      } else {
+        toast.error("Não foi possível salvar o acesso");
+      }
+    }
   };
 
   const salvarEdicao = async () => {
