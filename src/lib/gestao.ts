@@ -175,11 +175,12 @@ export async function excluirServico(id: string): Promise<void> {
 }
 
 // ---------- materiais ----------
-async function buscarTudo<T>(tabela: string, ordem?: string): Promise<T[]> {
+async function buscarTudo<T>(tabela: "materiais" | "materiais_precos_atuais", ordem?: string): Promise<T[]> {
   const passo = 1000;
   const todos: T[] = [];
   for (let inicio = 0; ; inicio += passo) {
-    let q = supabase.from(tabela).select("*").range(inicio, inicio + passo - 1);
+    let q = (supabase.from(tabela) as any).select("*").range(inicio, inicio + passo - 1);
+
     if (ordem) q = q.order(ordem);
     const { data, error } = await q;
     if (error) throw error;
