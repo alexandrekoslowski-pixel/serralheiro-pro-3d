@@ -236,6 +236,11 @@ export async function definirPapel(m: { user_id: string; role: Papel; nome: stri
   if (error) throw error;
 }
 
+export async function atualizarMembro(id: string, patch: { nome?: string; role?: Papel }): Promise<void> {
+  const { error } = await supabase.from("user_roles").update(patch as never).eq("id", id);
+  if (error) throw error;
+}
+
 export async function removerMembro(id: string): Promise<void> {
   await supabase.from("user_roles").delete().eq("id", id);
 }
