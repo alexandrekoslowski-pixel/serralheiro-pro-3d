@@ -7,21 +7,21 @@ export function Ambiente({ noite }: { noite?: boolean }) {
   return (
     <Environment resolution={128}>
       <Lightformer
-        intensity={noite ? 0.6 : 2.2}
+        intensity={noite ? 0.5 : 1.3}
         color={noite ? "#93b6ff" : "#ffffff"}
         position={[0, 6, 2]}
         rotation-x={Math.PI / 2}
         scale={[14, 14, 1]}
       />
       <Lightformer
-        intensity={noite ? 0.35 : 1.1}
+        intensity={noite ? 0.3 : 0.7}
         color={noite ? "#5c7bb5" : "#dfe9f5"}
         position={[-6, 2, 2]}
         rotation-y={Math.PI / 2}
         scale={[16, 6, 1]}
       />
       <Lightformer
-        intensity={noite ? 0.3 : 0.9}
+        intensity={noite ? 0.25 : 0.6}
         color={noite ? "#3d4f77" : "#ffe9d2"}
         position={[6, 2, -2]}
         rotation-y={-Math.PI / 2}
@@ -39,7 +39,7 @@ export function LuzesDia({ larguraCena }: { larguraCena: number }) {
       <ambientLight intensity={0.25} />
       <directionalLight
         position={[d * 0.6, d, d * 0.5]}
-        intensity={2.1}
+        intensity={1.5}
         color="#fff3e2"
         castShadow
         shadow-mapSize-width={1024}
@@ -83,7 +83,7 @@ export function Chao({ larguraCena, noite }: { larguraCena: number; noite?: bool
     <>
       <mesh rotation-x={-Math.PI / 2} position={[0, -0.002, 0]} receiveShadow>
         <planeGeometry args={[tam, tam]} />
-        <meshStandardMaterial color={noite ? "#1c1f26" : "#9a9995"} roughness={0.95} metalness={0} />
+        <meshStandardMaterial color={noite ? "#1b1e24" : "#6f6c66"} roughness={1} metalness={0} />
       </mesh>
       <ContactShadows
         position={[0, 0.004, 0]}
@@ -101,21 +101,27 @@ export function Chao({ larguraCena, noite }: { larguraCena: number; noite?: bool
 /** Muro de contexto atrás da peça — ajuda o cliente a entender a escala. */
 export function Muro({ larguraCena, altura }: { larguraCena: number; altura: number }) {
   const larg = larguraCena + 3;
-  const h = Math.max(altura * 0.95, 1.6);
+  const h = Math.min(Math.max(altura * 0.85, 1.6), 2.3);
   return (
     <group position={[0, 0, -0.28]}>
       <mesh position={[-(larguraCena / 2 + larg / 4 + 0.1), h / 2, 0]} receiveShadow castShadow>
         <boxGeometry args={[larg / 2, h, 0.2]} />
-        <meshStandardMaterial color="#c9c2b6" roughness={0.95} />
+        <meshStandardMaterial color="#a79f92" roughness={0.95} />
       </mesh>
       <mesh position={[larguraCena / 2 + larg / 4 + 0.1, h / 2, 0]} receiveShadow castShadow>
         <boxGeometry args={[larg / 2, h, 0.2]} />
-        <meshStandardMaterial color="#c9c2b6" roughness={0.95} />
+        <meshStandardMaterial color="#a79f92" roughness={0.95} />
       </mesh>
-      {/* rufo / acabamento superior */}
-      <mesh position={[0, h + 0.04, 0]} material={materialAco("#b8b2a6", 0.85)}>
-        <boxGeometry args={[larg + larguraCena, 0.08, 0.26]} />
-      </mesh>
+      {/* rufo / acabamento superior (só sobre a alvenaria) */}
+      {[-1, 1].map((sgn) => (
+        <mesh
+          key={sgn}
+          position={[sgn * (larguraCena / 2 + larg / 4 + 0.1), h + 0.04, 0]}
+          material={materialAco("#9a9184", 0.9)}
+        >
+          <boxGeometry args={[larg / 2 + 0.1, 0.08, 0.26]} />
+        </mesh>
+      ))}
     </group>
   );
 }
