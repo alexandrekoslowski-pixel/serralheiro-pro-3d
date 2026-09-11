@@ -257,7 +257,7 @@ export default function Painel() {
                   <div><div className="text-[10px] uppercase text-muted-foreground">Recebido</div><div>{formatarBRL(recebido)}</div></div>
                 </div>
 
-                <div className="mt-3 flex flex-wrap gap-1 border-t border-border pt-3">
+                <div className="relative z-10 mt-3 flex flex-wrap gap-1 border-t border-border pt-3">
                   {prox && (
                     <Button size="sm" variant="ghost" onClick={() => avancar(p)}>
                       {STATUS_LABEL[prox]} <ArrowRight className="ml-1 h-3.5 w-3.5" />
