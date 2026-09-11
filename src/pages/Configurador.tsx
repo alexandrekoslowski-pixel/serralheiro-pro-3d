@@ -30,7 +30,7 @@ import {
   ProjetoLocal, Peca, OrdemStatus, obterProjeto, salvarProjeto, duplicarProjeto,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId,
 } from "@/lib/storage";
-import { STATUS_ORDEM, STATUS_LABEL } from "@/lib/ordens";
+import { STATUS_ORDEM, STATUS_LABEL, somarDias } from "@/lib/ordens";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
   FixacaoTipo, FixacaoLados, pontosFixacao, fixacaoTipo,
@@ -201,6 +201,22 @@ export default function Configurador() {
       toast.success("Duplicado");
       navigate(`/app/projeto/${novo.id}`);
     }
+  };
+
+  const aprovarParaOficina = () => {
+    const agora = new Date().toISOString();
+    const atualizado: ProjetoLocal = {
+      ...projeto,
+      total: resultado.totalGeral,
+      status: "aprovado",
+      aprovado_em: agora,
+      etapa: "fila",
+      etapa_em: agora,
+      prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+    };
+    setProjeto(atualizado);
+    salvarProjeto(atualizado);
+    toast.success("Aprovado e enviado para a oficina");
   };
 
   const exportarOrcamento = () => {
