@@ -72,12 +72,12 @@ export default function Equipe() {
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded bg-card px-2 py-1 text-xs">{PAPEIS.find((p) => p.id === m.role)?.nome}</span>
-              <Button size="sm" variant="ghost" onClick={() => setEdicao({ id: m.id, nome: m.nome, role: m.role })}>
-                <Pencil className="h-3.5 w-3.5" />
+              <Button size="sm" variant="soft" onClick={() => setEdicao({ id: m.id, nome: m.nome, role: m.role })}>
+                <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
               </Button>
               {m.user_id !== session?.user?.id && (
-                <Button size="sm" variant="ghost" onClick={async () => { await removerMembro(m.id); await recarregar(); }}>
-                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                <Button size="sm" variant="dangerOutline" onClick={async () => { await removerMembro(m.id); await recarregar(); }}>
+                  <Trash2 className="mr-1 h-3.5 w-3.5" /> Remover
                 </Button>
               )}
             </div>

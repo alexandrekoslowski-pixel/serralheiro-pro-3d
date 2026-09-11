@@ -280,7 +280,7 @@ export default function ModoAtendimento() {
                 <div className="space-y-2">
                   <img src={assinatura.dataUrl} alt="Assinatura" className="h-20 mx-auto bg-white rounded border border-border" />
                   <div className="text-xs text-center text-muted-foreground">{assinatura.nome || "Cliente"}</div>
-                  <Button variant="ghost" size="sm" className="w-full" onClick={() => setAssinaturaOpen(true)}>
+                  <Button variant="soft" size="sm" className="w-full" onClick={() => setAssinaturaOpen(true)}>
                     <Pencil className="mr-2 h-4 w-4" /> Refazer
                   </Button>
                 </div>

@@ -114,7 +114,8 @@ export default function MinhasOrdens() {
                         key={o.id}
                         draggable
                         onDragStart={(e) => e.dataTransfer.setData("text/plain", o.id)}
-                        className="cursor-grab overflow-hidden rounded border border-border bg-card active:cursor-grabbing"
+                        title="Arraste para outra coluna"
+                        className="cursor-grab overflow-hidden rounded-lg border border-border bg-card shadow-sm transition hover:border-primary hover:shadow-lg active:cursor-grabbing"
                       >
                         <div className={`h-1.5 ${faixaPrazo(o.prazo_entrega)}`} />
                         <div className="space-y-1 p-2">
@@ -132,7 +133,7 @@ export default function MinhasOrdens() {
                           <div className="flex gap-1 pt-1">
                             <Button asChild size="sm" variant="outline" className="flex-1">
                               <Link to={`/oficina/${codigo}/os/${o.id}`}>
-                                <FileText className="mr-1 h-3.5 w-3.5" /> OS
+                                <FileText className="mr-1 h-3.5 w-3.5" /> Ver ordem
                               </Link>
                             </Button>
                             {prox ? (

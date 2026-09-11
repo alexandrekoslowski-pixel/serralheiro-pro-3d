@@ -51,7 +51,7 @@ export function TecladoNumerico({ open, label, initial, min, max, onConfirm, onC
             <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
             <div className="text-[10px] text-muted-foreground">min {min} · max {max} cm</div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onCancel}><X className="h-5 w-5" /></Button>
+          <Button variant="soft" size="icon" onClick={onCancel}><X className="h-5 w-5" /></Button>
         </div>
 
         {/* Display */}
@@ -89,9 +89,9 @@ export function TecladoNumerico({ open, label, initial, min, max, onConfirm, onC
               {d}
             </Button>
           ))}
-          <Button variant="ghost" className="h-14 text-base" onClick={() => setValor("0")}>C</Button>
+          <Button variant="soft" className="h-14 text-base" onClick={() => setValor("0")}>C</Button>
           <Button variant="secondary" className="h-14 text-2xl font-bold tabular-nums" onClick={() => append("0")}>0</Button>
-          <Button variant="ghost" className="h-14" onClick={back}><Delete className="h-6 w-6" /></Button>
+          <Button variant="soft" className="h-14" onClick={back}><Delete className="h-6 w-6" /></Button>
         </div>
 
         {/* Confirmar */}

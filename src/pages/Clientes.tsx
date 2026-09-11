@@ -92,7 +92,7 @@ export default function Clientes() {
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {lista.map((c) => (
-            <div key={c.id} className="surface-card rounded-lg border border-border p-4">
+            <div key={c.id} className="surface-card rounded-lg border border-border p-4 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
@@ -126,8 +126,8 @@ export default function Clientes() {
                     </a>
                   </Button>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => setEdit(c)}><Pencil className="h-3.5 w-3.5" /></Button>
-                <Button size="sm" variant="ghost" onClick={() => remover(c)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                <Button size="sm" variant="soft" onClick={() => setEdit(c)}><Pencil className="mr-1 h-3.5 w-3.5" /> Editar</Button>
+                <Button size="sm" variant="dangerOutline" onClick={() => remover(c)}><Trash2 className="mr-1 h-3.5 w-3.5" /> Excluir</Button>
               </div>
             </div>
           ))}

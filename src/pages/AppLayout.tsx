@@ -111,7 +111,7 @@ export default function AppLayout() {
             <span>{pendentes} orçamento(s) antigos estão salvos só neste aparelho.</span>
             <div className="flex gap-2">
               <Button size="sm" onClick={importar} className="bg-gradient-orange text-primary-foreground">Enviar para minha conta</Button>
-              <Button size="sm" variant="ghost" onClick={() => setPendentes(0)}>Agora não</Button>
+              <Button size="sm" variant="soft" onClick={() => setPendentes(0)}>Agora não</Button>
             </div>
           </div>
         </div>

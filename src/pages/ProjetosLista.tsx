@@ -173,7 +173,7 @@ export default function ProjetosLista() {
         {filtrados.map((p) => {
           const tip = tipologiaPorId(p.tipologia);
           return (
-            <div key={p.id} className="surface-card rounded-lg border border-border p-4 transition hover:border-primary/50">
+            <div key={p.id} className="surface-card rounded-lg border border-border p-4 transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg">
               <Link to={`/app/projeto/${p.id}`} className="block">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -198,12 +198,12 @@ export default function ProjetosLista() {
                 </div>
               </Link>
               <div className="mt-3 flex gap-1 border-t border-border pt-3">
-                <Button size="sm" variant="ghost" onClick={() => duplicar(p.id)}>
+                <Button size="sm" variant="soft" onClick={() => duplicar(p.id)}>
                   <Copy className="mr-1 h-3.5 w-3.5" /> Duplicar
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                    <Button size="sm" variant="dangerOutline">
                       <Trash2 className="mr-1 h-3.5 w-3.5" /> Excluir
                     </Button>
                   </AlertDialogTrigger>

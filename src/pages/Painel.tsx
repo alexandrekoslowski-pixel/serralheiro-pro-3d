@@ -235,7 +235,7 @@ export default function Painel() {
           const recebido = totalRecebido(p.id);
           const prox = proximoStatus(p.status);
           return (
-            <div key={p.id} className="surface-card relative overflow-hidden rounded-lg border border-border transition hover:shadow-md">
+            <div key={p.id} className="surface-card relative cursor-pointer overflow-hidden rounded-lg border border-border transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg">
               <div className={`h-1.5 w-full ${cls.faixa}`} />
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
@@ -263,15 +263,15 @@ export default function Painel() {
                       Aprovar e mandar para a oficina <ArrowRight className="ml-1 h-3.5 w-3.5" />
                     </Button>
                   ) : prox ? (
-                    <Button size="sm" variant="ghost" onClick={() => avancar(p)}>
+                    <Button size="sm" variant="soft" onClick={() => avancar(p)}>
                       {STATUS_LABEL[prox]} <ArrowRight className="ml-1 h-3.5 w-3.5" />
                     </Button>
                   ) : null}
 
-                  <Button size="sm" variant="ghost" onClick={() => setDetalhe(p)}>
+                  <Button size="sm" variant="soft" onClick={() => setDetalhe(p)}>
                     <Wallet className="mr-1 h-3.5 w-3.5" /> Financeiro
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => window.open(`/op/${p.id}`, "_blank")}>
+                  <Button size="sm" variant="soft" onClick={() => window.open(`/op/${p.id}`, "_blank")}>
                     <Monitor className="mr-1 h-3.5 w-3.5" /> Oficina
                   </Button>
                 </div>
