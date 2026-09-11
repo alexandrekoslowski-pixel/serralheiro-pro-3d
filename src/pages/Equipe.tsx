@@ -6,24 +6,31 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MembroEquipe, PAPEIS, Papel, listarEquipe, definirPapel, atualizarMembro, removerMembro } from "@/lib/gestao";
+import { MembroEquipe, PAPEIS, Papel, listarEquipe, definirPapel, atualizarMembro, removerMembro, ContaNaoEncontrada } from "@/lib/gestao";
 import { useSessao } from "@/lib/sessao";
 
 export default function Equipe() {
   const { session, papel } = useSessao();
   const [equipe, setEquipe] = useState<MembroEquipe[]>([]);
-  const [novo, setNovo] = useState<{ user_id: string; nome: string; role: Papel } | null>(null);
+  const [novo, setNovo] = useState<{ email: string; nome: string; role: Papel } | null>(null);
   const [edicao, setEdicao] = useState<{ id: string; nome: string; role: Papel } | null>(null);
 
   const recarregar = () => listarEquipe().then(setEquipe).catch(() => toast.error("Não foi possível carregar a equipe"));
   useEffect(() => { void recarregar(); }, []);
 
   const salvar = async () => {
-    if (!novo?.user_id.trim()) { toast.error("Informe o identificador da pessoa"); return; }
+    if (!novo?.nome.trim()) { toast.error("Informe o nome da pessoa"); return; }
+    if (!novo?.email.trim()) { toast.error("Informe o e-mail da pessoa"); return; }
     try {
-      await definirPapel(novo);
+      await definirPapel({ ...novo, nome: novo.nome.trim(), email: novo.email.trim() });
       setNovo(null); await recarregar(); toast.success("Acesso liberado");
-    } catch { toast.error("Não foi possível salvar o acesso"); }
+    } catch (e) {
+      if (e instanceof ContaNaoEncontrada) {
+        toast.error("Essa pessoa ainda não criou a conta. Peça para ela entrar com e-mail e senha e tente de novo.");
+      } else {
+        toast.error("Não foi possível salvar o acesso");
+      }
+    }
   };
 
   const salvarEdicao = async () => {
@@ -47,15 +54,15 @@ export default function Equipe() {
           <p className="text-sm text-muted-foreground">Cada pessoa entra com a própria conta e vê só o que precisa.</p>
         </div>
         <Button className="bg-gradient-orange text-primary-foreground shadow-orange"
-                onClick={() => setNovo({ user_id: "", nome: "", role: "vendedora" })}>
+                onClick={() => setNovo({ email: "", nome: "", role: "vendedora" })}>
           <Plus className="mr-2 h-4 w-4" /> Liberar acesso
         </Button>
       </div>
 
       <div className="surface-card rounded-lg border border-border p-4">
         <p className="text-xs text-muted-foreground">
-          A pessoa cria a conta dela na tela de entrada com e-mail e senha. Depois você cola aqui o identificador dela
-          (aparece no perfil, em Empresa) e escolhe o papel.
+          A pessoa cria a conta dela na tela de entrada com e-mail e senha. Depois é só informar aqui o nome, o e-mail
+          que ela usou e escolher o papel.
         </p>
       </div>
 
@@ -68,7 +75,7 @@ export default function Equipe() {
                 {m.nome || "Sem nome"}
                 {m.user_id === session?.user?.id && <span className="text-xs text-muted-foreground">(você)</span>}
               </div>
-              <div className="truncate text-xs text-muted-foreground">{m.user_id}</div>
+              <div className="truncate text-xs text-muted-foreground">{m.email || "e-mail não informado"}</div>
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded bg-card px-2 py-1 text-xs">{PAPEIS.find((p) => p.id === m.role)?.nome}</span>
@@ -119,9 +126,10 @@ export default function Equipe() {
               <Input className="mt-1.5" value={novo?.nome ?? ""} onChange={(e) => setNovo((n) => n && { ...n, nome: e.target.value })} />
             </div>
             <div>
-              <Label>Identificador da conta</Label>
-              <Input className="mt-1.5" placeholder="cole aqui o identificador" value={novo?.user_id ?? ""}
-                     onChange={(e) => setNovo((n) => n && { ...n, user_id: e.target.value.trim() })} />
+              <Label>E-mail da conta</Label>
+              <Input className="mt-1.5" type="email" placeholder="nome@email.com" value={novo?.email ?? ""}
+                     onChange={(e) => setNovo((n) => n && { ...n, email: e.target.value })} />
+              <p className="mt-1 text-xs text-muted-foreground">Use o mesmo e-mail com que a pessoa entra no sistema.</p>
             </div>
             <div>
               <Label>Papel</Label>
