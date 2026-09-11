@@ -58,7 +58,7 @@ export default function AppLayout() {
             </Link>
           </div>
 
-          <nav className="hidden items-center gap-1 md:flex">
+          <nav className="hidden min-w-0 flex-1 items-center justify-end gap-0.5 overflow-x-auto lg:flex [&::-webkit-scrollbar]:hidden">
             {navItems.map((it) => (
               <NavLink
                 key={it.to}
@@ -66,7 +66,7 @@ export default function AppLayout() {
                 end={it.end}
                 className={({ isActive }) =>
                   cn(
-                    "flex items-center gap-2 rounded px-3 py-1.5 text-sm transition",
+                    "flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded px-2 py-1.5 text-sm transition",
                     isActive ? "bg-card text-foreground" : "text-muted-foreground hover:bg-card hover:text-foreground",
                   )
                 }
