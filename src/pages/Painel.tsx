@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Wallet, Plus, Search, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import {
 import { toast } from "sonner";
 import { useDados } from "@/hooks/useDados";
 import {
-  ProjetoLocal, listarProjetos, obterEmpresa, salvarProjeto, formatarBRL,
+  ProjetoLocal, listarProjetos, obterEmpresa, salvarProjeto, criarOrcamentoRapido, formatarBRL,
   listarPagamentos, totalRecebido, adicionarPagamento, removerPagamento, OrdemStatus,
 } from "@/lib/storage";
 import {
@@ -26,6 +26,7 @@ import CalendarioEntregas from "@/components/CalendarioEntregas";
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
 export default function Painel() {
+  const navigate = useNavigate();
   useDados();
   const projetos = listarProjetos();
   const empresa = obterEmpresa();
@@ -129,6 +130,11 @@ export default function Painel() {
     toast.success(`Ordem em ${STATUS_LABEL[prox]}`);
   };
 
+  const criar = () => {
+    const novo = criarOrcamentoRapido();
+    navigate(`/app/projeto/${novo.id}`, { state: { novoOrcamento: true } });
+  };
+
   return (
     <section className="container py-6 md:py-10">
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -136,8 +142,8 @@ export default function Painel() {
           <h1 className="font-display text-2xl md:text-3xl">Painel de ordens</h1>
           <p className="text-sm text-muted-foreground">Vermelho é urgente, amarelo merece atenção, verde tem folga.</p>
         </div>
-        <Button asChild className="bg-gradient-orange text-primary-foreground shadow-orange">
-          <Link to="/app/projetos"><Plus className="mr-2 h-4 w-4" /> Novo orçamento</Link>
+        <Button onClick={criar} className="bg-gradient-orange text-primary-foreground shadow-orange">
+          <Plus className="mr-2 h-4 w-4" /> Novo orçamento
         </Button>
       </div>
 

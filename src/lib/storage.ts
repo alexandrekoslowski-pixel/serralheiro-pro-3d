@@ -1,6 +1,6 @@
 // Camada de dados: cache em memória (leitura síncrona) sincronizado com a nuvem.
 import { supabase } from "@/integrations/supabase/client";
-import { TipologiaId, AcabamentoId } from "./tipologias";
+import { TipologiaId, AcabamentoId, tipologiaPorId } from "./tipologias";
 import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
 
@@ -437,6 +437,67 @@ export function listarProjetos(): ProjetoLocal[] {
 
 export function obterProjeto(id: string): ProjetoLocal | undefined {
   return projetos.find((p) => p.id === id);
+}
+
+/** Cria um orçamento padrão e o disponibiliza imediatamente para preenchimento. */
+export function criarOrcamentoRapido(): ProjetoLocal {
+  const agora = new Date().toISOString();
+  const tipologia: TipologiaId = "portao_correr";
+  const tip = tipologiaPorId(tipologia);
+  const novo: ProjetoLocal = {
+    id: gerarId(),
+    nome: "Novo orçamento",
+    vendedora: "",
+    cliente: "",
+    cliente_documento: "",
+    cliente_endereco: "",
+    cliente_bairro: "",
+    cliente_cidade: "",
+    cliente_cep: "",
+    cliente_telefone: "",
+    cliente_email: "",
+    local_instalacao: "",
+    prazo_dias_uteis: null,
+    servicos_valor: null,
+    frete_valor: null,
+    observacoes_proposta: "",
+    tipologia,
+    largura_mm: tip.larguraDefault,
+    altura_mm: tip.alturaDefault,
+    cor: "branco",
+    maoObraPct: 30,
+    margemPct: 25,
+    descontoGeralPct: 0,
+    pecas: [{
+      id: gerarId(),
+      nome: "Peça 1",
+      tipologia,
+      largura_mm: tip.larguraDefault,
+      altura_mm: tip.alturaDefault,
+      cor: "branco",
+      fixacao: FIXACAO_PADRAO,
+      fixacaoLados: FIXACAO_LADOS_PADRAO,
+    }],
+    overrides: {},
+    extras: [],
+    total: 0,
+    cliente_id: null,
+    briefing_id: null,
+    responsavel_id: null,
+    prioridade_manual: null,
+    status: "orcamento",
+    etapa: "fila",
+    etapa_em: agora,
+    prazo_entrega: null,
+    valor_faturado: 0,
+    aprovado_em: null,
+    entregue_em: null,
+    faturado_em: null,
+    created_at: agora,
+    updated_at: agora,
+  };
+  salvarProjeto(novo);
+  return novo;
 }
 
 export function salvarProjeto(p: ProjetoLocal): void {
