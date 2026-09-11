@@ -642,6 +642,17 @@ export async function removerPagamento(id: string): Promise<void> {
   await supabase.from("pagamentos").delete().eq("id", id);
 }
 
+export function registrarComprovanteLocal(id: string, caminho: string, nome: string, tipo: string): void {
+  pagamentos = pagamentos.map((p) => p.id === id ? {
+    ...p,
+    comprovante_caminho: caminho,
+    comprovante_nome: nome,
+    comprovante_tipo: tipo,
+    comprovante_enviado_em: new Date().toISOString(),
+  } : p);
+  notificar();
+}
+
 // ----- Empresa -----
 export function obterEmpresa(): DadosEmpresa {
   return empresa;

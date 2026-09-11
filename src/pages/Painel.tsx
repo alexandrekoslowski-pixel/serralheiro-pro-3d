@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { useDados } from "@/hooks/useDados";
 import {
   ProjetoLocal, listarProjetos, obterEmpresa, salvarProjeto, criarOrcamentoRapido, formatarBRL,
-  listarPagamentos, totalRecebido, adicionarPagamento, removerPagamento, OrdemStatus,
+  listarPagamentos, totalRecebido, adicionarPagamento, removerPagamento, registrarComprovanteLocal, OrdemStatus,
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
@@ -442,7 +442,10 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
     if (!v || v <= 0) { toast.error("Informe o valor recebido"); return; }
     try {
       const pagamento = await adicionarPagamento({ projeto_id: atual.id, data, valor: v, forma, observacao: obs, comprovante_caminho: null, comprovante_nome: null, comprovante_tipo: null, comprovante_enviado_em: null });
-      if (arquivo) await anexarComprovante(pagamento.id, atual.id, arquivo);
+      if (arquivo) {
+        const caminho = await anexarComprovante(pagamento.id, atual.id, arquivo);
+        registrarComprovanteLocal(pagamento.id, caminho, arquivo.name, arquivo.type);
+      }
       setValor(""); setObs("");
       setArquivo(null);
       toast.success("Pagamento lançado");
@@ -516,7 +519,7 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
                   ) : (
                     <label className="inline-flex min-h-9 cursor-pointer items-center rounded border border-border px-2 text-xs font-medium hover:border-primary">
                       <Upload className="mr-1 h-3.5 w-3.5" /> Anexar
-                      <input className="sr-only" type="file" accept="image/*,application/pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) void anexarComprovante(p.id, atual.id, f).then(() => toast.success("Comprovante anexado")).catch(() => toast.error("Não foi possível anexar")); }} />
+                      <input className="sr-only" type="file" accept="image/*,application/pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) void anexarComprovante(p.id, atual.id, f).then((caminho) => { registrarComprovanteLocal(p.id, caminho, f.name, f.type); toast.success("Comprovante anexado"); }).catch((erro) => toast.error(erro instanceof Error ? erro.message : "Não foi possível anexar")); }} />
                     </label>
                   )}
                   <Button size="sm" variant="dangerOutline" onClick={() => removerPagamento(p.id)}>Excluir</Button>

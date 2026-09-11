@@ -3,6 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 const BUCKET = "comprovantes-pagamento";
 
 export async function anexarComprovante(pagamentoId: string, projetoId: string, arquivo: File) {
+  if (arquivo.size > 10 * 1024 * 1024) throw new Error("O comprovante deve ter no máximo 10 MB.");
+  if (!(arquivo.type.startsWith("image/") || arquivo.type === "application/pdf")) throw new Error("Envie uma imagem ou PDF.");
   const { data } = await supabase.auth.getUser();
   const usuario = data.user;
   if (!usuario) throw new Error("Faça login para anexar o comprovante.");
