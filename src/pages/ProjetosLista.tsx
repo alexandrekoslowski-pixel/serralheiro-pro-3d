@@ -103,7 +103,7 @@ export default function ProjetosLista() {
   };
 
   const duplicar = (id: string) => {
-    if (duplicarProjeto(id)) toast.success("Projeto duplicado");
+    if (duplicarProjeto(id)) toast.success("Orçamento duplicado");
   };
 
   const remover = (id: string) => {
