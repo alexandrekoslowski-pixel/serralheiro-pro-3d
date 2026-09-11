@@ -163,23 +163,85 @@ export default function Painel() {
         </Button>
       </div>
 
-      {(alertas.atrasadas > 0 || alertas.urgentes > 0) && (
+      {(alertas.atrasadas.length > 0 || alertas.urgentes.length > 0) && (
         <div className="mt-4 flex flex-wrap gap-2 text-sm">
-          {alertas.atrasadas > 0 && (
+          {alertas.atrasadas.length > 0 && (
             <button
-              onClick={() => setFiltro("abertos")}
-              className="rounded-md bg-destructive/15 px-3 py-2 font-medium text-destructive"
+              onClick={() => setFiltroPrazo((f) => (f === "atrasadas" ? "todos" : "atrasadas"))}
+              className={`rounded-md px-3 py-2 font-medium transition ${
+                filtroPrazo === "atrasadas"
+                  ? "bg-destructive text-destructive-foreground"
+                  : "bg-destructive/15 text-destructive hover:bg-destructive/25"
+              }`}
             >
-              {alertas.atrasadas} ordem(ns) atrasada(s)
+              {alertas.atrasadas.length} ordem(ns) atrasada(s)
             </button>
           )}
-          {alertas.urgentes > 0 && (
+          {alertas.urgentes.length > 0 && (
             <button
-              onClick={() => setFiltro("abertos")}
-              className="rounded-md bg-amber-500/15 px-3 py-2 font-medium text-amber-500"
+              onClick={() => setFiltroPrazo((f) => (f === "urgentes" ? "todos" : "urgentes"))}
+              className={`rounded-md px-3 py-2 font-medium transition ${
+                filtroPrazo === "urgentes"
+                  ? "bg-amber-500 text-white"
+                  : "bg-amber-500/15 text-amber-500 hover:bg-amber-500/25"
+              }`}
             >
-              {alertas.urgentes} com prazo apertado
+              {alertas.urgentes.length} com prazo apertado
             </button>
+          )}
+        </div>
+      )}
+
+      {(alertas.atrasadas.length > 0 || alertas.urgentes.length > 0) && (
+        <div className="surface-card mt-4 rounded-lg border border-border p-4">
+          <h2 className="font-display text-sm uppercase tracking-wide text-muted-foreground">Prioridades</h2>
+
+          {alertas.atrasadas.length > 0 && (
+            <div className="mt-3 space-y-1.5">
+              {alertas.atrasadas.map((p) => {
+                const d = diasRestantes(p.prazo_entrega) ?? 0;
+                return (
+                  <Link
+                    key={p.id}
+                    to={`/app/projeto/${p.id}`}
+                    className="flex items-center gap-2 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm transition hover:border-destructive hover:bg-destructive/15"
+                  >
+                    <AlertTriangle className="h-4 w-4 shrink-0 text-destructive" />
+                    <span className="min-w-0 flex-1 truncate font-medium">{p.nome}</span>
+                    <span className="hidden truncate text-xs text-muted-foreground sm:inline">
+                      {p.cliente || "Sem cliente"} · {ETAPA_LABEL[p.etapa]}
+                    </span>
+                    <span className="shrink-0 rounded bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground">
+                      atrasada há {Math.abs(d)} {Math.abs(d) === 1 ? "dia" : "dias"}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {alertas.urgentes.length > 0 && (
+            <div className="mt-3 space-y-1.5">
+              {alertas.urgentes.map((p) => {
+                const d = diasRestantes(p.prazo_entrega) ?? 0;
+                return (
+                  <Link
+                    key={p.id}
+                    to={`/app/projeto/${p.id}`}
+                    className="flex items-center gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm transition hover:border-amber-500 hover:bg-amber-500/15"
+                  >
+                    <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+                    <span className="min-w-0 flex-1 truncate font-medium">{p.nome}</span>
+                    <span className="hidden truncate text-xs text-muted-foreground sm:inline">
+                      {p.cliente || "Sem cliente"} · {ETAPA_LABEL[p.etapa]}
+                    </span>
+                    <span className="shrink-0 rounded bg-amber-500 px-2 py-0.5 text-xs font-semibold text-white">
+                      {d === 0 ? "vence hoje" : `faltam ${d} ${d === 1 ? "dia" : "dias"}`}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
           )}
         </div>
       )}
