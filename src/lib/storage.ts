@@ -5,7 +5,14 @@ import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
 
 export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
-export type EtapaOficina = "fila" | "producao" | "pintura" | "acabamento" | "pos_venda" | "pronto";
+export type EtapaOficina =
+  | "fila"
+  | "producao"
+  | "acabamento"
+  | "pintura"
+  | "entrega"
+  | "pos_venda"
+  | "pronto";
 
 /** Uma peça do orçamento (portão, janela, grade…). */
 import { FixacaoTipo, FixacaoLados, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO } from "./fixacao";

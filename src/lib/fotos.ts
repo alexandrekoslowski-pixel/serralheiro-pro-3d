@@ -16,7 +16,7 @@ export const ETAPAS_FOTO: { id: EtapaFoto; nome: string }[] = [
 export const etapaFotoDaOficina = (e: EtapaOficina): EtapaFoto => {
   if (e === "pintura") return "pintura";
   if (e === "acabamento") return "acabamento";
-  if (e === "pos_venda" || e === "pronto") return "entrega";
+  if (e === "entrega" || e === "pos_venda" || e === "pronto") return "entrega";
   return "montagem";
 };
 
