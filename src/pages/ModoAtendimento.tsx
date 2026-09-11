@@ -216,24 +216,25 @@ export default function ModoAtendimento() {
         {passo === 1 && (
           <div className="space-y-5">
             <div>
-              <div className="text-xs uppercase tracking-wider text-muted-foreground mb-3">Cor / acabamento</div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-xs uppercase tracking-wider text-muted-foreground">Cor / acabamento</div>
+                <div className="text-sm font-semibold">{ACABAMENTOS.find((a) => a.id === projeto.cor)?.nome ?? "—"}</div>
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-thin">
                 {ACABAMENTOS.map((a) => (
                   <button
                     key={a.id}
                     onClick={() => upd("cor", a.id as AcabamentoId)}
                     className={cn(
-                      "relative h-24 rounded-2xl border-2 transition flex flex-col items-end justify-end p-3 overflow-hidden",
-                      projeto.cor === a.id ? "border-primary shadow-orange" : "border-border",
+                      "relative h-11 w-11 shrink-0 rounded-full border-2 transition active:scale-90",
+                      projeto.cor === a.id ? "border-primary ring-2 ring-primary/40 scale-110" : "border-border",
                     )}
                     style={{ backgroundColor: a.hex }}
+                    title={a.nome}
                   >
                     {projeto.cor === a.id && (
-                      <div className="absolute top-2 right-2 h-7 w-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
-                        <Check className="h-4 w-4" />
-                      </div>
+                      <Check className="absolute inset-0 m-auto h-5 w-5 text-white drop-shadow" />
                     )}
-                    <span className="rounded bg-background/85 px-2 py-0.5 text-sm font-bold text-foreground">{a.nome}</span>
                   </button>
                 ))}
               </div>
