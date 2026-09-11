@@ -24,6 +24,8 @@ export interface PecaVisual {
   largura_mm: number;
   altura_mm: number;
   cor: AcabamentoId;
+  fixacao?: TipoFixacao;
+  fixacaoLados?: LadosFixacao;
 }
 
 export interface Visualizador3DProps {
@@ -43,6 +45,10 @@ export interface Visualizador3DProps {
   showPessoa?: boolean;
   showCarro?: boolean;
   abertura?: number; // 0 (fechado) → 1 (aberto)
+  /** Peça destacada no desenho (sincroniza com o cartão selecionado). */
+  selecionadaId?: string;
+  /** Clique na peça dentro do 3D. */
+  onSelecionar?: (id: string) => void;
   onCanvasReady?: (canvas: HTMLCanvasElement) => void;
 }
 
@@ -206,13 +212,11 @@ function GeometriaTipologia({
         <group>
           <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
           <Tubo position={[0, H_m / 2, 0]} size={[t * 0.6, H_m - 2 * t, t * 0.6]} color={cor} wireframe={wireframe} />
-          <mesh position={[-L_m / 4, H_m / 2, 0]} >
+          <mesh position={[-L_m / 4, H_m / 2, 0]} material={materialVidro()}>
             <boxGeometry args={[L_m / 2 - t, H_m - 2 * t, 0.008]} />
-            <meshPhysicalMaterial color="#a8d8e8" transparent opacity={0.35} roughness={0.05} metalness={0} transmission={0.85} />
           </mesh>
-          <mesh position={[L_m / 4 - desloc, H_m / 2, 0.005]} >
+          <mesh position={[L_m / 4 - desloc, H_m / 2, 0.005]} material={materialVidro()}>
             <boxGeometry args={[L_m / 2 - t, H_m - 2 * t, 0.008]} />
-            <meshPhysicalMaterial color="#a8d8e8" transparent opacity={0.35} roughness={0.05} metalness={0} transmission={0.85} />
           </mesh>
         </group>
       );
