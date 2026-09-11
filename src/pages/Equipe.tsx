@@ -6,13 +6,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MembroEquipe, PAPEIS, Papel, listarEquipe, definirPapel, removerMembro } from "@/lib/gestao";
+import { MembroEquipe, PAPEIS, Papel, listarEquipe, definirPapel, atualizarMembro, removerMembro } from "@/lib/gestao";
 import { useSessao } from "@/lib/sessao";
 
 export default function Equipe() {
   const { session, papel } = useSessao();
   const [equipe, setEquipe] = useState<MembroEquipe[]>([]);
   const [novo, setNovo] = useState<{ user_id: string; nome: string; role: Papel } | null>(null);
+  const [edicao, setEdicao] = useState<{ id: string; nome: string; role: Papel } | null>(null);
 
   const recarregar = () => listarEquipe().then(setEquipe).catch(() => toast.error("Não foi possível carregar a equipe"));
   useEffect(() => { void recarregar(); }, []);
@@ -23,6 +24,15 @@ export default function Equipe() {
       await definirPapel(novo);
       setNovo(null); await recarregar(); toast.success("Acesso liberado");
     } catch { toast.error("Não foi possível salvar o acesso"); }
+  };
+
+  const salvarEdicao = async () => {
+    if (!edicao) return;
+    if (!edicao.nome.trim()) { toast.error("Informe o nome"); return; }
+    try {
+      await atualizarMembro(edicao.id, { nome: edicao.nome.trim(), role: edicao.role });
+      setEdicao(null); await recarregar(); toast.success("Nome atualizado");
+    } catch { toast.error("Não foi possível salvar"); }
   };
 
   if (papel !== "gestor") {
@@ -62,6 +72,9 @@ export default function Equipe() {
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded bg-card px-2 py-1 text-xs">{PAPEIS.find((p) => p.id === m.role)?.nome}</span>
+              <Button size="sm" variant="ghost" onClick={() => setEdicao({ id: m.id, nome: m.nome, role: m.role })}>
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
               {m.user_id !== session?.user?.id && (
                 <Button size="sm" variant="ghost" onClick={async () => { await removerMembro(m.id); await recarregar(); }}>
                   <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -71,6 +84,31 @@ export default function Equipe() {
           </div>
         ))}
       </div>
+
+      <Dialog open={!!edicao} onOpenChange={(o) => !o && setEdicao(null)}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>Editar pessoa</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label>Nome da pessoa</Label>
+              <Input className="mt-1.5" value={edicao?.nome ?? ""} onChange={(e) => setEdicao((n) => n && { ...n, nome: e.target.value })} />
+            </div>
+            <div>
+              <Label>Papel</Label>
+              <Select value={edicao?.role ?? "vendedora"} onValueChange={(v) => setEdicao((n) => n && { ...n, role: v as Papel })}>
+                <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PAPEIS.map((p) => <SelectItem key={p.id} value={p.id}>{p.nome} — {p.descricao}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEdicao(null)}>Cancelar</Button>
+            <Button className="bg-gradient-orange text-primary-foreground" onClick={salvarEdicao}>Salvar</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!novo} onOpenChange={(o) => !o && setNovo(null)}>
         <DialogContent>
