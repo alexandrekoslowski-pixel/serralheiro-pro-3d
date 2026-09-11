@@ -6,7 +6,7 @@ import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
 import { useDados } from "@/hooks/useDados";
-import { listarProjetos, listarPagamentos, formatarBRL } from "@/lib/storage";
+import { listarProjetos, listarPagamentos, formatarBRL, obterEmpresa } from "@/lib/storage";
 import { STATUS_LABEL, corPrazo, CLASSES_PRAZO, textoPrazo } from "@/lib/ordens";
 import { useVendedores } from "@/hooks/useVendedores";
 
@@ -19,6 +19,7 @@ const rotuloMes = (m: string) => {
 export default function Financeiro() {
   useDados();
   const todosProjetos = listarProjetos();
+  const empresa = obterEmpresa();
     const [vendFiltro, setVendFiltro] = useState("todas");
 
   const nomesVendedores = useVendedores();
