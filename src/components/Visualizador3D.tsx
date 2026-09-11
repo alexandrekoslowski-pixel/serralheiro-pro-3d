@@ -13,6 +13,7 @@ import { Ambiente as AmbienteHDR, LuzesDia, LuzesNoite, Chao, Muro } from "./viz
 import { Cota } from "./viz/cotas";
 import { AcessoriosTipologia, Fixacoes } from "./viz/acessorios";
 import { PessoaEscala, CarroEscala } from "./viz/escala";
+import type { RespostasChecklist } from "@/lib/checklistPedido";
 
 export type CameraPreset = "iso" | "frente" | "lateral" | "topo";
 export type Ambiente = "dia" | "noite";
@@ -26,6 +27,7 @@ export interface PecaVisual {
   cor: AcabamentoId;
   fixacao?: FixacaoTipo;
   fixacaoLados?: FixacaoLados;
+  checklist_respostas?: RespostasChecklist;
 }
 
 export interface Visualizador3DProps {
@@ -87,6 +89,7 @@ function GeometriaTipologia({
   cor,
   wireframe,
   abertura,
+  respostas,
 }: {
   tipologia: TipologiaId;
   L_m: number;
@@ -94,6 +97,7 @@ function GeometriaTipologia({
   cor: string;
   wireframe?: boolean;
   abertura: number;
+  respostas: RespostasChecklist;
 }) {
   // Seções reais dos perfis (as mesmas da lista de corte).
   const pf = perfisTipologia(tipologia);
@@ -114,18 +118,50 @@ function GeometriaTipologia({
         return <Tubo key={`v${i}`} position={[x, H_m / 2, 0]} size={[tThin, H_m - 0.1, tThinP]} color={cor} wireframe={wireframe} />;
       });
 
-      // Animação por tipologia
+      const preenchimento = respostas[`${tipologia === "portao_basculante" ? "basculante" : "correr"}.preenchimento`];
+      const painel = preenchimento && preenchimento !== "Vazado" && preenchimento !== "Outro" ? (
+        <mesh position={[0, H_m / 2, -tp / 2 - 0.006]} castShadow>
+          <boxGeometry args={[Math.max(0.05, L_m - 2 * t), Math.max(0.05, H_m - 2 * t), 0.012]} />
+          <meshStandardMaterial color={cor} metalness={0.55} roughness={preenchimento === "Chapa lisa" ? 0.28 : 0.48} />
+        </mesh>
+      ) : null;
+
+      // Animação por tipologia e sentido escolhido no checklist.
       let groupTransform: { position?: [number, number, number]; rotation?: [number, number, number] } = {};
       if (tipologia === "portao_correr") {
-        groupTransform.position = [-L_m * abertura * 0.95, 0, 0];
+        const lado = respostas["correr.recolhimento"];
+        const sinal = lado === "Direita" ? 1 : -1;
+        if (respostas["correr.folhas"] === "2 folhas" || lado === "Ambos") {
+          const desloc = abertura * L_m * 0.48;
+          return (
+            <group>
+              <group position={[-desloc, 0, 0]} scale={[0.5, 1, 1]} position-x={-L_m / 4 - desloc / 2}><Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />{verticais}{painel}</group>
+              <group position={[L_m / 4 + desloc / 2, 0, 0]} scale={[0.5, 1, 1]}><Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />{verticais}{painel}</group>
+              <Tubo position={[0, -0.04, 0]} size={[L_m * 1.8, 0.04, 0.06]} color="#444" wireframe={wireframe} />
+            </group>
+          );
+        }
+        groupTransform.position = [sinal * L_m * abertura * 0.95, 0, 0];
       } else if (tipologia === "portao_basculante") {
+        const sinal = respostas["basculante.movimento"] === "Para fora" ? -1 : 1;
         groupTransform.position = [0, abertura * H_m * 0.6, 0];
-        groupTransform.rotation = [-abertura * Math.PI / 3, 0, 0];
+        groupTransform.rotation = [sinal * abertura * Math.PI / 3, 0, 0];
       } else if (tipologia === "portao_pivotante") {
-        // gira em torno do eixo descentralizado (1/3)
-        const pivotX = -halfL + L_m / 3;
+        const sentido = respostas["pivotante.sentido"] === "Para fora" ? -1 : 1;
+        const duas = respostas["pivotante.folhas"] === "2 folhas" || respostas["pivotante.mao"] === "Duas folhas";
+        if (duas) {
+          const folhaL = L_m / 2;
+          return (
+            <group>
+              <group position={[-halfL, 0, 0]} rotation={[0, sentido * abertura * Math.PI / 2.2, 0]}><group position={[folhaL / 2, 0, 0]}><Moldura L={folhaL} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} /></group></group>
+              <group position={[halfL, 0, 0]} rotation={[0, -sentido * abertura * Math.PI / 2.2, 0]}><group position={[-folhaL / 2, 0, 0]}><Moldura L={folhaL} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} /></group></group>
+            </group>
+          );
+        }
+        const direita = respostas["pivotante.mao"] === "Direita";
+        const pivotX = direita ? halfL : -halfL;
         return (
-          <group position={[pivotX, 0, 0]} rotation={[0, abertura * (Math.PI / 2.2), 0]}>
+          <group position={[pivotX, 0, 0]} rotation={[0, sentido * (direita ? -1 : 1) * abertura * (Math.PI / 2.2), 0]}>
             <group position={[-pivotX, 0, 0]}>
               <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
               {verticais}
@@ -138,6 +174,7 @@ function GeometriaTipologia({
         <group {...groupTransform}>
           <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
           {verticais}
+          {painel}
           {tipologia === "portao_correr" && (
             <Tubo position={[L_m * abertura * 0.95, -0.04, 0]} size={[L_m * 1.1, 0.04, 0.06]} color="#444" wireframe={wireframe} />
           )}
@@ -162,8 +199,9 @@ function GeometriaTipologia({
         />
       ));
       const rolDiam = 0.08 + abertura * 0.18;
+      const externo = respostas["rolo.enrolamento"] === "Externo";
       return (
-        <group>
+        <group position-z={externo ? tp * 2 : 0}>
           {lams}
           <mesh position={[0, H_m + 0.1, 0]} rotation={[0, 0, Math.PI / 2]}>
             <cylinderGeometry args={[rolDiam, rolDiam, L_m * 1.1, 24]} />
@@ -192,13 +230,16 @@ function GeometriaTipologia({
       const montantes = Array.from({ length: nMod + 1 }, (_, i) => (
         <Tubo key={`m${i}`} position={[-halfLvis + i * w, H_m / 2, 0]} size={[tThin, H_m, tThin]} color={cor} wireframe={wireframe} />
       ));
+      const lado = respostas["pantografico.recolhimento"];
+      const duas = respostas["pantografico.folhas"] === "2 folhas" || lado === "Ambos";
+      const deslocX = duas ? 0 : lado === "Direita" ? -halfL + halfLvis : halfL - halfLvis;
       // Trilhos completos (não comprimem)
       return (
         <group>
           <Tubo position={[0, H_m, 0]} size={[L_m, 0.05, 0.05]} color="#555" wireframe={wireframe} />
           <Tubo position={[0, 0, 0]} size={[L_m, 0.05, 0.05]} color="#555" wireframe={wireframe} />
           {/* deslocar as peças que comprimem para a esquerda */}
-          <group position={[halfL - halfLvis, 0, 0]}>
+          <group position={[deslocX, 0, 0]}>
             {diags}
             {montantes}
           </group>
@@ -207,7 +248,8 @@ function GeometriaTipologia({
     }
     case "janela_correr_2f": {
       // Folha direita desliza para a esquerda sobre a esquerda
-      const desloc = abertura * (L_m / 2 - t);
+      const lado = respostas["janela.sentido"];
+      const desloc = abertura * (L_m / 2 - t) * (lado === "Direita" ? -1 : 1);
       return (
         <group>
           <Moldura L={L_m} H={H_m} w={t} d={tp} cor={cor} wireframe={wireframe} />
@@ -225,7 +267,9 @@ function GeometriaTipologia({
       // Lâminas giram (abrem inclinação)
       const nLam = Math.max(2, Math.ceil((H_m * 1000) / 60));
       const space = H_m / nLam;
-      const inclin = Math.PI / 6 + abertura * (Math.PI / 3);
+      const sinal = respostas["veneziana.laminas"] === "Ventilação para cima" ? -1 : 1;
+      const movel = respostas["veneziana.fixa"] === "Móvel";
+      const inclin = sinal * (Math.PI / 6 + (movel ? abertura : 0) * (Math.PI / 3));
       const lams = Array.from({ length: nLam }, (_, i) => (
         <Tubo
           key={`vl${i}`}
@@ -353,7 +397,7 @@ function CanvasReadyHook({ onReady }: { onReady?: (c: HTMLCanvasElement) => void
 // Geometria com abertura suavizada (lerp via useFrame).
 // Mantém estado próprio dentro do Canvas para re-render por frame.
 function AnimatedGeometria({
-  tipologia, L_m, H_m, cor, wireframe, aberturaAlvo,
+  tipologia, L_m, H_m, cor, wireframe, aberturaAlvo, respostas,
 }: {
   tipologia: TipologiaId;
   L_m: number;
@@ -361,6 +405,7 @@ function AnimatedGeometria({
   cor: string;
   wireframe?: boolean;
   aberturaAlvo: number;
+  respostas: RespostasChecklist;
 }) {
   const [aberturaAtual, setAberturaAtual] = useState(aberturaAlvo);
   const ref = useRef(aberturaAlvo);
@@ -379,6 +424,7 @@ function AnimatedGeometria({
       cor={cor}
       wireframe={wireframe}
       abertura={aberturaAtual}
+      respostas={respostas}
     />
   );
 }
@@ -508,12 +554,14 @@ export default function Visualizador3D({
                 cor={item.hex}
                 wireframe={wireframe}
                 aberturaAlvo={abertura}
+                respostas={item.peca.checklist_respostas ?? {}}
               />
               <AcessoriosTipologia
                 tipologia={item.peca.tipologia}
                 L={item.L_m}
                 H={item.H_m}
                 prof={pf.moldura.d}
+                respostas={item.peca.checklist_respostas ?? {}}
               />
               {item.peca.fixacao && (
                 <Fixacoes

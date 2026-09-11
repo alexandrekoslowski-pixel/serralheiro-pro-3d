@@ -6,34 +6,76 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { TipologiaId } from "@/lib/tipologias";
 import {
-  limparRespostasOcultas, perguntasPendentes, secoesChecklist,
+  limparRespostasOcultasPeca, pendentesComunsChecklist, pendentesPecaChecklist,
+  perguntasComunsChecklist, perguntasPecaChecklist,
   type RespostasChecklist,
 } from "@/lib/checklistPedido";
 
+interface PecaChecklist {
+  id: string;
+  nome: string;
+  tipologia: TipologiaId;
+  checklist_respostas: RespostasChecklist;
+}
+
 interface Props {
-  tipos: TipologiaId[];
+  pecas: PecaChecklist[];
+  selecionadaId: string;
   respostas: RespostasChecklist;
   onChange: (respostas: RespostasChecklist) => void;
+  onChangePeca: (id: string, respostas: RespostasChecklist) => void;
+  onSelecionarPeca: (id: string) => void;
   mostrarPendencias?: boolean;
 }
 
-export function ChecklistPedido({ tipos, respostas, onChange, mostrarPendencias = false }: Props) {
-  const secoes = useMemo(() => secoesChecklist(tipos, respostas), [tipos, respostas]);
-  const todas = secoes.flatMap((s) => s.perguntas);
-  const pendentes = perguntasPendentes(tipos, respostas);
-  const obrigatorias = todas.filter((p) => p.obrigatoria !== false);
+export function ChecklistPedido({ pecas, selecionadaId, respostas, onChange, onChangePeca, onSelecionarPeca, mostrarPendencias = false }: Props) {
+  const peca = pecas.find((item) => item.id === selecionadaId) ?? pecas[0];
+  const perguntasComuns = useMemo(() => perguntasComunsChecklist(), []);
+  const perguntasPeca = useMemo(() => perguntasPecaChecklist(peca.tipologia, peca.checklist_respostas), [peca]);
+  const pendentesComuns = pendentesComunsChecklist(respostas);
+  const pendentesPecas = pecas.flatMap((item) => pendentesPecaChecklist(item.tipologia, item.checklist_respostas));
+  const pendentes = [...pendentesComuns, ...pendentesPecas];
+  const obrigatorias = [...perguntasComuns, ...pecas.flatMap((item) => perguntasPecaChecklist(item.tipologia, item.checklist_respostas))].filter((p) => p.obrigatoria !== false);
   const respondidas = obrigatorias.length - pendentes.length;
 
-  const atualizar = (id: string, valor: string) => {
-    const proximas = limparRespostasOcultas(tipos, { ...respostas, [id]: valor.slice(0, 500) });
-    onChange(proximas);
+  const atualizar = (id: string, valor: string, daPeca: boolean) => {
+    if (daPeca) {
+      const proximas = limparRespostasOcultasPeca(peca.tipologia, { ...peca.checklist_respostas, [id]: valor.slice(0, 500) });
+      onChangePeca(peca.id, proximas);
+    } else {
+      onChange({ ...respostas, [id]: valor.slice(0, 500) });
+    }
   };
 
-  const alternarMultipla = (id: string, opcao: string) => {
-    const atuais = (respostas[id] ?? "").split(", ").filter(Boolean);
+  const alternarMultipla = (id: string, opcao: string, daPeca: boolean) => {
+    const origem = daPeca ? peca.checklist_respostas : respostas;
+    const atuais = (origem[id] ?? "").split(", ").filter(Boolean);
     const proximas = atuais.includes(opcao) ? atuais.filter((x) => x !== opcao) : [...atuais, opcao];
-    atualizar(id, proximas.join(", "));
+    atualizar(id, proximas.join(", "), daPeca);
   };
+
+  const renderPerguntas = (perguntas: typeof perguntasComuns, valores: RespostasChecklist, daPeca: boolean) => (
+    <div className="grid gap-4 lg:grid-cols-2">
+      {perguntas.map((pergunta) => {
+        const semResposta = mostrarPendencias && pergunta.obrigatoria !== false && !valores[pergunta.id]?.trim();
+        return (
+          <div key={pergunta.id} id={`check-${daPeca ? peca.id : "comum"}-${pergunta.id}`} className={cn("rounded-lg border p-3", semResposta ? "border-destructive/60 bg-destructive/5" : "border-border")}>
+            <Label className="text-sm leading-snug">{pergunta.label}{pergunta.obrigatoria === false && <span className="ml-1 text-muted-foreground">(opcional)</span>}</Label>
+            {pergunta.tipo === "texto" ? (
+              <Input className="mt-2" maxLength={500} value={valores[pergunta.id] ?? ""} onChange={(e) => atualizar(pergunta.id, e.target.value, daPeca)} placeholder={pergunta.ajuda ?? "Digite a resposta"} />
+            ) : (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {pergunta.opcoes?.map((op) => {
+                  const ativo = pergunta.tipo === "multipla" ? (valores[pergunta.id] ?? "").split(", ").includes(op) : valores[pergunta.id] === op;
+                  return <Button key={op} type="button" size="sm" variant={ativo ? "default" : "outline"} className={cn("h-auto min-h-10 whitespace-normal text-left", ativo && "bg-primary text-primary-foreground")} onClick={() => pergunta.tipo === "multipla" ? alternarMultipla(pergunta.id, op, daPeca) : atualizar(pergunta.id, op, daPeca)}>{op}</Button>;
+                })}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   return (
     <div className="space-y-5">
@@ -57,52 +99,15 @@ export function ChecklistPedido({ tipos, respostas, onChange, mostrarPendencias 
         </div>
       )}
 
-      {secoes.map((secao) => (
-        <section key={secao.id} className="space-y-3 border-t border-border pt-4 first:border-0 first:pt-0">
-          <h3 className="font-display text-base">{secao.titulo}</h3>
-          <div className="grid gap-4 lg:grid-cols-2">
-            {secao.perguntas.map((pergunta) => {
-              const semResposta = mostrarPendencias && pergunta.obrigatoria !== false && !respostas[pergunta.id]?.trim();
-              return (
-                <div key={pergunta.id} id={`check-${pergunta.id}`} className={cn("rounded-lg border p-3", semResposta ? "border-destructive/60 bg-destructive/5" : "border-border")}>
-                  <Label className="text-sm leading-snug">
-                    {pergunta.label}{pergunta.obrigatoria === false && <span className="ml-1 text-muted-foreground">(opcional)</span>}
-                  </Label>
-                  {pergunta.tipo === "texto" ? (
-                    <Input
-                      className="mt-2"
-                      maxLength={500}
-                      value={respostas[pergunta.id] ?? ""}
-                      onChange={(e) => atualizar(pergunta.id, e.target.value)}
-                      placeholder={pergunta.ajuda ?? "Digite a resposta"}
-                    />
-                  ) : (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {pergunta.opcoes?.map((op) => {
-                        const ativo = pergunta.tipo === "multipla"
-                          ? (respostas[pergunta.id] ?? "").split(", ").includes(op)
-                          : respostas[pergunta.id] === op;
-                        return (
-                          <Button
-                            key={op}
-                            type="button"
-                            size="sm"
-                            variant={ativo ? "default" : "outline"}
-                            className={cn("h-auto min-h-10 whitespace-normal text-left", ativo && "bg-primary text-primary-foreground")}
-                            onClick={() => pergunta.tipo === "multipla" ? alternarMultipla(pergunta.id, op) : atualizar(pergunta.id, op)}
-                          >
-                            {op}
-                          </Button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      ))}
+      <section className="space-y-3"><h3 className="font-display text-base">Informações gerais do orçamento</h3>{renderPerguntas(perguntasComuns, respostas, false)}</section>
+      <section className="space-y-3 border-t border-border pt-4">
+        <h3 className="font-display text-base">Configuração de cada peça</h3>
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {pecas.map((item, index) => <Button key={item.id} type="button" variant={item.id === peca.id ? "default" : "outline"} className="shrink-0" onClick={() => onSelecionarPeca(item.id)}>Peça {index + 1} · {item.nome}</Button>)}
+        </div>
+        <p className="text-sm font-semibold">{peca.nome}</p>
+        {perguntasPeca.length ? renderPerguntas(perguntasPeca, peca.checklist_respostas, true) : <p className="text-sm text-muted-foreground">Esta peça não exige perguntas técnicas adicionais.</p>}
+      </section>
     </div>
   );
 }

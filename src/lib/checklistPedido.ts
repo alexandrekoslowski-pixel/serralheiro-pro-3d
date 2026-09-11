@@ -168,6 +168,46 @@ const POR_TIPO: Record<TipologiaId, { titulo: string; perguntas: PerguntaCheckli
   grade_fixa_trabalhada: { titulo: "Grades fixas", perguntas: GRADE },
 };
 
+export const perguntasComunsChecklist = () => COMUNS;
+
+export function perguntasPecaChecklist(tipo: TipologiaId, respostas: RespostasChecklist): PerguntaChecklist[] {
+  const perguntas = POR_TIPO[tipo]?.perguntas ?? [];
+  return perguntas.filter((pergunta) => !pergunta.depende || pergunta.depende.valores.includes(respostas[pergunta.depende.de] ?? ""));
+}
+
+export function pendentesComunsChecklist(respostas: RespostasChecklist) {
+  return COMUNS.filter((pergunta) => pergunta.obrigatoria !== false && !respostas[pergunta.id]?.trim());
+}
+
+export function pendentesPecaChecklist(tipo: TipologiaId, respostas: RespostasChecklist) {
+  return perguntasPecaChecklist(tipo, respostas).filter((pergunta) => pergunta.obrigatoria !== false && !respostas[pergunta.id]?.trim());
+}
+
+export function limparRespostasOcultasPeca(tipo: TipologiaId, respostas: RespostasChecklist): RespostasChecklist {
+  const visiveis = new Set(perguntasPecaChecklist(tipo, respostas).map((pergunta) => pergunta.id));
+  return Object.fromEntries(Object.entries(respostas).filter(([id]) => visiveis.has(id)));
+}
+
+export function linhasChecklistPeca(tipo: TipologiaId, respostas: RespostasChecklist, somenteComercial = false) {
+  const titulo = POR_TIPO[tipo]?.titulo ?? "Detalhes técnicos";
+  return perguntasPecaChecklist(tipo, respostas)
+    .filter((pergunta) => respostas[pergunta.id] && (!somenteComercial || pergunta.comercial))
+    .map((pergunta) => ({ secao: titulo, pergunta: pergunta.label, resposta: respostas[pergunta.id] }));
+}
+
+export function linhasChecklistProjeto(
+  pecas: Array<{ nome: string; tipologia: TipologiaId; checklist_respostas?: RespostasChecklist }>,
+  respostasGerais: RespostasChecklist,
+  somenteComercial = false,
+) {
+  const gerais = COMUNS
+    .filter((pergunta) => respostasGerais[pergunta.id] && (!somenteComercial || pergunta.comercial))
+    .map((pergunta) => ({ secao: "Informações gerais", pergunta: pergunta.label, resposta: respostasGerais[pergunta.id] }));
+  const porPeca = pecas.flatMap((peca) => linhasChecklistPeca(peca.tipologia, peca.checklist_respostas ?? {}, somenteComercial)
+    .map((linha) => ({ ...linha, secao: peca.nome })));
+  return [...gerais, ...porPeca];
+}
+
 export const CHECKLIST_VERSAO = 1;
 const respostaSchema = z.record(z.string().max(500));
 

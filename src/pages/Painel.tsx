@@ -23,7 +23,7 @@ import {
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
 import { useVendedores } from "@/hooks/useVendedores";
-import { perguntasPendentes } from "@/lib/checklistPedido";
+import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
@@ -131,7 +131,10 @@ export default function Painel() {
     const prox = proximoStatus(p.status);
     if (!prox) return;
     if (prox === "aprovado") {
-      const pendentes = perguntasPendentes(p.pecas.map((peca) => peca.tipologia), p.checklist_respostas ?? {});
+      const pendentes = [
+        ...pendentesComunsChecklist(p.checklist_respostas ?? {}),
+        ...p.pecas.flatMap((peca) => pendentesPecaChecklist(peca.tipologia, peca.checklist_respostas ?? {})),
+      ];
       if (pendentes.length > 0) {
         toast.error(`Complete o checklist antes de aprovar (${pendentes.length} pendente${pendentes.length === 1 ? "" : "s"})`);
         navigate(`/app/projeto/${p.id}`, { state: { abrirChecklist: true } });

@@ -3,6 +3,7 @@ import { TipologiaId } from "@/lib/tipologias";
 import { FixacaoTipo, FixacaoLados } from "@/lib/fixacao";
 import { GEO_CIL } from "./perfis";
 import { materialAco } from "./materiais";
+import type { RespostasChecklist } from "@/lib/checklistPedido";
 
 type P3 = [number, number, number];
 
@@ -59,36 +60,57 @@ function EixoRolo({ L, H }: { L: number; H: number }) {
   return <Cilindro pos={[0, H + 0.11, 0]} r={0.1} h={L + 0.12} rot={[0, 0, Math.PI / 2]} cor="#6b7079" />;
 }
 
+function Motor({ x, y, z = 0 }: { x: number; y: number; z?: number }) {
+  return (
+    <group position={[x, y, z]}>
+      <mesh material={materialAco("#343940", 0.35)} castShadow><boxGeometry args={[0.24, 0.16, 0.18]} /></mesh>
+      <Cilindro pos={[0.15, 0, 0]} r={0.045} h={0.14} rot={[0, 0, Math.PI / 2]} cor="#59616a" />
+    </group>
+  );
+}
+
+function Contrapesos({ lado, L, H, prof }: { lado: string; L: number; H: number; prof: number }) {
+  const xs = lado === "Ambos os lados" ? [-L / 2 - 0.1, L / 2 + 0.1] : [lado === "Direita" ? L / 2 + 0.1 : -L / 2 - 0.1];
+  return <>{xs.map((x) => <mesh key={x} position={[x, H / 2, -prof / 2]} material={materialAco("#555b62", 0.45)} castShadow><boxGeometry args={[0.14, H * 0.75, 0.12]} /></mesh>)}</>;
+}
+
 export function AcessoriosTipologia({
   tipologia,
   L,
   H,
   prof,
+  respostas = {},
 }: {
   tipologia: TipologiaId;
   L: number;
   H: number;
   prof: number;
+  respostas?: RespostasChecklist;
 }) {
+  const automatizado = respostas.acionamento === "Automatizado";
+  const fechamentos = Object.entries(respostas).find(([chave]) => chave.endsWith(".fechamento"))?.[1] ?? "";
+  const temFechadura = /Sobrepor|Maçaneta|Bico|Trinco/.test(fechamentos);
   switch (tipologia) {
     case "portao_correr":
       return (
         <>
           <Roldanas L={L} prof={prof} />
-          <Fechadura x={L / 2 - 0.12} y={H * 0.45} prof={prof} />
+          {temFechadura && <Fechadura x={L / 2 - 0.12} y={H * 0.45} prof={prof} />}
+          {automatizado && <Motor x={respostas["correr.recolhimento"] === "Direita" ? -L / 2 - 0.16 : L / 2 + 0.16} y={0.14} />}
         </>
       );
     case "portao_pivotante":
       return (
         <>
-          <Dobradicas x={-L / 2 + 0.02} H={H} prof={prof} />
-          <Fechadura x={L / 2 - 0.12} y={H * 0.45} prof={prof} />
+          <Dobradicas x={respostas["pivotante.mao"] === "Direita" ? L / 2 - 0.02 : -L / 2 + 0.02} H={H} prof={prof} />
+          {temFechadura && <Fechadura x={respostas["pivotante.mao"] === "Direita" ? -L / 2 + 0.12 : L / 2 - 0.12} y={H * 0.45} prof={prof} />}
+          {automatizado && <Motor x={0} y={0.12} z={-0.18} />}
         </>
       );
     case "portao_basculante":
-      return <Fechadura x={0} y={H * 0.35} prof={prof} />;
+      return <><Contrapesos lado={respostas["basculante.contrapeso"] ?? "Ambos os lados"} L={L} H={H} prof={prof} />{temFechadura && <Fechadura x={0} y={H * 0.35} prof={prof} />}{automatizado && <Motor x={0} y={H + 0.15} />}</>;
     case "portao_rolo":
-      return <EixoRolo L={L} H={H} />;
+      return <><EixoRolo L={L} H={H} />{automatizado && <Motor x={L / 2 + 0.18} y={H + 0.11} />}</>;
     case "portao_pantografico":
       return <Roldanas L={L} prof={prof} />;
     case "janela_correr_2f":

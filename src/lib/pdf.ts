@@ -6,7 +6,7 @@ import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
 import { acabamentoPorId, tipologiaPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
 import { fixacaoTipo, fixacaoLados } from "./fixacao";
-import { linhasChecklist } from "./checklistPedido";
+import { linhasChecklistProjeto } from "./checklistPedido";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -65,7 +65,7 @@ export function gerarOrcamentoPDF(
 
   const validadeDias = empresa.validadeDias || 5;
   const prazoDias = projeto.prazo_dias_uteis ?? empresa.prazoDiasUteis ?? 22;
-  const checklistComercial = linhasChecklist(projeto.pecas.map((p) => p.tipologia), projeto.checklist_respostas ?? {}, true);
+  const checklistComercial = linhasChecklistProjeto(projeto.pecas, projeto.checklist_respostas ?? {}, true);
 
   // ===== Header =====
   doc.setFillColor(...ORANGE);
