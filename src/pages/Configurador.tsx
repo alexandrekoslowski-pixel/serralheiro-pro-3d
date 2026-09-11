@@ -57,6 +57,7 @@ export default function Configurador() {
   const [salvo, setSalvo] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const clienteNomeRef = useRef<HTMLInputElement | null>(null);
+  const focoInicialFeito = useRef(false);
 
   // Controles 3D
   const [preset, setPreset] = useState<CameraPreset>("iso");
@@ -86,9 +87,13 @@ export default function Configurador() {
   }, [id, navigate]);
 
   useEffect(() => {
-    if (!projeto || !(location.state as { novoOrcamento?: boolean } | null)?.novoOrcamento) return;
+    if (
+      !projeto
+      || focoInicialFeito.current
+      || !(location.state as { novoOrcamento?: boolean } | null)?.novoOrcamento
+    ) return;
+    focoInicialFeito.current = true;
     const timer = window.setTimeout(() => clienteNomeRef.current?.focus(), 80);
-    window.history.replaceState({}, document.title);
     return () => window.clearTimeout(timer);
   }, [location.state, projeto]);
 
