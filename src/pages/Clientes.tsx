@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { z } from "zod";
+import { cepOpcionalSchema, documentoOpcionalSchema, emailOpcionalSchema, primeiraMensagem, telefoneOpcionalSchema } from "@/lib/validacao";
 import {
   Cliente, ORIGENS, listarClientes, salvarCliente, excluirCliente,
 } from "@/lib/gestao";
@@ -40,9 +42,18 @@ export default function Clientes() {
   }, [clientes, busca]);
 
   const salvar = async () => {
-    if (!edit?.nome?.trim()) { toast.error("Informe o nome do cliente"); return; }
+    const resultado = z.object({
+      nome: z.string().trim().min(2, "Informe o nome completo").max(120),
+      documento: documentoOpcionalSchema,
+      email: emailOpcionalSchema,
+      telefone: telefoneOpcionalSchema,
+      whatsapp: telefoneOpcionalSchema,
+      cep: cepOpcionalSchema,
+    }).safeParse({ nome: edit?.nome ?? "", documento: edit?.documento ?? "", email: edit?.email ?? "", telefone: edit?.telefone ?? "", whatsapp: edit?.whatsapp ?? "", cep: edit?.cep ?? "" });
+    const mensagem = primeiraMensagem(resultado);
+    if (mensagem) { toast.error(mensagem); return; }
     try {
-      await salvarCliente(edit);
+      await salvarCliente({ ...edit, nome: edit?.nome?.trim(), email: edit?.email?.trim().toLowerCase() });
       setEdit(null);
       await recarregar();
       toast.success("Cliente salvo");
@@ -54,12 +65,13 @@ export default function Clientes() {
     try { await excluirCliente(c.id); await recarregar(); } catch { toast.error("Não foi possível excluir"); }
   };
 
-  const campo = (k: keyof Cliente, label: string, tipo = "text") => (
+  const campo = (k: keyof Cliente, label: string, tipo = "text", mask?: "cpfCnpj" | "telefone" | "cep") => (
     <div>
       <Label>{label}</Label>
       <Input
         className="mt-1.5"
         type={tipo}
+        mask={mask}
         value={(edit?.[k] as string) ?? ""}
         onChange={(e) => setEdit((v) => ({ ...v, [k]: e.target.value }))}
       />
@@ -139,14 +151,14 @@ export default function Clientes() {
           <DialogHeader><DialogTitle>{edit?.id ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="sm:col-span-2">{campo("nome", "Nome / razão social")}</div>
-            {campo("documento", "CPF / CNPJ")}
+            {campo("documento", "CPF / CNPJ", "text", "cpfCnpj")}
             {campo("email", "E-mail", "email")}
-            {campo("telefone", "Telefone")}
-            {campo("whatsapp", "WhatsApp")}
+            {campo("telefone", "Telefone", "tel", "telefone")}
+            {campo("whatsapp", "WhatsApp", "tel", "telefone")}
             <div className="sm:col-span-2">{campo("endereco", "Endereço")}</div>
             {campo("bairro", "Bairro")}
             {campo("cidade", "Cidade")}
-            {campo("cep", "CEP")}
+            {campo("cep", "CEP", "text", "cep")}
             <div>
               <Label>Origem</Label>
               <Select value={edit?.origem ?? "whatsapp"} onValueChange={(v) => setEdit((c) => ({ ...c, origem: v }))}>
@@ -158,7 +170,7 @@ export default function Clientes() {
             </div>
             <div className="sm:col-span-2">
               <Label>Observações</Label>
-              <Textarea className="mt-1.5" rows={3} value={edit?.observacoes ?? ""}
+              <Textarea className="mt-1.5" rows={3} maxLength={1000} value={edit?.observacoes ?? ""}
                         onChange={(e) => setEdit((c) => ({ ...c, observacoes: e.target.value }))} />
             </div>
             <button

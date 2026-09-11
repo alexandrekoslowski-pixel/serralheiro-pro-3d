@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MembroEquipe, PAPEIS, Papel, listarEquipe, definirPapel, atualizarMembro, removerMembro, ContaNaoEncontrada } from "@/lib/gestao";
 import { useSessao } from "@/lib/sessao";
+import { emailOpcionalSchema, primeiraMensagem } from "@/lib/validacao";
 
 export default function Equipe() {
   const { session, papel } = useSessao();
@@ -21,8 +22,10 @@ export default function Equipe() {
   const salvar = async () => {
     if (!novo?.nome.trim()) { toast.error("Informe o nome da pessoa"); return; }
     if (!novo?.email.trim()) { toast.error("Informe o e-mail da pessoa"); return; }
+    const mensagem = primeiraMensagem(emailOpcionalSchema.safeParse(novo.email));
+    if (mensagem) { toast.error(mensagem); return; }
     try {
-      await definirPapel({ ...novo, nome: novo.nome.trim(), email: novo.email.trim() });
+      await definirPapel({ ...novo, nome: novo.nome.trim(), email: novo.email.trim().toLowerCase() });
       setNovo(null); await recarregar(); toast.success("Acesso liberado");
     } catch (e) {
       if (e instanceof ContaNaoEncontrada) {
@@ -98,7 +101,7 @@ export default function Equipe() {
           <div className="space-y-3">
             <div>
               <Label>Nome da pessoa</Label>
-              <Input className="mt-1.5" value={edicao?.nome ?? ""} onChange={(e) => setEdicao((n) => n && { ...n, nome: e.target.value })} />
+              <Input className="mt-1.5" maxLength={100} value={edicao?.nome ?? ""} onChange={(e) => setEdicao((n) => n && { ...n, nome: e.target.value })} />
             </div>
             <div>
               <Label>Papel</Label>
@@ -123,7 +126,7 @@ export default function Equipe() {
           <div className="space-y-3">
             <div>
               <Label>Nome da pessoa</Label>
-              <Input className="mt-1.5" value={novo?.nome ?? ""} onChange={(e) => setNovo((n) => n && { ...n, nome: e.target.value })} />
+              <Input className="mt-1.5" maxLength={100} value={novo?.nome ?? ""} onChange={(e) => setNovo((n) => n && { ...n, nome: e.target.value })} />
             </div>
             <div>
               <Label>E-mail da conta</Label>

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Material, MaterialPreco, listarMateriais, listarHistoricoMaterial, salvarMaterial, excluirMaterial } from "@/lib/gestao";
 import { formatarBRL } from "@/lib/storage";
+import { numeroMascarado } from "@/lib/mascaras";
 
 const NOMES_CATEGORIAS: Record<string, string> = {
   "automatizadores": "Automatizadores",
@@ -127,7 +128,7 @@ export default function Materiais() {
           <div className="grid gap-3 sm:grid-cols-2">
              <div>
                <Label>Código do fornecedor</Label>
-               <Input className="mt-1.5" value={edit?.codigo_fornecedor ?? ""} onChange={(e) => setEdit((m) => ({ ...m, codigo_fornecedor: e.target.value }))} />
+                <Input className="mt-1.5" mask="codigo" value={edit?.codigo_fornecedor ?? ""} onChange={(e) => setEdit((m) => ({ ...m, codigo_fornecedor: e.target.value }))} />
              </div>
              <div>
                <Label>Categoria</Label>
@@ -143,12 +144,12 @@ export default function Materiais() {
             </div>
             <div>
                <Label>Preço vigente (R$)</Label>
-               <Input className="mt-1.5" type="number" value={edit?.preco_atual ?? edit?.custo ?? 0}
-                      onChange={(e) => setEdit((m) => ({ ...m, preco_atual: Number(e.target.value) }))} />
+                <Input className="mt-1.5" mask="moeda" value={String(edit?.preco_atual ?? edit?.custo ?? 0).replace(".", ",")}
+                       onChange={(e) => setEdit((m) => ({ ...m, preco_atual: numeroMascarado(e.target.value) }))} />
             </div>
              <div><Label>Unidade de compra</Label><Input className="mt-1.5" value={edit?.unidade_compra ?? "un"} onChange={(e) => setEdit((m) => ({ ...m, unidade_compra: e.target.value, unidade: e.target.value }))} /></div>
-             <div><Label>Comprimento comercial (mm)</Label><Input className="mt-1.5" type="number" value={edit?.comprimento_comercial_mm ?? ""} onChange={(e) => setEdit((m) => ({ ...m, comprimento_comercial_mm: e.target.value ? Number(e.target.value) : null }))} /></div>
-             <div><Label>Espessura (mm)</Label><Input className="mt-1.5" type="number" step="0.01" value={edit?.espessura_mm ?? ""} onChange={(e) => setEdit((m) => ({ ...m, espessura_mm: e.target.value ? Number(e.target.value) : null }))} /></div>
+              <div><Label>Comprimento comercial (mm)</Label><Input className="mt-1.5" mask="inteiro" value={edit?.comprimento_comercial_mm ?? ""} onChange={(e) => setEdit((m) => ({ ...m, comprimento_comercial_mm: e.target.value ? Number(e.target.value) : null }))} /></div>
+              <div><Label>Espessura (mm)</Label><Input className="mt-1.5" mask="decimal" value={edit?.espessura_mm == null ? "" : String(edit.espessura_mm).replace(".", ",")} onChange={(e) => setEdit((m) => ({ ...m, espessura_mm: e.target.value ? numeroMascarado(e.target.value) : null }))} /></div>
             <div className="sm:col-span-2">
               <Label>Fornecedor</Label>
               <Input className="mt-1.5" value={edit?.fornecedor ?? ""} onChange={(e) => setEdit((m) => ({ ...m, fornecedor: e.target.value }))} />

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { useSessao } from "@/lib/sessao";
+import { emailOpcionalSchema, primeiraMensagem } from "@/lib/validacao";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -22,15 +23,19 @@ export default function Auth() {
 
   const submeter = async (e: React.FormEvent) => {
     e.preventDefault();
+    const emailNormalizado = email.trim().toLowerCase();
+    const mensagem = primeiraMensagem(emailOpcionalSchema.safeParse(emailNormalizado));
+    if (mensagem) { toast.error(mensagem); return; }
+    if (modo === "criar" && nome.trim().length < 2) { toast.error("Informe seu nome"); return; }
     setEnviando(true);
     try {
       if (modo === "entrar") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password: senha });
+        const { error } = await supabase.auth.signInWithPassword({ email: emailNormalizado, password: senha });
         if (error) throw error;
         navigate("/app", { replace: true });
       } else {
         const { data, error } = await supabase.auth.signUp({
-          email,
+          email: emailNormalizado,
           password: senha,
           options: { emailRedirectTo: window.location.origin + "/app", data: { nome } },
         });
@@ -72,16 +77,16 @@ export default function Auth() {
             {modo === "criar" && (
               <div>
                 <Label>Seu nome</Label>
-                <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da serralheria ou seu nome" />
+                <Input maxLength={100} autoComplete="name" value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Nome da serralheria ou seu nome" />
               </div>
             )}
             <div>
               <Label>E-mail</Label>
-              <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input type="email" required autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div>
               <Label>Senha</Label>
-              <Input type="password" required minLength={6} value={senha} onChange={(e) => setSenha(e.target.value)} />
+              <Input type="password" required minLength={6} maxLength={128} autoComplete={modo === "entrar" ? "current-password" : "new-password"} value={senha} onChange={(e) => setSenha(e.target.value)} />
             </div>
             <Button type="submit" disabled={enviando} className="w-full bg-gradient-orange text-primary-foreground shadow-orange">
               {enviando ? "Aguarde..." : modo === "entrar" ? "Entrar" : "Criar conta"}

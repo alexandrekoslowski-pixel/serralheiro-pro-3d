@@ -24,6 +24,7 @@ import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
 import { useVendedores } from "@/hooks/useVendedores";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
+import { numeroMascarado } from "@/lib/mascaras";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
@@ -419,7 +420,7 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
   const saldo = (atual.valor_faturado || 0) - recebido;
 
   const lancar = async () => {
-    const v = Number(valor.replace(",", "."));
+    const v = numeroMascarado(valor);
     if (!v || v <= 0) { toast.error("Informe o valor recebido"); return; }
     try {
       await adicionarPagamento({ projeto_id: atual.id, data, valor: v, forma, observacao: obs });
@@ -454,8 +455,8 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
           <div>
             <Label>Valor faturado</Label>
             <Input
-              type="number" step="0.01" value={atual.valor_faturado || 0}
-              onChange={(e) => salvarProjeto({ ...atual, valor_faturado: Number(e.target.value) })}
+              mask="moeda" value={String(atual.valor_faturado || 0).replace(".", ",")}
+              onChange={(e) => salvarProjeto({ ...atual, valor_faturado: numeroMascarado(e.target.value) })}
             />
           </div>
         </div>
@@ -469,14 +470,14 @@ function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClo
           <Label>Lançar pagamento</Label>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-            <Input placeholder="Valor" value={valor} onChange={(e) => setValor(e.target.value)} />
+            <Input mask="moeda" placeholder="0,00" value={valor} onChange={(e) => setValor(e.target.value)} />
             <Select value={forma} onValueChange={setForma}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{FORMAS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
             </Select>
             <Button onClick={lancar} className="bg-gradient-orange text-primary-foreground">Lançar</Button>
           </div>
-          <Input placeholder="Observação (opcional)" value={obs} onChange={(e) => setObs(e.target.value)} />
+          <Input maxLength={500} placeholder="Observação (opcional)" value={obs} onChange={(e) => setObs(e.target.value)} />
         </div>
 
         {pagos.length > 0 && (

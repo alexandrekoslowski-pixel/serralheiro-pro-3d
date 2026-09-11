@@ -79,6 +79,7 @@ export function PainelFotos({ projetoId, etapaInicial = "medicao", somenteEtapa 
 
       <div className="flex flex-wrap items-center gap-2">
         <Input
+          maxLength={500}
           placeholder="Observação da foto (opcional)"
           value={obs}
           onChange={(ev) => setObs(ev.target.value)}

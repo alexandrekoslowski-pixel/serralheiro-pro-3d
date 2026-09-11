@@ -44,6 +44,7 @@ import { gerarOrcamentoPDF } from "@/lib/pdf";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
+import { numeroMascarado } from "@/lib/mascaras";
 
 const PALETA_BARRAS = [
   "hsl(18 78% 52%)", "hsl(210 60% 55%)", "hsl(140 50% 50%)",
@@ -366,11 +367,11 @@ export default function Configurador() {
               </div>
               <div>
                 <Label className="text-xs">RG ou CPF</Label>
-                <Input className="h-9" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} />
+                <Input className="h-9" mask="rgCpf" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} placeholder="RG ou CPF" />
               </div>
               <div>
                 <Label className="text-xs">Telefone / WhatsApp</Label>
-                <Input className="h-9" inputMode="tel" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
+                <Input className="h-9" type="tel" mask="telefone" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">E-mail</Label>
@@ -390,7 +391,7 @@ export default function Configurador() {
               </div>
               <div>
                 <Label className="text-xs">CEP</Label>
-                <Input className="h-9" inputMode="numeric" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} />
+                <Input className="h-9" mask="cep" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} placeholder="00000-000" />
               </div>
               <div>
                 <Label className="text-xs">Local de instalação</Label>
@@ -431,39 +432,37 @@ export default function Configurador() {
                 <Label className="text-xs">Prazo (dias úteis)</Label>
                 <Input
                   className="h-9"
-                  type="number"
-                  min={1}
+                  mask="inteiro"
                   placeholder={String(empresa.prazoDiasUteis ?? 22)}
                   value={projeto.prazo_dias_uteis ?? ""}
-                  onChange={(e) => upd("prazo_dias_uteis", e.target.value === "" ? null : Number(e.target.value))}
+                  onChange={(e) => upd("prazo_dias_uteis", e.target.value === "" ? null : Math.max(1, Number(e.target.value)))}
                 />
               </div>
               <div>
                 <Label className="text-xs">Serviços (R$)</Label>
                 <Input
                   className="h-9"
-                  type="number"
-                  step="0.01"
+                  mask="moeda"
                   placeholder="não incluso"
-                  value={projeto.servicos_valor ?? ""}
-                  onChange={(e) => upd("servicos_valor", e.target.value === "" ? null : Number(e.target.value))}
+                  value={projeto.servicos_valor == null ? "" : String(projeto.servicos_valor).replace(".", ",")}
+                  onChange={(e) => upd("servicos_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
                 />
               </div>
               <div>
                 <Label className="text-xs">Frete (R$)</Label>
                 <Input
                   className="h-9"
-                  type="number"
-                  step="0.01"
+                  mask="moeda"
                   placeholder="não incluso"
-                  value={projeto.frete_valor ?? ""}
-                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : Number(e.target.value))}
+                  value={projeto.frete_valor == null ? "" : String(projeto.frete_valor).replace(".", ",")}
+                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
                 />
               </div>
               <div className="sm:col-span-2 lg:col-span-4">
                 <Label className="text-xs">Observações da proposta</Label>
                 <Textarea
                   rows={3}
+                  maxLength={2000}
                   value={projeto.observacoes_proposta ?? ""}
                   onChange={(e) => upd("observacoes_proposta", e.target.value)}
                 />
@@ -506,7 +505,7 @@ export default function Configurador() {
               </div>
               <div>
                 <Label className="text-xs">Valor faturado (R$)</Label>
-                <Input className="h-9" type="number" step="0.01" value={projeto.valor_faturado || 0} onChange={(e) => upd("valor_faturado", Number(e.target.value))} />
+                <Input className="h-9" mask="moeda" value={String(projeto.valor_faturado || 0).replace(".", ",")} onChange={(e) => upd("valor_faturado", numeroMascarado(e.target.value))} />
               </div>
               <div>
                 <Label className="text-xs">Total orçado</Label>
@@ -791,10 +790,10 @@ export default function Configurador() {
                           </div>
                           {it.codigo && <div className="text-[10px] text-muted-foreground">{it.codigo}</div>}
                         </td>
-                        <td className="py-1.5 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={it.qtd} onChange={(e) => setOverride(it.key, { qtd: Number(e.target.value) })} /></td>
+                        <td className="py-1.5 pr-2"><Input className="h-8 text-right" mask="decimal" value={String(it.qtd).replace(".", ",")} onChange={(e) => setOverride(it.key, { qtd: numeroMascarado(e.target.value) })} /></td>
                         <td className="py-1.5 pr-2 text-muted-foreground">{it.unidade}</td>
-                        <td className="py-1.5 pr-2"><Input className="h-8 text-right" type="number" step="0.01" value={it.precoUnit} onChange={(e) => setOverride(it.key, { precoUnit: Number(e.target.value) })} /></td>
-                        <td className="py-1.5 pr-2"><Input className="h-8 text-right" type="number" step="1" value={it.descontoPct} onChange={(e) => setOverride(it.key, { descontoPct: Number(e.target.value) })} /></td>
+                        <td className="py-1.5 pr-2"><Input className="h-8 text-right" mask="moeda" value={String(it.precoUnit).replace(".", ",")} onChange={(e) => setOverride(it.key, { precoUnit: numeroMascarado(e.target.value) })} /></td>
+                        <td className="py-1.5 pr-2"><Input className="h-8 text-right" mask="inteiro" value={it.descontoPct} onChange={(e) => setOverride(it.key, { descontoPct: Math.min(100, Number(e.target.value)) })} /></td>
                         <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(it.total)}</td>
                         <td className="py-1.5 text-right">
                           <Button size="icon" variant="soft" className="h-7 w-7" onClick={() => setOverride(it.key, { oculto: !it.oculto })} title={it.oculto ? "Mostrar" : "Ocultar"}>
@@ -827,9 +826,9 @@ export default function Configurador() {
                   {projeto.extras.map((ex) => (
                     <div key={ex.id} className="grid grid-cols-12 gap-2 items-center">
                       <Input className="h-8 col-span-12 sm:col-span-5" placeholder="Descrição" value={ex.descricao} onChange={(e) => updExtra(ex.id, { descricao: e.target.value })} />
-                      <Input className="h-8 col-span-3 sm:col-span-2 text-right" type="number" step="0.01" value={ex.qtd} onChange={(e) => updExtra(ex.id, { qtd: Number(e.target.value) })} />
+                      <Input className="h-8 col-span-3 sm:col-span-2 text-right" mask="decimal" value={String(ex.qtd).replace(".", ",")} onChange={(e) => updExtra(ex.id, { qtd: numeroMascarado(e.target.value) })} />
                       <Input className="h-8 col-span-3 sm:col-span-1" placeholder="un" value={ex.unidade} onChange={(e) => updExtra(ex.id, { unidade: e.target.value })} />
-                      <Input className="h-8 col-span-4 sm:col-span-3 text-right" type="number" step="0.01" placeholder="Preço" value={ex.precoUnit} onChange={(e) => updExtra(ex.id, { precoUnit: Number(e.target.value) })} />
+                      <Input className="h-8 col-span-4 sm:col-span-3 text-right" mask="moeda" placeholder="0,00" value={String(ex.precoUnit).replace(".", ",")} onChange={(e) => updExtra(ex.id, { precoUnit: numeroMascarado(e.target.value) })} />
                       <Button size="icon" variant="dangerOutline" title="Excluir" className="col-span-2 sm:col-span-1" onClick={() => delExtra(ex.id)}><Trash2 className="h-4 w-4" /></Button>
                     </div>
                   ))}
@@ -1075,6 +1074,7 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
             inputMode="decimal"
             className="h-7 w-24 text-right text-xs"
             value={exibido}
+            mask="decimal"
             onChange={(e) => setTexto(e.target.value)}
             onFocus={(e) => e.currentTarget.select()}
             onBlur={confirmar}
@@ -1112,6 +1112,7 @@ function SliderPct({ label, value, onChange, max = 100 }: { label: string; value
           inputMode="decimal"
           className="h-7 w-16 text-right text-xs"
           value={exibido}
+          mask="decimal"
           onChange={(e) => setTexto(e.target.value)}
           onFocus={(e) => e.currentTarget.select()}
           onBlur={confirmar}
