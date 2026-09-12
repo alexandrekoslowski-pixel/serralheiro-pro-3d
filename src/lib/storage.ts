@@ -123,6 +123,8 @@ export interface DadosEmpresa {
   prazoPadraoDias: number;
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
+  /** Meta semanal de faturamento (R$) exibida no painel do gestor. */
+  metaSemanal: number;
   codigoOficina: string;
   /** Equipe de vendas */
   vendedoras: string[];
@@ -196,6 +198,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   prazoPadraoDias: 15,
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
+  metaSemanal: 40000,
   codigoOficina: "",
   vendedoras: [],
   empresasPintura: [],
