@@ -327,6 +327,89 @@ export default function Painel() {
         </div>
       )}
 
+      {/* O que falta fazer em cada orçamento */}
+      <div className="surface-card mt-4 rounded-lg border border-border p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-sm uppercase tracking-wide text-muted-foreground">O que falta fazer</h2>
+          {totalPendencias > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
+                .filter((t) => pendencias[t].length > 0)
+                .map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setFiltroPend((f) => (f === t ? null : t))}
+                    className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+                      filtroPend === t ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
+                    }`}
+                  >
+                    {ROTULO_PENDENCIA[t]} <strong className="ml-1">{pendencias[t].length}</strong>
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {totalPendencias === 0 ? (
+          <p className="mt-3 flex items-center gap-2 text-sm text-emerald-500">
+            <CheckCircle2 className="h-4 w-4" /> Tudo em dia — nenhum orçamento parado.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
+              .filter((t) => pendencias[t].length > 0 && (!filtroPend || filtroPend === t))
+              .map((t) => (
+                <div key={t}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {ROTULO_PENDENCIA[t]} · {pendencias[t].length}
+                  </p>
+                  <div className="mt-1.5 space-y-1.5">
+                    {pendencias[t].slice(0, 6).map((p) => {
+                      const d = progressos.get(p.id)?.diasParado ?? 0;
+                      return (
+                        <div key={`${t}-${p.id}`} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/60 px-3 py-2 text-sm">
+                          <Link to={`/app/projeto/${p.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
+                            {p.cliente || p.nome}
+                          </Link>
+                          <span className="shrink-0 text-xs text-muted-foreground">{formatarBRL(p.total)}</span>
+                          <span className={`shrink-0 rounded px-2 py-0.5 text-[11px] ${d >= 3 ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                            parado há {d} {d === 1 ? "dia" : "dias"}
+                          </span>
+                          {t === "enviar" && (
+                            <Button size="sm" variant="soft" onClick={() => marcarEnviado(p)}>
+                              <Send className="mr-1 h-3.5 w-3.5" /> Marcar como enviado
+                            </Button>
+                          )}
+                          {t === "retorno" && (
+                            <Button size="sm" variant="outline" onClick={() => abrirFollowup(p)}>
+                              <MessageCircle className="mr-1 h-3.5 w-3.5" /> Retomar no WhatsApp
+                            </Button>
+                          )}
+                          {t === "comprovante" && (
+                            <Button size="sm" variant="soft" onClick={() => setDetalhe(p)}>
+                              <Upload className="mr-1 h-3.5 w-3.5" /> Anexar comprovante
+                            </Button>
+                          )}
+                          {t === "fila" && (
+                            <Button size="sm" variant="soft" onClick={() => avancar(p)}>
+                              <Wrench className="mr-1 h-3.5 w-3.5" /> Mandar para a oficina
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {pendencias[t].length > 6 && (
+                      <button onClick={() => setFiltroPend(t)} className="text-xs text-muted-foreground underline">
+                        ver os {pendencias[t].length} na lista abaixo
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
+
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
         {[
           { l: "Orçado no mês", v: resumo.atual.orcado, ant: resumo.anterior.orcado },
