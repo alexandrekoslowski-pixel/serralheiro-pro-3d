@@ -202,7 +202,7 @@ export function gerarOrcamentoPDF(
     doc.text(typeof valor === "number" ? formatarBRL(valor) : valor, pageW - margin, yTot, { align: "right" });
     yTot += 5;
   };
-  escreverLinha("Materiais", resultado.totalMateriais);
+  
   if (mo) escreverLinha(mo.descricao, mo.total);
   if (mg) escreverLinha(mg.descricao, mg.total);
   if (desc) escreverLinha(desc.descricao, desc.total);
