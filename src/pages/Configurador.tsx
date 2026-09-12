@@ -344,25 +344,21 @@ export default function Configurador() {
         </div>
         <TrilhaOrcamento marcos={progressoOrcamento(projeto, listarPagamentos(projeto.id)).marcos} />
         <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
+          <PassosOrcamento
+            projeto={projeto}
+            pagamentos={listarPagamentos(projeto.id)}
+            onPasso={(id) => {
+              if (id === "orcamento") exportarOrcamento();
+              else if (id === "enviar") marcarEnviado();
+              else if (id === "aprovar") aprovar();
+              else if (id === "contrato") exportarContrato();
+              else if (id === "comprovante") setFinanceiroAberto(true);
+              else mandarParaOficina();
+            }}
+          />
           <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); toast.success("Salvo"); }}>
             <Save className="mr-1 h-4 w-4" /> Salvar
           </Button>
-          <Button size="sm" variant="outline" className="shrink-0" onClick={exportarOrcamento}>
-            <Download className="mr-1 h-4 w-4" /> Orçamento
-          </Button>
-          <Button size="sm" variant="outline" className="shrink-0" onClick={() => gerarContratoPDF({ ...projeto, total: resultado.totalGeral }, empresa)}>
-            <FileSignature className="mr-1 h-4 w-4" /> Contrato
-          </Button>
-          {projeto.status === "orcamento" && (
-            <Button size="sm" variant="soft" className="shrink-0" onClick={marcarEnviado}>
-              <Send className="mr-1 h-4 w-4" /> {projeto.enviado_em ? "Registrar novo envio" : "Marcar como enviado"}
-            </Button>
-          )}
-          {projeto.status === "orcamento" && (
-            <Button size="sm" className="shrink-0 bg-gradient-orange text-primary-foreground shadow-orange" onClick={aprovarParaOficina}>
-              <Wrench className="mr-1 h-4 w-4" /> Aprovar e mandar para a oficina
-            </Button>
-          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="soft" size="sm" className="shrink-0">
