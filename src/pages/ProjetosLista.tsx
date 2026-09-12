@@ -300,7 +300,7 @@ export default function ProjetosLista() {
           );
         })}
       </div>
-      <DialogOrdemFinanceiro projeto={detalhe} onClose={() => setDetalhe(null)} />
+      <DialogOrdemFinanceiro projeto={detalhe} foco="comprovante" onClose={() => setDetalhe(null)} />
     </section>
   );
 }
