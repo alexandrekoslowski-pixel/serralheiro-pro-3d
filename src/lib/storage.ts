@@ -584,6 +584,8 @@ export function criarOrcamentoRapido(): ProjetoLocal {
     followup_em: null,
     followup_tentativa_em: null,
     followup_erro: "",
+    medicao: { largura_mm: null, altura_mm: null, observacoes: "" },
+    posvenda: { instalacao_ok: false, cliente_satisfeito: false, sem_problemas: false, retorno: "", concluido_em: null },
     created_at: agora,
     updated_at: agora,
   };
@@ -708,6 +710,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
         msgFollowUp: empresa.msgFollowUp,
         msgVisitaTecnica: empresa.msgVisitaTecnica,
         clausulasContrato: empresa.clausulasContrato,
+        metaSemanal: empresa.metaSemanal,
       },
       prazo_padrao_dias: empresa.prazoPadraoDias,
       limite_vermelho_dias: empresa.limiteVermelhoDias,
