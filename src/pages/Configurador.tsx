@@ -318,6 +318,7 @@ export default function Configurador() {
             </div>
           </div>
         </div>
+        <TrilhaOrcamento marcos={progressoOrcamento(projeto, listarPagamentos(projeto.id)).marcos} />
         <div className="flex flex-wrap items-center gap-2 border-t border-border pt-3">
           <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); toast.success("Salvo"); }}>
             <Save className="mr-1 h-4 w-4" /> Salvar
