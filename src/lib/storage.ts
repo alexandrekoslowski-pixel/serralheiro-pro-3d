@@ -226,6 +226,9 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
 let userId: string | null = null;
 /** Dono do cadastro único da serralheria (a linha de empresa usada por toda a equipe). */
 let empresaUserId: string | null = null;
+/** Conta dona da serralheria: todas as gravações usam esse id, mesmo para membros da equipe. */
+let donoId: string | null = null;
+const idDono = () => donoId ?? empresaUserId ?? userId;
 let projetos: ProjetoLocal[] = [];
 let pagamentos: Pagamento[] = [];
 let empresa: DadosEmpresa = { ...EMPRESA_PADRAO };
