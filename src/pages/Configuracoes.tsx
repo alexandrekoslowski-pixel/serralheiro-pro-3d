@@ -157,6 +157,11 @@ export default function Configuracoes() {
             <Input mask="inteiro" value={empresa.limiteAmareloDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteAmareloDias: Number(e.target.value) })} />
           </div>
+          <div>
+            <Label>Meta semanal de faturamento (R$)</Label>
+            <Input mask="moeda" value={String(empresa.metaSemanal ?? 40000).replace(".", ",")}
+              onChange={(e) => setEmpresa({ ...empresa, metaSemanal: numeroMascarado(e.target.value) })} />
+          </div>
         </div>
 
         <h2 className="font-display text-lg mt-6 mb-4">Proposta comercial (PDF do orçamento)</h2>

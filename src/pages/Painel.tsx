@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Upload, ExternalLink } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Upload, ExternalLink, Target } from "lucide-react";
+import { useSessao } from "@/lib/sessao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
