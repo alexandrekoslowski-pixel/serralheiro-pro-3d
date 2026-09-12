@@ -207,6 +207,32 @@ export default function ModoOficina() {
         )}
       </section>
 
+      {(projeto.medicao?.largura_mm || projeto.medicao?.altura_mm || projeto.medicao?.observacoes || fotosMedicao.length > 0) && (
+        <section className="px-6 py-5 border-t border-zinc-800 print:border-black">
+          <h2 className="text-orange-400 print:text-black text-sm font-black uppercase tracking-widest mb-3">Medição no local</h2>
+          <div className="flex flex-wrap items-baseline gap-x-8 gap-y-2">
+            {projeto.medicao?.largura_mm ? (
+              <p className="text-2xl font-black">Largura: {cm(projeto.medicao.largura_mm)} cm</p>
+            ) : null}
+            {projeto.medicao?.altura_mm ? (
+              <p className="text-2xl font-black">Altura: {cm(projeto.medicao.altura_mm)} cm</p>
+            ) : null}
+          </div>
+          {projeto.medicao?.observacoes ? (
+            <p className="mt-2 text-lg text-zinc-300 print:text-black">{projeto.medicao.observacoes}</p>
+          ) : null}
+          {fotosMedicao.length > 0 && (
+            <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4 print:grid-cols-2">
+              {fotosMedicao.map((f) =>
+                f.url ? (
+                  <img key={f.id} src={f.url} alt="Foto anotada da medição" className="w-full rounded border border-zinc-700 print:border-black" />
+                ) : null,
+              )}
+            </div>
+          )}
+        </section>
+      )}
+
       {respostasTecnicas.length > 0 && (
         <section className="px-6 py-5 border-t border-zinc-800 print:border-black">
           <h2 className="text-orange-400 print:text-black text-sm font-black uppercase tracking-widest mb-3">Checklist do pedido</h2>
