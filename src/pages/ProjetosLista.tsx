@@ -14,6 +14,7 @@ import {
 } from "@/lib/storage";
 import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/progressoOrcamento";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
+import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { tipologiaPorId } from "@/lib/tipologias";
 import { STATUS_LABEL, somarDias } from "@/lib/ordens";
 import { useDados } from "@/hooks/useDados";
@@ -260,6 +261,19 @@ export default function ProjetosLista() {
                   </p>
                 )}
               </Link>
+              <PassosOrcamento
+                className="mt-3"
+                somenteProximo
+                projeto={p}
+                pagamentos={pagamentos.filter((x) => x.projeto_id === p.id)}
+                onPasso={(id) => {
+                  if (id === "enviar") marcarEnviado(p);
+                  else if (id === "aprovar") aprovar(p);
+                  else if (id === "comprovante") setDetalhe(p);
+                  else if (id === "oficina") mandarParaOficina(p);
+                  else navigate(`/app/projeto/${p.id}`);
+                }}
+              />
               <div className="mt-3 flex gap-1 border-t border-border pt-3">
                 <Button size="sm" variant="soft" onClick={() => duplicar(p.id)}>
                   <Copy className="mr-1 h-3.5 w-3.5" /> Duplicar
