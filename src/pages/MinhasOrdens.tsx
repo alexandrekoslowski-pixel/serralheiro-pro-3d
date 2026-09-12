@@ -17,6 +17,11 @@ import { useSessao } from "@/lib/sessao";
 import { listarEquipe, MembroEquipe } from "@/lib/gestao";
 import { moverComResponsavel, etapaFotoDaOficina } from "@/lib/fotos";
 import { PainelFotos, FotosOrdemDialog } from "@/components/FotosOrdem";
+import { MedicaoDialog } from "@/components/MedicaoDialog";
+import { PosVendaDialog, posVendaLiberada } from "@/components/PosVendaDialog";
+import { temOcorrenciaAberta } from "@/lib/ocorrencias";
+import { obterProjeto } from "@/lib/storage";
+import { toast } from "sonner";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import { cm } from "@/lib/medidas";
 
@@ -88,6 +93,21 @@ export default function MinhasOrdens() {
   const confirmarMover = async () => {
     if (!mover) return;
     const { ordem, etapa } = mover;
+    if (etapa === "pronto") {
+      if (!posVendaLiberada(obterProjeto(ordem.id))) {
+        toast.error("Complete o checklist de pós-venda antes de concluir a ordem");
+        return;
+      }
+      try {
+        if (await temOcorrenciaAberta(ordem.id)) {
+          toast.error("Ainda há ocorrência aberta — resolva antes de concluir");
+          return;
+        }
+      } catch {
+        toast.error("Peça para a vendedora ou gestor concluir o pós-venda antes de finalizar");
+        return;
+      }
+    }
     setOrdens((lista) =>
       lista.map((x) =>
         x.id === ordem.id ? { ...x, etapa, etapa_em: new Date().toISOString(), responsavel } : x,
@@ -190,6 +210,10 @@ export default function MinhasOrdens() {
                               etapaInicial={etapaFotoDaOficina(o.etapa)}
                               total={o.fotos ?? 0}
                             />
+                            <MedicaoDialog projetoId={o.id} />
+                            {o.etapa === "pos_venda" && papel !== "serralheiro" ? (
+                              <PosVendaDialog projetoId={o.id} />
+                            ) : null}
                             {prox ? (
                               <Button size="sm" className="w-full" onClick={() => abrirMover(o, prox)}>
                                 <ArrowRight className="mr-1 h-3.5 w-3.5" /> {ETAPA_LABEL[prox]}

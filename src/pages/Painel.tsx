@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Upload, ExternalLink } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Upload, ExternalLink, Target } from "lucide-react";
+import { useSessao } from "@/lib/sessao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,7 @@ const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 export default function Painel() {
   const navigate = useNavigate();
   useDados();
+  const { papel } = useSessao();
   const projetos = listarProjetos();
   const empresa = obterEmpresa();
   const [busca, setBusca] = useState("");
@@ -91,6 +93,21 @@ export default function Painel() {
     );
     return { atual: calc(mesAtual), anterior: calc(mesAnterior), aReceber };
   }, [base, pagamentosBase]);
+
+  // Meta semanal: segunda-feira 00:00 até agora.
+  const metaSemana = useMemo(() => {
+    const agora = new Date();
+    const dia = (agora.getDay() + 6) % 7; // segunda = 0
+    const seg = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - dia);
+    const inicio = `${seg.getFullYear()}-${String(seg.getMonth() + 1).padStart(2, "0")}-${String(seg.getDate()).padStart(2, "0")}`;
+    const recebido = pagamentosBase.filter((p) => p.data >= inicio).reduce((s, p) => s + p.valor, 0);
+    const faturado = base
+      .filter((p) => (p.faturado_em ?? "") >= inicio)
+      .reduce((s, p) => s + (p.valor_faturado || 0), 0);
+    const meta = empresa.metaSemanal || 0;
+    const pct = meta > 0 ? Math.min(100, (recebido / meta) * 100) : 0;
+    return { recebido, faturado, meta, pct };
+  }, [base, pagamentosBase, empresa.metaSemanal]);
 
   const contagem = useMemo(() => {
     const c: Record<string, number> = {};
@@ -292,6 +309,32 @@ export default function Painel() {
           );
         })}
       </div>
+
+      {papel === "gestor" && metaSemana.meta > 0 && (
+        <div className="surface-card mt-3 rounded-lg border border-border p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 font-display text-sm uppercase tracking-wide text-muted-foreground">
+              <Target className="h-4 w-4 text-primary" /> Meta da semana
+            </h2>
+            <p className="text-sm">
+              <span className="font-semibold">{formatarBRL(metaSemana.recebido)}</span>
+              <span className="text-muted-foreground"> de {formatarBRL(metaSemana.meta)} recebidos</span>
+            </p>
+          </div>
+          <div className="mt-2 h-3 overflow-hidden rounded-full bg-muted">
+            <div
+              className={`h-full rounded-full transition-all ${metaSemana.pct >= 100 ? "bg-emerald-500" : "bg-primary"}`}
+              style={{ width: `${metaSemana.pct}%` }}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {metaSemana.pct >= 100
+              ? "Meta batida esta semana!"
+              : `${metaSemana.pct.toFixed(0)}% da meta · faltam ${formatarBRL(Math.max(0, metaSemana.meta - metaSemana.recebido))}`}
+            {" · "}faturado na semana: {formatarBRL(metaSemana.faturado)}
+          </p>
+        </div>
+      )}
 
       <div className="mt-3 flex flex-wrap gap-2">
         {STATUS_ORDEM.map((s) => (

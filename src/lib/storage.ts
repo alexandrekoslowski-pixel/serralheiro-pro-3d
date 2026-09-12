@@ -30,6 +30,22 @@ export interface Peca {
   checklist_respostas: RespostasChecklist;
 }
 
+/** Medição fina feita no local (em cima das fotos anotadas). */
+export interface MedicaoOS {
+  largura_mm: number | null;
+  altura_mm: number | null;
+  observacoes: string;
+}
+
+/** Checklist de pós-venda respondido pela vendedora/gestor. */
+export interface PosVendaOS {
+  instalacao_ok: boolean;
+  cliente_satisfeito: boolean;
+  sem_problemas: boolean;
+  retorno: string;
+  concluido_em: string | null;
+}
+
 export interface ProjetoLocal {
   id: string;
   nome: string;
@@ -79,6 +95,8 @@ export interface ProjetoLocal {
   followup_em: string | null;
   followup_tentativa_em: string | null;
   followup_erro: string;
+  medicao: MedicaoOS;
+  posvenda: PosVendaOS;
   created_at: string;
   updated_at: string;
 }
@@ -105,6 +123,8 @@ export interface DadosEmpresa {
   prazoPadraoDias: number;
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
+  /** Meta semanal de faturamento (R$) exibida no painel do gestor. */
+  metaSemanal: number;
   codigoOficina: string;
   /** Equipe de vendas */
   vendedoras: string[];
@@ -178,6 +198,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   prazoPadraoDias: 15,
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
+  metaSemanal: 40000,
   codigoOficina: "",
   vendedoras: [],
   empresasPintura: [],
@@ -231,6 +252,8 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   followup_em: null,
   followup_tentativa_em: null,
   followup_erro: "",
+  medicao: { largura_mm: null, altura_mm: null, observacoes: "" },
+  posvenda: { instalacao_ok: false, cliente_satisfeito: false, sem_problemas: false, retorno: "", concluido_em: null },
   overrides: {},
   extras: [],
   checklist_versao: CHECKLIST_VERSAO,
@@ -293,6 +316,8 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   base.cor = p0.cor;
   base.checklist_versao = Number(base.checklist_versao || CHECKLIST_VERSAO);
   base.checklist_respostas = normalizarRespostasChecklist(base.checklist_respostas);
+  base.medicao = { largura_mm: null, altura_mm: null, observacoes: "", ...(base.medicao ?? {}) };
+  base.posvenda = { instalacao_ok: false, cliente_satisfeito: false, sem_problemas: false, retorno: "", concluido_em: null, ...(base.posvenda ?? {}) };
   return base;
 };
 
@@ -376,6 +401,8 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     observacoes_proposta: p.observacoes_proposta,
     checklist_versao: p.checklist_versao,
     checklist_respostas: p.checklist_respostas,
+    medicao: p.medicao,
+    posvenda: p.posvenda,
   },
   updated_at: p.updated_at,
 });
@@ -557,6 +584,8 @@ export function criarOrcamentoRapido(): ProjetoLocal {
     followup_em: null,
     followup_tentativa_em: null,
     followup_erro: "",
+    medicao: { largura_mm: null, altura_mm: null, observacoes: "" },
+    posvenda: { instalacao_ok: false, cliente_satisfeito: false, sem_problemas: false, retorno: "", concluido_em: null },
     created_at: agora,
     updated_at: agora,
   };
@@ -681,6 +710,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
         msgFollowUp: empresa.msgFollowUp,
         msgVisitaTecnica: empresa.msgVisitaTecnica,
         clausulasContrato: empresa.clausulasContrato,
+        metaSemanal: empresa.metaSemanal,
       },
       prazo_padrao_dias: empresa.prazoPadraoDias,
       limite_vermelho_dias: empresa.limiteVermelhoDias,
