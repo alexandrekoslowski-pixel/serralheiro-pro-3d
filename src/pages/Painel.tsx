@@ -27,6 +27,8 @@ import { useVendedores } from "@/hooks/useVendedores";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 import { numeroMascarado } from "@/lib/mascaras";
 import { anexarComprovante, abrirComprovante } from "@/lib/comprovantes";
+import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/progressoOrcamento";
+import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
