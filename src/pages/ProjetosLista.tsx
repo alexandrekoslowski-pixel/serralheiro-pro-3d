@@ -146,6 +146,12 @@ export default function ProjetosLista() {
                     {new Date(p.updated_at).toLocaleDateString("pt-BR")}
                   </div>
                 </div>
+                <TrilhaOrcamento compacta className="mt-3" marcos={progressos.get(p.id)?.marcos ?? []} />
+                {(progressos.get(p.id)?.pendencias.length ?? 0) > 0 && (
+                  <p className="mt-1.5 text-[11px] font-medium text-amber-500">
+                    Falta: {progressos.get(p.id)!.pendencias.map((t) => ROTULO_PENDENCIA[t]).join(" · ")}
+                  </p>
+                )}
               </Link>
               <div className="mt-3 flex gap-1 border-t border-border pt-3">
                 <Button size="sm" variant="soft" onClick={() => duplicar(p.id)}>
