@@ -88,6 +88,30 @@ export default function ProjetosLista() {
         <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou cliente" className="pl-9" />
       </div>
 
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
+          .filter((t) => contagemPend[t] > 0)
+          .map((t) => (
+            <button
+              key={t}
+              onClick={() => setPend((f) => (f === t ? null : t))}
+              className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+                pend === t ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
+              }`}
+            >
+              {ROTULO_PENDENCIA[t]} <strong className="ml-1">{contagemPend[t]}</strong>
+            </button>
+          ))}
+        <button
+          onClick={() => setOrdem((o) => (o === "parados" ? "recentes" : "parados"))}
+          className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+            ordem === "parados" ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
+          }`}
+        >
+          Parados há mais tempo
+        </button>
+      </div>
+
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filtrados.length === 0 && (
           <div className="surface-card col-span-full grid place-items-center rounded-lg border border-dashed border-border p-12 text-center">
