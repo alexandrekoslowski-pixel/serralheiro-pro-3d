@@ -518,7 +518,11 @@ export default function Painel() {
                     <p className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {tipologiaPorId(p.tipologia).nome}</p>
                     {p.vendedora && <p className="truncate text-[11px] text-muted-foreground">Venda: {p.vendedora}</p>}
                     {p.enviado_em && <p className="truncate text-[11px] text-muted-foreground">Enviado em {new Date(p.enviado_em).toLocaleDateString("pt-BR")}</p>}
-                  {p.status !== "orcamento" && totalRecebido(p.id) <= 0 && <p className="text-[11px] font-medium text-amber-500">Comprovante pendente</p>}
+                    {(progressos.get(p.id)?.pendencias.length ?? 0) > 0 && (
+                      <p className="text-[11px] font-medium text-amber-500">
+                        Falta: {progressos.get(p.id)!.pendencias.map((t) => ROTULO_PENDENCIA[t]).join(" · ")}
+                      </p>
+                    )}
                   </div>
                   <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-medium uppercase ${STATUS_CORES[p.status].badge}`}>
                     {STATUS_LABEL[p.status]}
