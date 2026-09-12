@@ -24,13 +24,38 @@ export default function ProjetosLista() {
   useDados();
   const projetos = listarProjetos();
   const [busca, setBusca] = useState("");
+  const [pend, setPend] = useState<TipoPendencia | null>(null);
+  const [ordem, setOrdem] = useState<"recentes" | "parados">("recentes");
+  const pagamentos = listarPagamentos();
+
+  const progressos = useMemo(() => {
+    const porOrdem = new Map<string, typeof pagamentos>();
+    for (const x of pagamentos) {
+      const atual = porOrdem.get(x.projeto_id) ?? [];
+      atual.push(x);
+      porOrdem.set(x.projeto_id, atual);
+    }
+    return new Map(projetos.map((p) => [p.id, progressoOrcamento(p, porOrdem.get(p.id) ?? [])]));
+  }, [projetos, pagamentos]);
+
+  const contagemPend = useMemo(() => {
+    const c: Record<TipoPendencia, number> = { enviar: 0, retorno: 0, comprovante: 0, fila: 0 };
+    for (const prog of progressos.values()) for (const t of prog.pendencias) c[t] += 1;
+    return c;
+  }, [progressos]);
 
   const filtrados = useMemo(() => {
     const q = busca.toLowerCase().trim();
-    return projetos.filter(
-      (p) => !q || p.nome.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q),
-    );
-  }, [projetos, busca]);
+    const lista = projetos.filter((p) => {
+      const okBusca = !q || p.nome.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q);
+      const okPend = !pend || (progressos.get(p.id)?.pendencias.includes(pend) ?? false);
+      return okBusca && okPend;
+    });
+    if (ordem === "parados") {
+      return [...lista].sort((a, b) => (progressos.get(b.id)?.diasParado ?? 0) - (progressos.get(a.id)?.diasParado ?? 0));
+    }
+    return lista;
+  }, [projetos, busca, pend, ordem, progressos]);
 
   const criar = () => {
     const novo = criarOrcamentoRapido();
