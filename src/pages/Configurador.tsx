@@ -1101,7 +1101,7 @@ export default function Configurador() {
           </Tabs>
         </div>
       {financeiroAberto && (
-        <DialogOrdemFinanceiro projeto={projeto} onClose={() => setFinanceiroAberto(false)} />
+        <DialogOrdemFinanceiro projeto={projeto} foco="comprovante" onClose={() => setFinanceiroAberto(false)} />
       )}
     </div>
   );

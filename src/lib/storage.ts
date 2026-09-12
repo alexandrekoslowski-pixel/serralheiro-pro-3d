@@ -226,6 +226,9 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
 let userId: string | null = null;
 /** Dono do cadastro único da serralheria (a linha de empresa usada por toda a equipe). */
 let empresaUserId: string | null = null;
+/** Conta dona da serralheria: todas as gravações usam esse id, mesmo para membros da equipe. */
+let donoId: string | null = null;
+const idDono = () => donoId ?? empresaUserId ?? userId;
 let projetos: ProjetoLocal[] = [];
 let pagamentos: Pagamento[] = [];
 let empresa: DadosEmpresa = { ...EMPRESA_PADRAO };
@@ -362,7 +365,7 @@ const linhaParaProjeto = (row: Record<string, unknown>): ProjetoLocal =>
 
 const projetoParaLinha = (p: ProjetoLocal) => ({
   id: p.id,
-  user_id: userId,
+  user_id: idDono(),
   nome: p.nome,
   cliente: p.cliente,
   status: p.status,
@@ -428,6 +431,8 @@ const lerLocais = (): ProjetoLocal[] =>
 /** Carrega tudo da nuvem para a memória. Deve rodar antes de exibir o app. */
 export async function hidratarNuvem(uid: string): Promise<void> {
   userId = uid;
+  const { data: donoRpc } = await supabase.rpc("dono_atual", { _user_id: uid });
+  donoId = (donoRpc as string | null) ?? uid;
 
   const [proj, pag, emp, cat] = await Promise.all([
     supabase.from("projetos").select("*").order("updated_at", { ascending: false }),
@@ -517,6 +522,8 @@ export async function importarLocaisParaNuvem(): Promise<number> {
 
 export function limparMemoria(): void {
   userId = null;
+  donoId = null;
+  empresaUserId = null;
   projetos = [];
   pagamentos = [];
   empresa = { ...EMPRESA_PADRAO };
@@ -673,7 +680,7 @@ export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<Paga
   if (!userId) return;
   const { data, error } = await supabase
     .from("pagamentos")
-    .insert({ ...p, user_id: userId } as never)
+    .insert({ ...p, user_id: idDono() } as never)
     .select()
     .single();
   if (error) throw error;
@@ -748,7 +755,7 @@ export function salvarCatalogo(c: Catalogo): void {
   notificar();
   if (userId) {
     void supabase.from("catalogo").upsert({
-      user_id: userId, dados: c as unknown as Record<string, unknown>,
+      user_id: idDono(), dados: c as unknown as Record<string, unknown>,
       updated_at: new Date().toISOString(),
     } as never).then(({ error }) => { if (error) console.error("Falha ao salvar catálogo", error); });
   }
