@@ -87,11 +87,26 @@ export default function ProjetosLista() {
       ...p,
       status: "aprovado",
       aprovado_em: p.aprovado_em ?? agora,
+      aguardando_oficina: false,
       etapa: "fila",
       etapa_em: agora,
       prazo_entrega: p.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
     });
     toast.success("Ordem enviada para a oficina");
+  };
+
+  const aprovar = (p: ProjetoLocal) => {
+    const agora = new Date().toISOString();
+    salvarProjeto({
+      ...p,
+      status: "aprovado",
+      aprovado_em: p.aprovado_em ?? agora,
+      aguardando_oficina: true,
+      etapa: "fila",
+      etapa_em: agora,
+      prazo_entrega: p.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+    });
+    toast.success("Orçamento aprovado");
   };
 
   const filtrados = useMemo(() => {
