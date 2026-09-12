@@ -30,6 +30,22 @@ export interface Peca {
   checklist_respostas: RespostasChecklist;
 }
 
+/** Medição fina feita no local (em cima das fotos anotadas). */
+export interface MedicaoOS {
+  largura_mm: number | null;
+  altura_mm: number | null;
+  observacoes: string;
+}
+
+/** Checklist de pós-venda respondido pela vendedora/gestor. */
+export interface PosVendaOS {
+  instalacao_ok: boolean;
+  cliente_satisfeito: boolean;
+  sem_problemas: boolean;
+  retorno: string;
+  concluido_em: string | null;
+}
+
 export interface ProjetoLocal {
   id: string;
   nome: string;
@@ -79,6 +95,8 @@ export interface ProjetoLocal {
   followup_em: string | null;
   followup_tentativa_em: string | null;
   followup_erro: string;
+  medicao: MedicaoOS;
+  posvenda: PosVendaOS;
   created_at: string;
   updated_at: string;
 }
