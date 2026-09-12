@@ -365,7 +365,7 @@ const linhaParaProjeto = (row: Record<string, unknown>): ProjetoLocal =>
 
 const projetoParaLinha = (p: ProjetoLocal) => ({
   id: p.id,
-  user_id: userId,
+  user_id: idDono(),
   nome: p.nome,
   cliente: p.cliente,
   status: p.status,
@@ -431,6 +431,8 @@ const lerLocais = (): ProjetoLocal[] =>
 /** Carrega tudo da nuvem para a memória. Deve rodar antes de exibir o app. */
 export async function hidratarNuvem(uid: string): Promise<void> {
   userId = uid;
+  const { data: donoRpc } = await supabase.rpc("dono_atual", { _user_id: uid });
+  donoId = (donoRpc as string | null) ?? uid;
 
   const [proj, pag, emp, cat] = await Promise.all([
     supabase.from("projetos").select("*").order("updated_at", { ascending: false }),
@@ -676,7 +678,7 @@ export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<Paga
   if (!userId) return;
   const { data, error } = await supabase
     .from("pagamentos")
-    .insert({ ...p, user_id: userId } as never)
+    .insert({ ...p, user_id: idDono() } as never)
     .select()
     .single();
   if (error) throw error;
@@ -751,7 +753,7 @@ export function salvarCatalogo(c: Catalogo): void {
   notificar();
   if (userId) {
     void supabase.from("catalogo").upsert({
-      user_id: userId, dados: c as unknown as Record<string, unknown>,
+      user_id: idDono(), dados: c as unknown as Record<string, unknown>,
       updated_at: new Date().toISOString(),
     } as never).then(({ error }) => { if (error) console.error("Falha ao salvar catálogo", error); });
   }
