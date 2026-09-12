@@ -34,8 +34,10 @@ import {
 } from "@/lib/tipologias";
 import {
   ProjetoLocal, Peca, OrdemStatus, obterProjeto, salvarProjeto, duplicarProjeto,
-  obterEmpresa, obterCatalogo, formatarBRL, gerarId,
+  obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
 } from "@/lib/storage";
+import { progressoOrcamento } from "@/lib/progressoOrcamento";
+import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { STATUS_ORDEM, STATUS_LABEL, somarDias } from "@/lib/ordens";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
