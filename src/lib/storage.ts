@@ -95,6 +95,12 @@ export interface ProjetoLocal {
   followup_em: string | null;
   followup_tentativa_em: string | null;
   followup_erro: string;
+  /** Quando o PDF do orçamento foi gerado pela última vez. */
+  orcamento_pdf_em: string | null;
+  /** Quando o contrato foi gerado pela última vez. */
+  contrato_pdf_em: string | null;
+  /** Aprovado, mas ainda não liberado para a oficina. */
+  aguardando_oficina: boolean;
   medicao: MedicaoOS;
   posvenda: PosVendaOS;
   created_at: string;
@@ -252,6 +258,9 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   followup_em: null,
   followup_tentativa_em: null,
   followup_erro: "",
+  orcamento_pdf_em: null,
+  contrato_pdf_em: null,
+  aguardando_oficina: false,
   medicao: { largura_mm: null, altura_mm: null, observacoes: "" },
   posvenda: { instalacao_ok: false, cliente_satisfeito: false, sem_problemas: false, retorno: "", concluido_em: null },
   overrides: {},
@@ -403,6 +412,9 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     checklist_respostas: p.checklist_respostas,
     medicao: p.medicao,
     posvenda: p.posvenda,
+    orcamento_pdf_em: p.orcamento_pdf_em,
+    contrato_pdf_em: p.contrato_pdf_em,
+    aguardando_oficina: p.aguardando_oficina,
   },
   updated_at: p.updated_at,
 });
