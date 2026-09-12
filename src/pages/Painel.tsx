@@ -184,7 +184,8 @@ export default function Painel() {
         filtroPrazo === "todos" ? true :
         filtroPrazo === "atrasadas" ? aberta && d !== null && d < 0 :
         aberta && d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
-      return okBusca && okStatus && okPrazo;
+      const okPend = !filtroPend || (progressos.get(p.id)?.pendencias.includes(filtroPend) ?? false);
+      return okBusca && okStatus && okPrazo && okPend;
     });
     const peso = (p: ProjetoLocal) => {
       if (p.status === "entregue" || p.status === "faturado") return 9999;
@@ -192,7 +193,7 @@ export default function Painel() {
       return d === null ? 9000 : d;
     };
     return [...filtrados].sort((a, b) => peso(a) - peso(b));
-  }, [base, busca, filtro, filtroPrazo, empresa]);
+  }, [base, busca, filtro, filtroPrazo, empresa, filtroPend, progressos]);
 
   const avancar = (p: ProjetoLocal) => {
     const prox = proximoStatus(p.status);
