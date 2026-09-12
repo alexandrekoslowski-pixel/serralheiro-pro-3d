@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Plus, Copy, Trash2, FolderOpen, Search } from "lucide-react";
+import { Plus, Copy, Trash2, FolderOpen, Search, Send, MessageCircle, Upload, Wrench, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,14 +10,16 @@ import {
 import { toast } from "sonner";
 import {
   deletarProjeto, duplicarProjeto, criarOrcamentoRapido,
-  listarProjetos, formatarBRL, listarPagamentos,
+  listarProjetos, formatarBRL, listarPagamentos, obterEmpresa, salvarProjeto, type ProjetoLocal,
 } from "@/lib/storage";
 import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/progressoOrcamento";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { tipologiaPorId } from "@/lib/tipologias";
-import { STATUS_LABEL } from "@/lib/ordens";
+import { STATUS_LABEL, somarDias } from "@/lib/ordens";
 import { useDados } from "@/hooks/useDados";
 import { cm } from "@/lib/medidas";
+import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
+import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 
 export default function ProjetosLista() {
   const navigate = useNavigate();
@@ -26,7 +28,9 @@ export default function ProjetosLista() {
   const [busca, setBusca] = useState("");
   const [pend, setPend] = useState<TipoPendencia | null>(null);
   const [ordem, setOrdem] = useState<"recentes" | "parados">("recentes");
+  const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
   const pagamentos = listarPagamentos();
+  const empresa = obterEmpresa();
 
   const progressos = useMemo(() => {
     const porOrdem = new Map<string, typeof pagamentos>();
@@ -43,6 +47,52 @@ export default function ProjetosLista() {
     for (const prog of progressos.values()) for (const t of prog.pendencias) c[t] += 1;
     return c;
   }, [progressos]);
+
+  const pendencias = useMemo(() => {
+    const itens: { tipo: TipoPendencia; projeto: ProjetoLocal; dias: number }[] = [];
+    for (const projeto of projetos) {
+      const progresso = progressos.get(projeto.id);
+      if (!progresso) continue;
+      for (const tipo of progresso.pendencias) itens.push({ tipo, projeto, dias: progresso.diasParado });
+    }
+    return itens.sort((a, b) => b.dias - a.dias);
+  }, [projetos, progressos]);
+
+  const pendenciasVisiveis = pend ? pendencias.filter((item) => item.tipo === pend) : pendencias;
+
+  const marcarEnviado = (p: ProjetoLocal) => {
+    salvarProjeto({ ...p, enviado_em: new Date().toISOString(), followup_status: "aguardando", followup_em: null });
+    toast.success("Envio registrado — retorno em 3 dias, se precisar");
+  };
+
+  const abrirFollowup = (p: ProjetoLocal) => {
+    const telefone = p.cliente_telefone.replace(/\D/g, "");
+    if (!telefone) { toast.error("Cadastre o WhatsApp do cliente"); return; }
+    window.open(`https://wa.me/55${telefone}?text=${encodeURIComponent(empresa.msgFollowUp)}`, "_blank", "noopener,noreferrer");
+    salvarProjeto({ ...p, followup_status: "feito", followup_em: new Date().toISOString(), followup_tentativa_em: new Date().toISOString(), followup_erro: "" });
+  };
+
+  const mandarParaOficina = (p: ProjetoLocal) => {
+    const pendentes = [
+      ...pendentesComunsChecklist(p.checklist_respostas ?? {}),
+      ...p.pecas.flatMap((peca) => pendentesPecaChecklist(peca.tipologia, peca.checklist_respostas ?? {})),
+    ];
+    if (pendentes.length > 0) {
+      toast.error(`Complete o checklist antes de aprovar (${pendentes.length} pendente${pendentes.length === 1 ? "" : "s"})`);
+      navigate(`/app/projeto/${p.id}`, { state: { abrirChecklist: true } });
+      return;
+    }
+    const agora = new Date().toISOString();
+    salvarProjeto({
+      ...p,
+      status: "aprovado",
+      aprovado_em: p.aprovado_em ?? agora,
+      etapa: "fila",
+      etapa_em: agora,
+      prazo_entrega: p.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+    });
+    toast.success("Ordem enviada para a oficina");
+  };
 
   const filtrados = useMemo(() => {
     const q = busca.toLowerCase().trim();
@@ -88,29 +138,71 @@ export default function ProjetosLista() {
         <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou cliente" className="pl-9" />
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+      <div className="mt-4 flex flex-wrap items-center gap-1.5">
         {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
           .filter((t) => contagemPend[t] > 0)
           .map((t) => (
-            <button
+            <Button
               key={t}
+              type="button"
+              size="sm"
+              variant="outline"
               onClick={() => setPend((f) => (f === t ? null : t))}
-              className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
-                pend === t ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
-              }`}
+              className={pend === t ? "border-primary bg-primary/15 text-foreground" : "text-muted-foreground"}
             >
               {ROTULO_PENDENCIA[t]} <strong className="ml-1">{contagemPend[t]}</strong>
-            </button>
+            </Button>
           ))}
-        <button
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
           onClick={() => setOrdem((o) => (o === "parados" ? "recentes" : "parados"))}
-          className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
-            ordem === "parados" ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
-          }`}
+          className={ordem === "parados" ? "border-primary bg-primary/15 text-foreground" : "text-muted-foreground"}
         >
           Parados há mais tempo
-        </button>
+        </Button>
       </div>
+
+      <section className="mt-4 border-y border-border py-4" aria-labelledby="tarefas-vendas">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 id="tarefas-vendas" className="font-display text-lg">O que falta fazer</h2>
+            <p className="text-xs text-muted-foreground">Mais antigos primeiro</p>
+          </div>
+          <span className="text-sm font-medium text-muted-foreground">{pendenciasVisiveis.length} pendência(s)</span>
+        </div>
+
+        {pendenciasVisiveis.length === 0 ? (
+          <p className="mt-4 flex items-center gap-2 text-sm text-emerald-500">
+            <CheckCircle2 className="h-4 w-4" /> Tudo em dia — nenhum orçamento parado.
+          </p>
+        ) : (
+          <div className="mt-3 divide-y divide-border border-y border-border">
+            {pendenciasVisiveis.map(({ tipo, projeto: p, dias }) => (
+              <div key={`${tipo}-${p.id}`} className="grid gap-3 py-3 md:grid-cols-[minmax(0,1.5fr)_minmax(120px,.7fr)_auto_auto] md:items-center">
+                <div className="min-w-0">
+                  <Link to={`/app/projeto/${p.id}`} className="block truncate font-medium hover:underline">{p.cliente || p.nome}</Link>
+                  <p className="truncate text-xs text-muted-foreground">{p.nome}{p.vendedora ? ` · Venda: ${p.vendedora}` : " · Sem vendedor(a)"}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium">{ROTULO_PENDENCIA[tipo]}</p>
+                  <p className="text-xs text-muted-foreground">{formatarBRL(p.total)}</p>
+                </div>
+                <span className={`w-fit rounded px-2 py-1 text-xs ${dias >= 3 ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                  parado há {dias} {dias === 1 ? "dia" : "dias"}
+                </span>
+                <div className="flex md:justify-end">
+                  {tipo === "enviar" && <Button size="sm" variant="soft" onClick={() => marcarEnviado(p)}><Send className="mr-1 h-3.5 w-3.5" /> Marcar como enviado</Button>}
+                  {tipo === "retorno" && <Button size="sm" variant="outline" onClick={() => abrirFollowup(p)}><MessageCircle className="mr-1 h-3.5 w-3.5" /> Retomar no WhatsApp</Button>}
+                  {tipo === "comprovante" && <Button size="sm" variant="soft" onClick={() => setDetalhe(p)}><Upload className="mr-1 h-3.5 w-3.5" /> Anexar comprovante</Button>}
+                  {tipo === "fila" && <Button size="sm" variant="soft" onClick={() => mandarParaOficina(p)}><Wrench className="mr-1 h-3.5 w-3.5" /> Mandar para a oficina</Button>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {filtrados.length === 0 && (
@@ -179,6 +271,7 @@ export default function ProjetosLista() {
           );
         })}
       </div>
+      <DialogOrdemFinanceiro projeto={detalhe} onClose={() => setDetalhe(null)} />
     </section>
   );
 }
