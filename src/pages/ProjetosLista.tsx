@@ -142,24 +142,26 @@ export default function ProjetosLista() {
         {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
           .filter((t) => contagemPend[t] > 0)
           .map((t) => (
-            <button
+            <Button
               key={t}
+              type="button"
+              size="sm"
+              variant="outline"
               onClick={() => setPend((f) => (f === t ? null : t))}
-              className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
-                pend === t ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
-              }`}
+              className={pend === t ? "border-primary bg-primary/15 text-foreground" : "text-muted-foreground"}
             >
               {ROTULO_PENDENCIA[t]} <strong className="ml-1">{contagemPend[t]}</strong>
-            </button>
+            </Button>
           ))}
-        <button
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
           onClick={() => setOrdem((o) => (o === "parados" ? "recentes" : "parados"))}
-          className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
-            ordem === "parados" ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
-          }`}
+          className={ordem === "parados" ? "border-primary bg-primary/15 text-foreground" : "text-muted-foreground"}
         >
           Parados há mais tempo
-        </button>
+        </Button>
       </div>
 
       <section className="mt-4 border-y border-border py-4" aria-labelledby="tarefas-vendas">

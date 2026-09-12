@@ -15,13 +15,13 @@ import {
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
-  diasRestantes, somarDias, dataISO, ETAPA_LABEL,
+  diasRestantes, somarDias, ETAPA_LABEL,
 } from "@/lib/ordens";
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
 import { useVendedores } from "@/hooks/useVendedores";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
-import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/progressoOrcamento";
+import { progressoOrcamento, ROTULO_PENDENCIA } from "@/lib/progressoOrcamento";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 
