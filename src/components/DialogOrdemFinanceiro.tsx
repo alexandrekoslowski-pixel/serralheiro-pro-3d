@@ -21,16 +21,18 @@ import { STATUS_LABEL, STATUS_ORDEM, dataISO } from "@/lib/ordens";
 import { numeroMascarado } from "@/lib/mascaras";
 import { anexarComprovante, abrirComprovante } from "@/lib/comprovantes";
 import { useDados } from "@/hooks/useDados";
+import { CampoArquivo } from "@/components/CampoArquivo";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
-export function DialogOrdemFinanceiro({ projeto, onClose }: { projeto: ProjetoLocal | null; onClose: () => void }) {
+export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: ProjetoLocal | null; onClose: () => void; foco?: "comprovante" }) {
   useDados();
   const [valor, setValor] = useState("");
   const [data, setData] = useState(dataISO(new Date()));
   const [forma, setForma] = useState("pix");
   const [obs, setObs] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
+  const [enviando, setEnviando] = useState(false);
 
   if (!projeto) return null;
   const atual = listarProjetos().find((p) => p.id === projeto.id) ?? projeto;
@@ -41,6 +43,7 @@ export function DialogOrdemFinanceiro({ projeto, onClose }: { projeto: ProjetoLo
   const lancar = async () => {
     const v = numeroMascarado(valor);
     if (!v || v <= 0) { toast.error("Informe o valor recebido"); return; }
+    setEnviando(true);
     try {
       const pagamento = await adicionarPagamento({ projeto_id: atual.id, data, valor: v, forma, observacao: obs, comprovante_caminho: null, comprovante_nome: null, comprovante_tipo: null, comprovante_enviado_em: null });
       if (arquivo) {
@@ -48,8 +51,22 @@ export function DialogOrdemFinanceiro({ projeto, onClose }: { projeto: ProjetoLo
         registrarComprovanteLocal(pagamento.id, caminho, arquivo.name, arquivo.type);
       }
       setValor(""); setObs(""); setArquivo(null);
-      toast.success("Pagamento lançado");
-    } catch { toast.error("Não foi possível lançar o pagamento"); }
+      toast.success(arquivo ? "Pagamento lançado com comprovante" : "Pagamento lançado");
+    } catch (erro) {
+      toast.error(erro instanceof Error ? erro.message : "Não foi possível lançar o pagamento");
+    } finally {
+      setEnviando(false);
+    }
+  };
+
+  const anexarEm = async (pagamentoId: string, f: File) => {
+    try {
+      const caminho = await anexarComprovante(pagamentoId, atual.id, f);
+      registrarComprovanteLocal(pagamentoId, caminho, f.name, f.type);
+      toast.success("Comprovante anexado");
+    } catch (erro) {
+      toast.error(erro instanceof Error ? erro.message : "Não foi possível anexar o comprovante");
+    }
   };
 
   return (
