@@ -226,17 +226,18 @@ export function gerarOrcamentoPDF(
   // ===== Prazo em destaque =====
   yTot += 10;
   const previsao = somarDiasUteis(prazoDias).toLocaleDateString("pt-BR");
-  doc.setFillColor(248, 246, 244);
-  doc.rect(margin, yTot - 5, larguraUtil, 12, "F");
-  doc.setTextColor(...DARK);
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
-  doc.text(
+  const prazoLinhas = doc.splitTextToSize(
     `Prazo de entrega: aproximadamente ${prazoDias} dias úteis após a confirmação do pagamento da entrada (previsão ${previsao}).`,
-    margin + 3,
-    yTot + 2,
-  );
-  yTot += 16;
+    larguraUtil - 6,
+  ) as string[];
+  const prazoAlt = 4 + prazoLinhas.length * 4.5;
+  doc.setFillColor(248, 246, 244);
+  doc.rect(margin, yTot - 4, larguraUtil, prazoAlt, "F");
+  doc.setTextColor(...DARK);
+  doc.text(prazoLinhas, margin + 3, yTot + 1);
+  yTot += prazoAlt + 5;
 
   // ===== Observações da proposta =====
   if (projeto.observacoes_proposta) {
