@@ -1,21 +1,17 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Upload, ExternalLink, Target, Send, CheckCircle2, Wrench } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Target, Send } from "lucide-react";
 import { useSessao } from "@/lib/sessao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
 } from "@/components/ui/select";
-import {
-  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useDados } from "@/hooks/useDados";
 import {
   ProjetoLocal, listarProjetos, obterEmpresa, salvarProjeto, criarOrcamentoRapido, formatarBRL,
-  listarPagamentos, totalRecebido, adicionarPagamento, removerPagamento, registrarComprovanteLocal, OrdemStatus,
+  listarPagamentos, totalRecebido, OrdemStatus,
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
@@ -25,12 +21,9 @@ import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
 import { useVendedores } from "@/hooks/useVendedores";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
-import { numeroMascarado } from "@/lib/mascaras";
-import { anexarComprovante, abrirComprovante } from "@/lib/comprovantes";
 import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/progressoOrcamento";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
-
-const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
+import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 
 export default function Painel() {
   const navigate = useNavigate();
@@ -43,7 +36,6 @@ export default function Painel() {
   const [vendedora, setVendedora] = useState("todas");
   const [filtroPrazo, setFiltroPrazo] = useState<"todos" | "atrasadas" | "urgentes">("todos");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
-  const [filtroPend, setFiltroPend] = useState<TipoPendencia | null>(null);
 
   const marcarEnviado = (p: ProjetoLocal) => {
     salvarProjeto({ ...p, enviado_em: new Date().toISOString(), followup_status: "aguardando", followup_em: null });
@@ -83,26 +75,6 @@ export default function Painel() {
     }
     return new Map(base.map((p) => [p.id, progressoOrcamento(p, porOrdem.get(p.id) ?? [])]));
   }, [base, pagamentosBase]);
-
-  // O que falta fazer, agrupado por tipo e do mais parado para o mais recente.
-  const pendencias = useMemo(() => {
-    const grupos: Record<TipoPendencia, ProjetoLocal[]> = { enviar: [], retorno: [], comprovante: [], fila: [] };
-    for (const p of base) {
-      const prog = progressos.get(p.id);
-      if (!prog) continue;
-      for (const t of prog.pendencias) grupos[t].push(p);
-    }
-    const ordenar = (lista: ProjetoLocal[]) =>
-      [...lista].sort((a, b) => (progressos.get(b.id)?.diasParado ?? 0) - (progressos.get(a.id)?.diasParado ?? 0));
-    return {
-      enviar: ordenar(grupos.enviar),
-      retorno: ordenar(grupos.retorno),
-      comprovante: ordenar(grupos.comprovante),
-      fila: ordenar(grupos.fila),
-    };
-  }, [base, progressos]);
-
-  const totalPendencias = pendencias.enviar.length + pendencias.retorno.length + pendencias.comprovante.length + pendencias.fila.length;
 
   // Resumo do mês (e do mês anterior, para comparar).
   const resumo = useMemo(() => {
@@ -175,7 +147,6 @@ export default function Painel() {
     const filtrados = base.filter((p) => {
       const okBusca = !q || p.nome.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q);
       const okStatus =
-        filtroPend ? true :
         filtro === "todos" ? true :
         filtro === "abertos" ? p.status !== "faturado" && p.status !== "entregue" :
         p.status === filtro;
@@ -185,8 +156,7 @@ export default function Painel() {
         filtroPrazo === "todos" ? true :
         filtroPrazo === "atrasadas" ? aberta && d !== null && d < 0 :
         aberta && d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
-      const okPend = !filtroPend || (progressos.get(p.id)?.pendencias.includes(filtroPend) ?? false);
-      return okBusca && okStatus && okPrazo && okPend;
+      return okBusca && okStatus && okPrazo;
     });
     const peso = (p: ProjetoLocal) => {
       if (p.status === "entregue" || p.status === "faturado") return 9999;
@@ -194,7 +164,7 @@ export default function Painel() {
       return d === null ? 9000 : d;
     };
     return [...filtrados].sort((a, b) => peso(a) - peso(b));
-  }, [base, busca, filtro, filtroPrazo, empresa, filtroPend, progressos]);
+  }, [base, busca, filtro, filtroPrazo, empresa]);
 
   const avancar = (p: ProjetoLocal) => {
     const prox = proximoStatus(p.status);
@@ -326,89 +296,6 @@ export default function Painel() {
           )}
         </div>
       )}
-
-      {/* O que falta fazer em cada orçamento */}
-      <div className="surface-card mt-4 rounded-lg border border-border p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="font-display text-sm uppercase tracking-wide text-muted-foreground">O que falta fazer</h2>
-          {totalPendencias > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
-                .filter((t) => pendencias[t].length > 0)
-                .map((t) => (
-                  <button
-                    key={t}
-                    onClick={() => setFiltroPend((f) => (f === t ? null : t))}
-                    className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
-                      filtroPend === t ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
-                    }`}
-                  >
-                    {ROTULO_PENDENCIA[t]} <strong className="ml-1">{pendencias[t].length}</strong>
-                  </button>
-                ))}
-            </div>
-          )}
-        </div>
-
-        {totalPendencias === 0 ? (
-          <p className="mt-3 flex items-center gap-2 text-sm text-emerald-500">
-            <CheckCircle2 className="h-4 w-4" /> Tudo em dia — nenhum orçamento parado.
-          </p>
-        ) : (
-          <div className="mt-3 space-y-3">
-            {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
-              .filter((t) => pendencias[t].length > 0 && (!filtroPend || filtroPend === t))
-              .map((t) => (
-                <div key={t}>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    {ROTULO_PENDENCIA[t]} · {pendencias[t].length}
-                  </p>
-                  <div className="mt-1.5 space-y-1.5">
-                    {pendencias[t].slice(0, 6).map((p) => {
-                      const d = progressos.get(p.id)?.diasParado ?? 0;
-                      return (
-                        <div key={`${t}-${p.id}`} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/60 px-3 py-2 text-sm">
-                          <Link to={`/app/projeto/${p.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
-                            {p.cliente || p.nome}
-                          </Link>
-                          <span className="shrink-0 text-xs text-muted-foreground">{formatarBRL(p.total)}</span>
-                          <span className={`shrink-0 rounded px-2 py-0.5 text-[11px] ${d >= 3 ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}>
-                            parado há {d} {d === 1 ? "dia" : "dias"}
-                          </span>
-                          {t === "enviar" && (
-                            <Button size="sm" variant="soft" onClick={() => marcarEnviado(p)}>
-                              <Send className="mr-1 h-3.5 w-3.5" /> Marcar como enviado
-                            </Button>
-                          )}
-                          {t === "retorno" && (
-                            <Button size="sm" variant="outline" onClick={() => abrirFollowup(p)}>
-                              <MessageCircle className="mr-1 h-3.5 w-3.5" /> Retomar no WhatsApp
-                            </Button>
-                          )}
-                          {t === "comprovante" && (
-                            <Button size="sm" variant="soft" onClick={() => setDetalhe(p)}>
-                              <Upload className="mr-1 h-3.5 w-3.5" /> Anexar comprovante
-                            </Button>
-                          )}
-                          {t === "fila" && (
-                            <Button size="sm" variant="soft" onClick={() => avancar(p)}>
-                              <Wrench className="mr-1 h-3.5 w-3.5" /> Mandar para a oficina
-                            </Button>
-                          )}
-                        </div>
-                      );
-                    })}
-                    {pendencias[t].length > 6 && (
-                      <button onClick={() => setFiltroPend(t)} className="text-xs text-muted-foreground underline">
-                        ver os {pendencias[t].length} na lista abaixo
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))}
-          </div>
-        )}
-      </div>
 
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
         {[
@@ -596,121 +483,7 @@ export default function Painel() {
         <CalendarioEntregas />
       </div>
 
-      <DialogOrdem projeto={detalhe} onClose={() => setDetalhe(null)} />
+      <DialogOrdemFinanceiro projeto={detalhe} onClose={() => setDetalhe(null)} />
     </section>
-  );
-}
-
-function DialogOrdem({ projeto, onClose }: { projeto: ProjetoLocal | null; onClose: () => void }) {
-  useDados();
-  const [valor, setValor] = useState("");
-  const [data, setData] = useState(dataISO(new Date()));
-  const [forma, setForma] = useState("pix");
-  const [obs, setObs] = useState("");
-  const [arquivo, setArquivo] = useState<File | null>(null);
-
-  if (!projeto) return null;
-  const atual = listarProjetos().find((p) => p.id === projeto.id) ?? projeto;
-  const pagos = listarPagamentos(atual.id);
-  const recebido = pagos.reduce((s, p) => s + p.valor, 0);
-  const saldo = (atual.valor_faturado || 0) - recebido;
-
-  const lancar = async () => {
-    const v = numeroMascarado(valor);
-    if (!v || v <= 0) { toast.error("Informe o valor recebido"); return; }
-    try {
-      const pagamento = await adicionarPagamento({ projeto_id: atual.id, data, valor: v, forma, observacao: obs, comprovante_caminho: null, comprovante_nome: null, comprovante_tipo: null, comprovante_enviado_em: null });
-      if (arquivo) {
-        const caminho = await anexarComprovante(pagamento.id, atual.id, arquivo);
-        registrarComprovanteLocal(pagamento.id, caminho, arquivo.name, arquivo.type);
-      }
-      setValor(""); setObs("");
-      setArquivo(null);
-      toast.success("Pagamento lançado");
-    } catch { toast.error("Não foi possível lançar o pagamento"); }
-  };
-
-  return (
-    <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
-        <DialogHeader><DialogTitle className="font-display">{atual.nome}</DialogTitle></DialogHeader>
-
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div>
-            <Label>Situação</Label>
-            <Select value={atual.status} onValueChange={(v) => salvarProjeto({ ...atual, status: v as OrdemStatus })}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label>Prazo de entrega</Label>
-            <Input type="date" value={atual.prazo_entrega ?? ""} onChange={(e) => salvarProjeto({ ...atual, prazo_entrega: e.target.value || null })} />
-          </div>
-          <div>
-            <Label>Valor orçado</Label>
-            <Input value={formatarBRL(atual.total)} readOnly />
-          </div>
-          <div>
-            <Label>Valor faturado</Label>
-            <Input
-              mask="moeda" value={String(atual.valor_faturado || 0).replace(".", ",")}
-              onChange={(e) => salvarProjeto({ ...atual, valor_faturado: numeroMascarado(e.target.value) })}
-            />
-          </div>
-        </div>
-
-        <div className="rounded-lg border border-border p-3 text-sm">
-          Recebido <strong>{formatarBRL(recebido)}</strong> · Em aberto{" "}
-          <strong className={saldo > 0 ? "text-amber-500" : "text-emerald-500"}>{formatarBRL(saldo)}</strong>
-        </div>
-
-        <div className="space-y-2">
-          <Label>Lançar pagamento</Label>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <Input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-            <Input mask="moeda" placeholder="0,00" value={valor} onChange={(e) => setValor(e.target.value)} />
-            <Select value={forma} onValueChange={setForma}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{FORMAS.map((f) => <SelectItem key={f} value={f}>{f}</SelectItem>)}</SelectContent>
-            </Select>
-            <Button onClick={lancar} className="bg-gradient-orange text-primary-foreground">Lançar</Button>
-          </div>
-          <Input maxLength={500} placeholder="Observação (opcional)" value={obs} onChange={(e) => setObs(e.target.value)} />
-          <div>
-            <Label htmlFor="comprovante">Comprovante de pagamento (pode anexar depois)</Label>
-            <Input id="comprovante" type="file" accept="image/*,application/pdf" onChange={(e) => setArquivo(e.target.files?.[0] ?? null)} />
-          </div>
-        </div>
-
-        {pagos.length > 0 && (
-          <div className="space-y-1 text-sm">
-            {pagos.map((p) => (
-              <div key={p.id} className="flex items-center justify-between rounded border border-border px-3 py-1.5">
-                <span>{new Date(p.data + "T00:00:00").toLocaleDateString("pt-BR")} · {p.forma}{p.observacao ? ` · ${p.observacao}` : ""}</span>
-                <span className="flex items-center gap-2">
-                  <strong>{formatarBRL(p.valor)}</strong>
-                  {p.comprovante_caminho ? (
-                    <Button size="sm" variant="outline" onClick={() => void abrirComprovante(p.comprovante_caminho ?? "")}><ExternalLink className="mr-1 h-3.5 w-3.5" /> Ver</Button>
-                  ) : (
-                    <label className="inline-flex min-h-9 cursor-pointer items-center rounded border border-border px-2 text-xs font-medium hover:border-primary">
-                      <Upload className="mr-1 h-3.5 w-3.5" /> Anexar
-                      <input className="sr-only" type="file" accept="image/*,application/pdf" onChange={(e) => { const f = e.target.files?.[0]; if (f) void anexarComprovante(p.id, atual.id, f).then((caminho) => { registrarComprovanteLocal(p.id, caminho, f.name, f.type); toast.success("Comprovante anexado"); }).catch((erro) => toast.error(erro instanceof Error ? erro.message : "Não foi possível anexar")); }} />
-                    </label>
-                  )}
-                  <Button size="sm" variant="dangerOutline" onClick={() => removerPagamento(p.id)}>Excluir</Button>
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Fechar</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
   );
 }
