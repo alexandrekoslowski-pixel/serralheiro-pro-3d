@@ -236,45 +236,69 @@ export default function Configurador() {
     }
   };
 
-  const aprovarParaOficina = () => {
+  const aplicar = (patch: Partial<ProjetoLocal>) => {
+    const atualizado: ProjetoLocal = { ...projeto, total: resultado.totalGeral, ...patch };
+    setProjeto(atualizado);
+    salvarProjeto(atualizado);
+    return atualizado;
+  };
+
+  const checklistPendente = () => {
     const pendentes = [
       ...pendentesComunsChecklist(projeto.checklist_respostas),
       ...projeto.pecas.flatMap((p) => pendentesPecaChecklist(p.tipologia, p.checklist_respostas ?? {})),
     ];
-    if (pendentes.length > 0) {
-      setMostrarPendencias(true);
-      setAbaCadastro("checklist");
-      window.setTimeout(() => document.querySelector<HTMLElement>(`[id$="-${pendentes[0].id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
-      toast.error(`Complete o checklist: ${pendentes.length} resposta${pendentes.length === 1 ? "" : "s"} pendente${pendentes.length === 1 ? "" : "s"}`);
-      return;
-    }
+    if (pendentes.length === 0) return false;
+    setMostrarPendencias(true);
+    setAbaCadastro("checklist");
+    window.setTimeout(() => document.querySelector<HTMLElement>(`[id$="-${pendentes[0].id}"]`)?.scrollIntoView({ behavior: "smooth", block: "center" }), 80);
+    toast.error(`Complete o checklist: ${pendentes.length} resposta${pendentes.length === 1 ? "" : "s"} pendente${pendentes.length === 1 ? "" : "s"}`);
+    return true;
+  };
+
+  const aprovar = () => {
     const agora = new Date().toISOString();
-    const atualizado: ProjetoLocal = {
-      ...projeto,
-      total: resultado.totalGeral,
+    aplicar({
       status: "aprovado",
-      aprovado_em: agora,
+      aprovado_em: projeto.aprovado_em ?? agora,
+      aguardando_oficina: true,
       etapa: "fila",
       etapa_em: agora,
       prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
-    };
-    setProjeto(atualizado);
-    salvarProjeto(atualizado);
-    toast.success("Aprovado e enviado para a oficina");
+    });
+    toast.success("Orçamento aprovado — gere o contrato e siga os passos");
+  };
+
+  const mandarParaOficina = () => {
+    if (checklistPendente()) return;
+    const agora = new Date().toISOString();
+    aplicar({
+      status: projeto.status === "orcamento" ? "aprovado" : projeto.status,
+      aprovado_em: projeto.aprovado_em ?? agora,
+      aguardando_oficina: false,
+      etapa: "fila",
+      etapa_em: agora,
+      prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+    });
+    toast.success("Ordem liberada para a oficina");
   };
 
   const exportarOrcamento = () => {
-    salvarProjeto({ ...projeto, total: resultado.totalGeral });
-    gerarOrcamentoPDF(projeto, resultado, empresa);
+    const atualizado = aplicar({ orcamento_pdf_em: new Date().toISOString() });
+    gerarOrcamentoPDF(atualizado, resultado, empresa);
     toast.success("Orçamento gerado");
+  };
+
+  const exportarContrato = () => {
+    const atualizado = aplicar({ contrato_pdf_em: new Date().toISOString() });
+    gerarContratoPDF(atualizado, empresa);
+    toast.success("Contrato gerado");
   };
 
   const marcarEnviado = () => {
     const agora = new Date().toISOString();
     const nome = (session?.user.user_metadata?.nome as string) || session?.user.email || projeto.vendedora || "";
-    const atualizado = { ...projeto, total: resultado.totalGeral, enviado_em: agora, enviado_por_nome: nome, followup_status: "aguardando" as const, followup_em: null };
-    setProjeto(atualizado);
-    salvarProjeto(atualizado);
+    aplicar({ enviado_em: agora, enviado_por_nome: nome, followup_status: "aguardando" as const, followup_em: null });
     toast.success("Envio registrado; retorno em 3 dias se necessário");
   };
 
