@@ -15,6 +15,7 @@ import { calcularProjeto } from "@/lib/calculator";
 import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import { resumoFixacao, fixacaoTipo } from "@/lib/fixacao";
+import { listarFotos, FotoOrdem } from "@/lib/fotos";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 import { DiagramaBarras } from "@/components/DiagramaBarras";
 import { cm } from "@/lib/medidas";
@@ -41,6 +42,15 @@ export default function ModoOficina() {
       } as ProjetoLocal);
     });
   }, [emMemoria, codigo, id]);
+
+  // Fotos de medição (anotadas) — só quando há sessão autenticada; na TV sem login valem as medidas abaixo.
+  const [fotosMedicao, setFotosMedicao] = useState<FotoOrdem[]>([]);
+  useEffect(() => {
+    if (!emMemoria) return;
+    void listarFotos(id)
+      .then((f) => setFotosMedicao(f.filter((x) => x.etapa === "medicao")))
+      .catch(() => setFotosMedicao([]));
+  }, [emMemoria, id]);
 
   const projeto = emMemoria ?? remoto;
   const catalogo = useMemo(() => (emMemoria ? obterCatalogo() : CATALOGO_PADRAO), [emMemoria]);
