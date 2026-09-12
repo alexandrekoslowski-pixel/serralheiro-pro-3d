@@ -1,17 +1,26 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, BookOpen, ShieldCheck } from "lucide-react";
+import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, BookOpen, ShieldCheck, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSessao } from "@/lib/sessao";
 import { projetosLocaisPendentes, importarLocaisParaNuvem } from "@/lib/storage";
-import type { Papel } from "@/lib/gestao";
+import { meuPerfil, PAPEIS, type Papel } from "@/lib/gestao";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const [pendentes, setPendentes] = useState(0);
-  const { sair, papel } = useSessao();
+  const [nome, setNome] = useState("");
+  const { sair, papel, session } = useSessao();
+
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    let vivo = true;
+    void meuPerfil(uid).then((p) => { if (vivo) setNome(p.nome); }).catch(() => undefined);
+    return () => { vivo = false; };
+  }, [session?.user?.id]);
 
   useEffect(() => { setPendentes(projetosLocaisPendentes()); }, []);
 
