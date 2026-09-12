@@ -252,6 +252,12 @@ export async function meuPapel(uid: string): Promise<Papel> {
   return ((data as { role?: Papel } | null)?.role ?? "gestor") as Papel;
 }
 
+export async function meuPerfil(uid: string): Promise<{ nome: string; role: Papel }> {
+  const { data } = await supabase.from("user_roles").select("nome,role").eq("user_id", uid).limit(1).maybeSingle();
+  const d = data as { nome?: string; role?: Papel } | null;
+  return { nome: d?.nome ?? "", role: (d?.role ?? "gestor") as Papel };
+}
+
 export class ContaNaoEncontrada extends Error {}
 
 export async function definirPapel(m: { email: string; role: Papel; nome: string }): Promise<void> {

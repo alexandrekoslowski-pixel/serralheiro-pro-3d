@@ -1,17 +1,26 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, BookOpen, ShieldCheck } from "lucide-react";
+import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, BookOpen, ShieldCheck, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSessao } from "@/lib/sessao";
 import { projetosLocaisPendentes, importarLocaisParaNuvem } from "@/lib/storage";
-import type { Papel } from "@/lib/gestao";
+import { meuPerfil, PAPEIS, type Papel } from "@/lib/gestao";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const [pendentes, setPendentes] = useState(0);
-  const { sair, papel } = useSessao();
+  const [nome, setNome] = useState("");
+  const { sair, papel, session } = useSessao();
+
+  useEffect(() => {
+    const uid = session?.user?.id;
+    if (!uid) return;
+    let vivo = true;
+    void meuPerfil(uid).then((p) => { if (vivo) setNome(p.nome); }).catch(() => undefined);
+    return () => { vivo = false; };
+  }, [session?.user?.id]);
 
   useEffect(() => { setPendentes(projetosLocaisPendentes()); }, []);
 
@@ -58,10 +67,26 @@ export default function AppLayout() {
             </Link>
           </div>
 
-          <Button variant="outline" size="sm" className="shrink-0" onClick={sair}>
-            <LogOut className="mr-2 h-3.5 w-3.5" />
-            Sair
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            {nome && (
+              <span className="hidden items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground sm:flex">
+                <UserCircle className="h-4 w-4 text-muted-foreground" />
+                <span className="max-w-[12rem] truncate">{nome}</span>
+                <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-primary">
+                  {PAPEIS.find((p) => p.id === papel)?.nome ?? papel}
+                </span>
+              </span>
+            )}
+            {nome && (
+              <span className="flex items-center gap-1.5 sm:hidden" title={`${nome} · ${PAPEIS.find((p) => p.id === papel)?.nome ?? papel}`}>
+                <UserCircle className="h-5 w-5 text-muted-foreground" />
+              </span>
+            )}
+            <Button variant="outline" size="sm" className="shrink-0" onClick={sair}>
+              <LogOut className="mr-2 h-3.5 w-3.5" />
+              Sair
+            </Button>
+          </div>
         </div>
 
         <nav className="container hidden items-center gap-1 overflow-x-auto border-t border-border py-2 lg:flex [&::-webkit-scrollbar]:hidden">
