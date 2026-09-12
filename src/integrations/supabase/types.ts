@@ -374,6 +374,59 @@ export type Database = {
           },
         ]
       }
+      ocorrencias: {
+        Row: {
+          created_at: string
+          criado_por_nome: string
+          descricao: string
+          id: string
+          prazo: string | null
+          projeto_id: string
+          resolucao: string
+          resolvida_em: string | null
+          responsavel_nome: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por_nome?: string
+          descricao?: string
+          id?: string
+          prazo?: string | null
+          projeto_id: string
+          resolucao?: string
+          resolvida_em?: string | null
+          responsavel_nome?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          criado_por_nome?: string
+          descricao?: string
+          id?: string
+          prazo?: string | null
+          projeto_id?: string
+          resolucao?: string
+          resolvida_em?: string | null
+          responsavel_nome?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ocorrencias_projeto_id_fkey"
+            columns: ["projeto_id"]
+            isOneToOne: false
+            referencedRelation: "projetos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ordem_etapas: {
         Row: {
           concluida_em: string | null
