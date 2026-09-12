@@ -43,6 +43,12 @@ export default function Painel() {
   const [vendedora, setVendedora] = useState("todas");
   const [filtroPrazo, setFiltroPrazo] = useState<"todos" | "atrasadas" | "urgentes">("todos");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
+  const [filtroPend, setFiltroPend] = useState<TipoPendencia | null>(null);
+
+  const marcarEnviado = (p: ProjetoLocal) => {
+    salvarProjeto({ ...p, enviado_em: new Date().toISOString(), followup_status: "aguardando", followup_em: null });
+    toast.success("Envio registrado — retorno em 3 dias, se precisar");
+  };
 
   const precisaFollowup = (p: ProjetoLocal) => p.status === "orcamento" && !!p.enviado_em && p.followup_status !== "feito" && Date.now() - new Date(p.enviado_em).getTime() >= 3 * 86400000;
 
