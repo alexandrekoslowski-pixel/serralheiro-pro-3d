@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Upload, ExternalLink, Target } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Upload, ExternalLink, Target, Send, CheckCircle2, Wrench } from "lucide-react";
 import { useSessao } from "@/lib/sessao";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ import { useVendedores } from "@/hooks/useVendedores";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 import { numeroMascarado } from "@/lib/mascaras";
 import { anexarComprovante, abrirComprovante } from "@/lib/comprovantes";
+import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/progressoOrcamento";
+import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
@@ -41,6 +43,12 @@ export default function Painel() {
   const [vendedora, setVendedora] = useState("todas");
   const [filtroPrazo, setFiltroPrazo] = useState<"todos" | "atrasadas" | "urgentes">("todos");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
+  const [filtroPend, setFiltroPend] = useState<TipoPendencia | null>(null);
+
+  const marcarEnviado = (p: ProjetoLocal) => {
+    salvarProjeto({ ...p, enviado_em: new Date().toISOString(), followup_status: "aguardando", followup_em: null });
+    toast.success("Envio registrado — retorno em 3 dias, se precisar");
+  };
 
   const precisaFollowup = (p: ProjetoLocal) => p.status === "orcamento" && !!p.enviado_em && p.followup_status !== "feito" && Date.now() - new Date(p.enviado_em).getTime() >= 3 * 86400000;
 
@@ -64,6 +72,37 @@ export default function Painel() {
     () => pagamentos.filter((x) => idsBase.has(x.projeto_id)),
     [pagamentos, idsBase],
   );
+
+  // Progresso de cada orçamento (enviado → retorno → comprovante → oficina).
+  const progressos = useMemo(() => {
+    const porOrdem = new Map<string, typeof pagamentos>();
+    for (const x of pagamentosBase) {
+      const atual = porOrdem.get(x.projeto_id) ?? [];
+      atual.push(x);
+      porOrdem.set(x.projeto_id, atual);
+    }
+    return new Map(base.map((p) => [p.id, progressoOrcamento(p, porOrdem.get(p.id) ?? [])]));
+  }, [base, pagamentosBase]);
+
+  // O que falta fazer, agrupado por tipo e do mais parado para o mais recente.
+  const pendencias = useMemo(() => {
+    const grupos: Record<TipoPendencia, ProjetoLocal[]> = { enviar: [], retorno: [], comprovante: [], fila: [] };
+    for (const p of base) {
+      const prog = progressos.get(p.id);
+      if (!prog) continue;
+      for (const t of prog.pendencias) grupos[t].push(p);
+    }
+    const ordenar = (lista: ProjetoLocal[]) =>
+      [...lista].sort((a, b) => (progressos.get(b.id)?.diasParado ?? 0) - (progressos.get(a.id)?.diasParado ?? 0));
+    return {
+      enviar: ordenar(grupos.enviar),
+      retorno: ordenar(grupos.retorno),
+      comprovante: ordenar(grupos.comprovante),
+      fila: ordenar(grupos.fila),
+    };
+  }, [base, progressos]);
+
+  const totalPendencias = pendencias.enviar.length + pendencias.retorno.length + pendencias.comprovante.length + pendencias.fila.length;
 
   // Resumo do mês (e do mês anterior, para comparar).
   const resumo = useMemo(() => {
@@ -136,6 +175,7 @@ export default function Painel() {
     const filtrados = base.filter((p) => {
       const okBusca = !q || p.nome.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q);
       const okStatus =
+        filtroPend ? true :
         filtro === "todos" ? true :
         filtro === "abertos" ? p.status !== "faturado" && p.status !== "entregue" :
         p.status === filtro;
@@ -145,7 +185,8 @@ export default function Painel() {
         filtroPrazo === "todos" ? true :
         filtroPrazo === "atrasadas" ? aberta && d !== null && d < 0 :
         aberta && d !== null && d >= 0 && d <= empresa.limiteVermelhoDias;
-      return okBusca && okStatus && okPrazo;
+      const okPend = !filtroPend || (progressos.get(p.id)?.pendencias.includes(filtroPend) ?? false);
+      return okBusca && okStatus && okPrazo && okPend;
     });
     const peso = (p: ProjetoLocal) => {
       if (p.status === "entregue" || p.status === "faturado") return 9999;
@@ -153,7 +194,7 @@ export default function Painel() {
       return d === null ? 9000 : d;
     };
     return [...filtrados].sort((a, b) => peso(a) - peso(b));
-  }, [base, busca, filtro, filtroPrazo, empresa]);
+  }, [base, busca, filtro, filtroPrazo, empresa, filtroPend, progressos]);
 
   const avancar = (p: ProjetoLocal) => {
     const prox = proximoStatus(p.status);
@@ -286,6 +327,89 @@ export default function Painel() {
         </div>
       )}
 
+      {/* O que falta fazer em cada orçamento */}
+      <div className="surface-card mt-4 rounded-lg border border-border p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 className="font-display text-sm uppercase tracking-wide text-muted-foreground">O que falta fazer</h2>
+          {totalPendencias > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
+                .filter((t) => pendencias[t].length > 0)
+                .map((t) => (
+                  <button
+                    key={t}
+                    onClick={() => setFiltroPend((f) => (f === t ? null : t))}
+                    className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+                      filtroPend === t ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
+                    }`}
+                  >
+                    {ROTULO_PENDENCIA[t]} <strong className="ml-1">{pendencias[t].length}</strong>
+                  </button>
+                ))}
+            </div>
+          )}
+        </div>
+
+        {totalPendencias === 0 ? (
+          <p className="mt-3 flex items-center gap-2 text-sm text-emerald-500">
+            <CheckCircle2 className="h-4 w-4" /> Tudo em dia — nenhum orçamento parado.
+          </p>
+        ) : (
+          <div className="mt-3 space-y-3">
+            {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
+              .filter((t) => pendencias[t].length > 0 && (!filtroPend || filtroPend === t))
+              .map((t) => (
+                <div key={t}>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    {ROTULO_PENDENCIA[t]} · {pendencias[t].length}
+                  </p>
+                  <div className="mt-1.5 space-y-1.5">
+                    {pendencias[t].slice(0, 6).map((p) => {
+                      const d = progressos.get(p.id)?.diasParado ?? 0;
+                      return (
+                        <div key={`${t}-${p.id}`} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-card/60 px-3 py-2 text-sm">
+                          <Link to={`/app/projeto/${p.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">
+                            {p.cliente || p.nome}
+                          </Link>
+                          <span className="shrink-0 text-xs text-muted-foreground">{formatarBRL(p.total)}</span>
+                          <span className={`shrink-0 rounded px-2 py-0.5 text-[11px] ${d >= 3 ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}>
+                            parado há {d} {d === 1 ? "dia" : "dias"}
+                          </span>
+                          {t === "enviar" && (
+                            <Button size="sm" variant="soft" onClick={() => marcarEnviado(p)}>
+                              <Send className="mr-1 h-3.5 w-3.5" /> Marcar como enviado
+                            </Button>
+                          )}
+                          {t === "retorno" && (
+                            <Button size="sm" variant="outline" onClick={() => abrirFollowup(p)}>
+                              <MessageCircle className="mr-1 h-3.5 w-3.5" /> Retomar no WhatsApp
+                            </Button>
+                          )}
+                          {t === "comprovante" && (
+                            <Button size="sm" variant="soft" onClick={() => setDetalhe(p)}>
+                              <Upload className="mr-1 h-3.5 w-3.5" /> Anexar comprovante
+                            </Button>
+                          )}
+                          {t === "fila" && (
+                            <Button size="sm" variant="soft" onClick={() => avancar(p)}>
+                              <Wrench className="mr-1 h-3.5 w-3.5" /> Mandar para a oficina
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })}
+                    {pendencias[t].length > 6 && (
+                      <button onClick={() => setFiltroPend(t)} className="text-xs text-muted-foreground underline">
+                        ver os {pendencias[t].length} na lista abaixo
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+      </div>
+
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
         {[
           { l: "Orçado no mês", v: resumo.atual.orcado, ant: resumo.anterior.orcado },
@@ -394,7 +518,11 @@ export default function Painel() {
                     <p className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {tipologiaPorId(p.tipologia).nome}</p>
                     {p.vendedora && <p className="truncate text-[11px] text-muted-foreground">Venda: {p.vendedora}</p>}
                     {p.enviado_em && <p className="truncate text-[11px] text-muted-foreground">Enviado em {new Date(p.enviado_em).toLocaleDateString("pt-BR")}</p>}
-                  {p.status !== "orcamento" && totalRecebido(p.id) <= 0 && <p className="text-[11px] font-medium text-amber-500">Comprovante pendente</p>}
+                    {(progressos.get(p.id)?.pendencias.length ?? 0) > 0 && (
+                      <p className="text-[11px] font-medium text-amber-500">
+                        Falta: {progressos.get(p.id)!.pendencias.map((t) => ROTULO_PENDENCIA[t]).join(" · ")}
+                      </p>
+                    )}
                   </div>
                   <span className={`shrink-0 rounded px-2 py-0.5 text-[10px] font-medium uppercase ${STATUS_CORES[p.status].badge}`}>
                     {STATUS_LABEL[p.status]}
@@ -428,6 +556,8 @@ export default function Painel() {
                   <div><div className="text-[10px] uppercase text-muted-foreground">Recebido</div><div>{formatarBRL(recebido)}</div></div>
                 </div>
 
+                <TrilhaOrcamento compacta className="mt-3" marcos={progressos.get(p.id)?.marcos ?? []} />
+
                 <div className="relative z-10 mt-3 flex flex-wrap gap-1 border-t border-border pt-3">
                   {p.status === "orcamento" ? (
                     <Button size="sm" onClick={() => avancar(p)} className="bg-gradient-orange text-primary-foreground">
@@ -445,6 +575,11 @@ export default function Painel() {
                   <Button size="sm" variant="soft" onClick={() => window.open(`/op/${p.id}`, "_blank")}>
                     <Monitor className="mr-1 h-3.5 w-3.5" /> Oficina
                   </Button>
+                  {p.status === "orcamento" && !p.enviado_em && (
+                    <Button size="sm" variant="outline" onClick={() => marcarEnviado(p)}>
+                      <Send className="mr-1 h-3.5 w-3.5" /> Marcar como enviado
+                    </Button>
+                  )}
                   {precisaFollowup(p) && (
                     <Button size="sm" variant="outline" onClick={() => abrirFollowup(p)}>
                       <MessageCircle className="mr-1 h-3.5 w-3.5" /> Retomar no WhatsApp

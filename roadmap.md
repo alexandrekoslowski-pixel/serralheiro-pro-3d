@@ -26,3 +26,4 @@
 - [x] Meta semanal de faturamento no painel do gestor (editável nas Configurações)
 - [x] Medição com foto anotada (cotas, linhas e textos) salva na ordem e visível na OS da oficina
 - [x] Checklist de pós-venda com ocorrências; card só vai para Pronto sem pendências
+- [x] Trilha de progresso do orçamento (enviado, retorno, comprovante, oficina) e lista "o que falta fazer"

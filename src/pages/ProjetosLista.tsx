@@ -10,8 +10,10 @@ import {
 import { toast } from "sonner";
 import {
   deletarProjeto, duplicarProjeto, criarOrcamentoRapido,
-  listarProjetos, formatarBRL,
+  listarProjetos, formatarBRL, listarPagamentos,
 } from "@/lib/storage";
+import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/progressoOrcamento";
+import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { tipologiaPorId } from "@/lib/tipologias";
 import { STATUS_LABEL } from "@/lib/ordens";
 import { useDados } from "@/hooks/useDados";
@@ -22,13 +24,38 @@ export default function ProjetosLista() {
   useDados();
   const projetos = listarProjetos();
   const [busca, setBusca] = useState("");
+  const [pend, setPend] = useState<TipoPendencia | null>(null);
+  const [ordem, setOrdem] = useState<"recentes" | "parados">("recentes");
+  const pagamentos = listarPagamentos();
+
+  const progressos = useMemo(() => {
+    const porOrdem = new Map<string, typeof pagamentos>();
+    for (const x of pagamentos) {
+      const atual = porOrdem.get(x.projeto_id) ?? [];
+      atual.push(x);
+      porOrdem.set(x.projeto_id, atual);
+    }
+    return new Map(projetos.map((p) => [p.id, progressoOrcamento(p, porOrdem.get(p.id) ?? [])]));
+  }, [projetos, pagamentos]);
+
+  const contagemPend = useMemo(() => {
+    const c: Record<TipoPendencia, number> = { enviar: 0, retorno: 0, comprovante: 0, fila: 0 };
+    for (const prog of progressos.values()) for (const t of prog.pendencias) c[t] += 1;
+    return c;
+  }, [progressos]);
 
   const filtrados = useMemo(() => {
     const q = busca.toLowerCase().trim();
-    return projetos.filter(
-      (p) => !q || p.nome.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q),
-    );
-  }, [projetos, busca]);
+    const lista = projetos.filter((p) => {
+      const okBusca = !q || p.nome.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q);
+      const okPend = !pend || (progressos.get(p.id)?.pendencias.includes(pend) ?? false);
+      return okBusca && okPend;
+    });
+    if (ordem === "parados") {
+      return [...lista].sort((a, b) => (progressos.get(b.id)?.diasParado ?? 0) - (progressos.get(a.id)?.diasParado ?? 0));
+    }
+    return lista;
+  }, [projetos, busca, pend, ordem, progressos]);
 
   const criar = () => {
     const novo = criarOrcamentoRapido();
@@ -59,6 +86,30 @@ export default function ProjetosLista() {
       <div className="mt-6 relative">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input value={busca} onChange={(e) => setBusca(e.target.value)} placeholder="Buscar por nome ou cliente" className="pl-9" />
+      </div>
+
+      <div className="mt-3 flex flex-wrap items-center gap-1.5">
+        {(["enviar", "retorno", "comprovante", "fila"] as TipoPendencia[])
+          .filter((t) => contagemPend[t] > 0)
+          .map((t) => (
+            <button
+              key={t}
+              onClick={() => setPend((f) => (f === t ? null : t))}
+              className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+                pend === t ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
+              }`}
+            >
+              {ROTULO_PENDENCIA[t]} <strong className="ml-1">{contagemPend[t]}</strong>
+            </button>
+          ))}
+        <button
+          onClick={() => setOrdem((o) => (o === "parados" ? "recentes" : "parados"))}
+          className={`rounded-md border px-2.5 py-1.5 text-xs font-medium transition ${
+            ordem === "parados" ? "border-primary bg-primary/15 text-foreground" : "border-border text-muted-foreground hover:bg-card"
+          }`}
+        >
+          Parados há mais tempo
+        </button>
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -95,6 +146,12 @@ export default function ProjetosLista() {
                     {new Date(p.updated_at).toLocaleDateString("pt-BR")}
                   </div>
                 </div>
+                <TrilhaOrcamento compacta className="mt-3" marcos={progressos.get(p.id)?.marcos ?? []} />
+                {(progressos.get(p.id)?.pendencias.length ?? 0) > 0 && (
+                  <p className="mt-1.5 text-[11px] font-medium text-amber-500">
+                    Falta: {progressos.get(p.id)!.pendencias.map((t) => ROTULO_PENDENCIA[t]).join(" · ")}
+                  </p>
+                )}
               </Link>
               <div className="mt-3 flex gap-1 border-t border-border pt-3">
                 <Button size="sm" variant="soft" onClick={() => duplicar(p.id)}>
