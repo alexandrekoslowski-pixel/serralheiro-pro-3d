@@ -33,6 +33,7 @@ const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 export default function Painel() {
   const navigate = useNavigate();
   useDados();
+  const { papel } = useSessao();
   const projetos = listarProjetos();
   const empresa = obterEmpresa();
   const [busca, setBusca] = useState("");
@@ -92,6 +93,21 @@ export default function Painel() {
     );
     return { atual: calc(mesAtual), anterior: calc(mesAnterior), aReceber };
   }, [base, pagamentosBase]);
+
+  // Meta semanal: segunda-feira 00:00 até agora.
+  const metaSemana = useMemo(() => {
+    const agora = new Date();
+    const dia = (agora.getDay() + 6) % 7; // segunda = 0
+    const seg = new Date(agora.getFullYear(), agora.getMonth(), agora.getDate() - dia);
+    const inicio = `${seg.getFullYear()}-${String(seg.getMonth() + 1).padStart(2, "0")}-${String(seg.getDate()).padStart(2, "0")}`;
+    const recebido = pagamentosBase.filter((p) => p.data >= inicio).reduce((s, p) => s + p.valor, 0);
+    const faturado = base
+      .filter((p) => (p.faturado_em ?? "") >= inicio)
+      .reduce((s, p) => s + (p.valor_faturado || 0), 0);
+    const meta = empresa.metaSemanal || 0;
+    const pct = meta > 0 ? Math.min(100, (recebido / meta) * 100) : 0;
+    return { recebido, faturado, meta, pct };
+  }, [base, pagamentosBase, empresa.metaSemanal]);
 
   const contagem = useMemo(() => {
     const c: Record<string, number> = {};
