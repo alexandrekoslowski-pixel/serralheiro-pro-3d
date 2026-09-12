@@ -54,7 +54,7 @@ export function temComprovante(pagamentos: Pagamento[]): boolean {
  */
 export function progressoOrcamento(p: ProjetoLocal, pagamentos: Pagamento[]): Progresso {
   const aprovado = p.status !== "orcamento";
-  const naOficina = aprovado;
+  const naOficina = aprovado && !p.aguardando_oficina;
   const comprovanteOk = temComprovante(pagamentos);
   const pendencias: TipoPendencia[] = [];
   let diasParado = 0;
@@ -100,9 +100,46 @@ export function progressoOrcamento(p: ProjetoLocal, pagamentos: Pagamento[]): Pr
     diasParado = Math.max(diasParado, d);
   }
 
-  const fila: Marco = naOficina
-    ? { id: "fila", label: "Na oficina", estado: "feito", detalhe: dataBR(p.aprovado_em) }
-    : { id: "fila", label: "Na oficina", estado: "neutro", detalhe: "após aprovar" };
+  let fila: Marco;
+  if (naOficina) {
+    fila = { id: "fila", label: "Na oficina", estado: "feito", detalhe: dataBR(p.aprovado_em) };
+  } else if (aprovado) {
+    const d = dias(p.aprovado_em);
+    fila = { id: "fila", label: "Na oficina", estado: d >= 1 ? "atrasado" : "pendente", detalhe: "falta liberar" };
+    pendencias.push("fila");
+    diasParado = Math.max(diasParado, d);
+  } else {
+    fila = { id: "fila", label: "Na oficina", estado: "neutro", detalhe: "após aprovar" };
+  }
 
   return { marcos: [criado, enviado, retorno, comprovante, fila], pendencias, diasParado };
+}
+
+// ---------- passos cronológicos da vendedora ----------
+export type PassoId = "orcamento" | "enviar" | "aprovar" | "contrato" | "comprovante" | "oficina";
+
+export interface Passo {
+  id: PassoId;
+  numero: number;
+  label: string;
+  /** Rótulo quando já foi feito e pode repetir. */
+  labelFeito: string;
+  feito: boolean;
+  detalhe: string;
+  atual: boolean;
+}
+
+/** Sequência de passos do orçamento até a ordem entrar na oficina. */
+export function passosOrcamento(p: ProjetoLocal, pagamentos: Pagamento[]): Passo[] {
+  const aprovado = p.status !== "orcamento";
+  const base: Omit<Passo, "numero" | "atual">[] = [
+    { id: "orcamento", label: "Baixar orçamento", labelFeito: "Baixar de novo", feito: !!p.orcamento_pdf_em, detalhe: dataBR(p.orcamento_pdf_em) },
+    { id: "enviar", label: "Marcar como enviado", labelFeito: "Registrar novo envio", feito: !!p.enviado_em, detalhe: dataBR(p.enviado_em) },
+    { id: "aprovar", label: "Aprovar", labelFeito: "Aprovado", feito: aprovado, detalhe: dataBR(p.aprovado_em) },
+    { id: "contrato", label: "Gerar contrato", labelFeito: "Gerar de novo", feito: !!p.contrato_pdf_em, detalhe: dataBR(p.contrato_pdf_em) },
+    { id: "comprovante", label: "Anexar comprovante", labelFeito: "Ver comprovante", feito: temComprovante(pagamentos), detalhe: temComprovante(pagamentos) ? "anexado" : "opcional" },
+    { id: "oficina", label: "Mandar para a oficina", labelFeito: "Na oficina", feito: aprovado && !p.aguardando_oficina, detalhe: aprovado && !p.aguardando_oficina ? dataBR(p.aprovado_em) : "" },
+  ];
+  const atualIdx = base.findIndex((x) => !x.feito);
+  return base.map((x, i) => ({ ...x, numero: i + 1, atual: i === atualIdx }));
 }
