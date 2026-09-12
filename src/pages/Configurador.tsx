@@ -38,6 +38,8 @@ import {
 } from "@/lib/storage";
 import { progressoOrcamento } from "@/lib/progressoOrcamento";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
+import { PassosOrcamento } from "@/components/PassosOrcamento";
+import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 import { STATUS_ORDEM, STATUS_LABEL, somarDias } from "@/lib/ordens";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
@@ -88,6 +90,7 @@ export default function Configurador() {
   const [abaCadastro, setAbaCadastro] = useState(abrirChecklist ? "checklist" : "cliente");
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [financeiroAberto, setFinanceiroAberto] = useState(false);
   const { session } = useSessao();
 
   useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
@@ -1097,6 +1100,9 @@ export default function Configurador() {
             </TabsContent>
           </Tabs>
         </div>
+      {financeiroAberto && (
+        <DialogOrdemFinanceiro projeto={projeto} onClose={() => setFinanceiroAberto(false)} />
+      )}
     </div>
   );
 }
