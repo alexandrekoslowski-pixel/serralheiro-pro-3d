@@ -29,6 +29,7 @@ export function PosVendaDialog({ projetoId }: { projetoId: string }) {
   const [responsavel, setResponsavel] = useState("");
   const [prazo, setPrazo] = useState("");
   const [resolucao, setResolucao] = useState<Record<string, string>>({});
+  const [retorno, setRetorno] = useState("");
   const [salvando, setSalvando] = useState(false);
 
   const projeto = obterProjeto(projetoId);
@@ -43,8 +44,11 @@ export function PosVendaDialog({ projetoId }: { projetoId: string }) {
   }, [projetoId]);
 
   useEffect(() => {
-    if (aberto) void carregar();
-  }, [aberto, carregar]);
+    if (aberto) {
+      void carregar();
+      setRetorno(obterProjeto(projetoId)?.posvenda.retorno ?? "");
+    }
+  }, [aberto, carregar, projetoId]);
 
   if (!projeto) return null;
   const pv = projeto.posvenda;
