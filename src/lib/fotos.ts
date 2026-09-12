@@ -102,6 +102,16 @@ export async function enviarFoto(
   if (error) throw error;
 }
 
+export async function enviarFotoBlob(
+  projetoId: string,
+  etapa: EtapaFoto,
+  blob: Blob,
+  observacao = "",
+): Promise<void> {
+  const file = new File([blob], `${etapa}-${Date.now()}.jpg`, { type: "image/jpeg" });
+  return enviarFoto(projetoId, etapa, file, observacao);
+}
+
 export async function excluirFoto(foto: FotoOrdem): Promise<void> {
   await supabase.storage.from(BUCKET).remove([foto.caminho]);
   const { error } = await supabase.from("ordem_fotos").delete().eq("id", foto.id);
