@@ -252,6 +252,8 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   followup_em: null,
   followup_tentativa_em: null,
   followup_erro: "",
+  medicao: { largura_mm: null, altura_mm: null, observacoes: "" },
+  posvenda: { instalacao_ok: false, cliente_satisfeito: false, sem_problemas: false, retorno: "", concluido_em: null },
   overrides: {},
   extras: [],
   checklist_versao: CHECKLIST_VERSAO,
@@ -314,6 +316,8 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   base.cor = p0.cor;
   base.checklist_versao = Number(base.checklist_versao || CHECKLIST_VERSAO);
   base.checklist_respostas = normalizarRespostasChecklist(base.checklist_respostas);
+  base.medicao = { largura_mm: null, altura_mm: null, observacoes: "", ...(base.medicao ?? {}) };
+  base.posvenda = { instalacao_ok: false, cliente_satisfeito: false, sem_problemas: false, retorno: "", concluido_em: null, ...(base.posvenda ?? {}) };
   return base;
 };
 
@@ -397,6 +401,8 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     observacoes_proposta: p.observacoes_proposta,
     checklist_versao: p.checklist_versao,
     checklist_respostas: p.checklist_respostas,
+    medicao: p.medicao,
+    posvenda: p.posvenda,
   },
   updated_at: p.updated_at,
 });
