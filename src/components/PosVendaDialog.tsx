@@ -63,7 +63,9 @@ export function PosVendaDialog({ projetoId }: { projetoId: string }) {
   };
 
   const salvarRetorno = () => {
-    salvarProjeto({ ...obterProjeto(projetoId)!, posvenda: { ...obterProjeto(projetoId)!.posvenda } });
+    const atual = obterProjeto(projetoId);
+    if (!atual || atual.posvenda.retorno === retorno) return;
+    salvarProjeto({ ...atual, posvenda: { ...atual.posvenda, retorno } });
     toast({ title: "Retorno salvo." });
   };
 
@@ -141,8 +143,8 @@ export function PosVendaDialog({ projetoId }: { projetoId: string }) {
               rows={2}
               maxLength={2000}
               placeholder="O que o cliente falou?"
-              value={pv.retorno}
-              onChange={(e) => salvarProjeto({ ...projeto, posvenda: { ...pv, retorno: e.target.value } })}
+              value={retorno}
+              onChange={(e) => setRetorno(e.target.value)}
               onBlur={salvarRetorno}
             />
           </div>
