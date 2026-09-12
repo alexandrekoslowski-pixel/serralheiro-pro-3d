@@ -522,6 +522,8 @@ export async function importarLocaisParaNuvem(): Promise<number> {
 
 export function limparMemoria(): void {
   userId = null;
+  donoId = null;
+  empresaUserId = null;
   projetos = [];
   pagamentos = [];
   empresa = { ...EMPRESA_PADRAO };
