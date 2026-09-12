@@ -310,6 +310,32 @@ export default function Painel() {
         })}
       </div>
 
+      {papel === "gestor" && metaSemana.meta > 0 && (
+        <div className="surface-card mt-3 rounded-lg border border-border p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className="flex items-center gap-2 font-display text-sm uppercase tracking-wide text-muted-foreground">
+              <Target className="h-4 w-4 text-primary" /> Meta da semana
+            </h2>
+            <p className="text-sm">
+              <span className="font-semibold">{formatarBRL(metaSemana.recebido)}</span>
+              <span className="text-muted-foreground"> de {formatarBRL(metaSemana.meta)} recebidos</span>
+            </p>
+          </div>
+          <div className="mt-2 h-3 overflow-hidden rounded-full bg-muted">
+            <div
+              className={`h-full rounded-full transition-all ${metaSemana.pct >= 100 ? "bg-emerald-500" : "bg-primary"}`}
+              style={{ width: `${metaSemana.pct}%` }}
+            />
+          </div>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {metaSemana.pct >= 100
+              ? "Meta batida esta semana!"
+              : `${metaSemana.pct.toFixed(0)}% da meta · faltam ${formatarBRL(Math.max(0, metaSemana.meta - metaSemana.recebido))}`}
+            {" · "}faturado na semana: {formatarBRL(metaSemana.faturado)}
+          </p>
+        </div>
+      )}
+
       <div className="mt-3 flex flex-wrap gap-2">
         {STATUS_ORDEM.map((s) => (
           <button
