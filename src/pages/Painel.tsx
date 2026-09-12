@@ -575,6 +575,11 @@ export default function Painel() {
                   <Button size="sm" variant="soft" onClick={() => window.open(`/op/${p.id}`, "_blank")}>
                     <Monitor className="mr-1 h-3.5 w-3.5" /> Oficina
                   </Button>
+                  {p.status === "orcamento" && !p.enviado_em && (
+                    <Button size="sm" variant="outline" onClick={() => marcarEnviado(p)}>
+                      <Send className="mr-1 h-3.5 w-3.5" /> Marcar como enviado
+                    </Button>
+                  )}
                   {precisaFollowup(p) && (
                     <Button size="sm" variant="outline" onClick={() => abrirFollowup(p)}>
                       <MessageCircle className="mr-1 h-3.5 w-3.5" /> Retomar no WhatsApp
