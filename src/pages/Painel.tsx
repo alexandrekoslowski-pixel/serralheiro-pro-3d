@@ -175,6 +175,7 @@ export default function Painel() {
     const filtrados = base.filter((p) => {
       const okBusca = !q || p.nome.toLowerCase().includes(q) || p.cliente.toLowerCase().includes(q);
       const okStatus =
+        filtroPend ? true :
         filtro === "todos" ? true :
         filtro === "abertos" ? p.status !== "faturado" && p.status !== "entregue" :
         p.status === filtro;
