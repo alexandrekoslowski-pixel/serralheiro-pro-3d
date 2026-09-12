@@ -23,3 +23,6 @@
 - [x] Contrato de prestação de serviço sem materiais
 - [x] Comprovante de pagamento e aviso de entrada pendente
 - [x] Corrigir sobreposição do menu principal e da barra de ações do orçamento em todos os tamanhos de tela
+- [x] Meta semanal de faturamento no painel do gestor (editável nas Configurações)
+- [x] Medição com foto anotada (cotas, linhas e textos) salva na ordem e visível na OS da oficina
+- [x] Checklist de pós-venda com ocorrências; card só vai para Pronto sem pendências
