@@ -556,6 +556,8 @@ export default function Painel() {
                   <div><div className="text-[10px] uppercase text-muted-foreground">Recebido</div><div>{formatarBRL(recebido)}</div></div>
                 </div>
 
+                <TrilhaOrcamento compacta className="mt-3" marcos={progressos.get(p.id)?.marcos ?? []} />
+
                 <div className="relative z-10 mt-3 flex flex-wrap gap-1 border-t border-border pt-3">
                   {p.status === "orcamento" ? (
                     <Button size="sm" onClick={() => avancar(p)} className="bg-gradient-orange text-primary-foreground">
