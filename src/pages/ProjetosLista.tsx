@@ -10,8 +10,10 @@ import {
 import { toast } from "sonner";
 import {
   deletarProjeto, duplicarProjeto, criarOrcamentoRapido,
-  listarProjetos, formatarBRL,
+  listarProjetos, formatarBRL, listarPagamentos,
 } from "@/lib/storage";
+import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/progressoOrcamento";
+import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { tipologiaPorId } from "@/lib/tipologias";
 import { STATUS_LABEL } from "@/lib/ordens";
 import { useDados } from "@/hooks/useDados";
