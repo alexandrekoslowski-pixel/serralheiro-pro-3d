@@ -73,6 +73,37 @@ export default function Painel() {
     [pagamentos, idsBase],
   );
 
+  // Progresso de cada orçamento (enviado → retorno → comprovante → oficina).
+  const progressos = useMemo(() => {
+    const porOrdem = new Map<string, typeof pagamentos>();
+    for (const x of pagamentosBase) {
+      const atual = porOrdem.get(x.projeto_id) ?? [];
+      atual.push(x);
+      porOrdem.set(x.projeto_id, atual);
+    }
+    return new Map(base.map((p) => [p.id, progressoOrcamento(p, porOrdem.get(p.id) ?? [])]));
+  }, [base, pagamentosBase]);
+
+  // O que falta fazer, agrupado por tipo e do mais parado para o mais recente.
+  const pendencias = useMemo(() => {
+    const grupos: Record<TipoPendencia, ProjetoLocal[]> = { enviar: [], retorno: [], comprovante: [], fila: [] };
+    for (const p of base) {
+      const prog = progressos.get(p.id);
+      if (!prog) continue;
+      for (const t of prog.pendencias) grupos[t].push(p);
+    }
+    const ordenar = (lista: ProjetoLocal[]) =>
+      [...lista].sort((a, b) => (progressos.get(b.id)?.diasParado ?? 0) - (progressos.get(a.id)?.diasParado ?? 0));
+    return {
+      enviar: ordenar(grupos.enviar),
+      retorno: ordenar(grupos.retorno),
+      comprovante: ordenar(grupos.comprovante),
+      fila: ordenar(grupos.fila),
+    };
+  }, [base, progressos]);
+
+  const totalPendencias = pendencias.enviar.length + pendencias.retorno.length + pendencias.comprovante.length + pendencias.fila.length;
+
   // Resumo do mês (e do mês anterior, para comparar).
   const resumo = useMemo(() => {
     const chave = (iso: string | null) => (iso ? iso.slice(0, 7) : "");
