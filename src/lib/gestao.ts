@@ -137,6 +137,69 @@ export async function excluirCliente(id: string): Promise<void> {
   if (error) throw error;
 }
 
+/** Dados de cliente que vivem dentro do orçamento. */
+export interface ClienteDoOrcamento {
+  cliente_id: string | null;
+  cliente: string;
+  cliente_documento?: string;
+  cliente_email?: string;
+  cliente_telefone?: string;
+  cliente_endereco?: string;
+  cliente_bairro?: string;
+  cliente_cidade?: string;
+  cliente_cep?: string;
+}
+
+const soDigitos = (v?: string | null) => (v ?? "").replace(/\D+/g, "");
+
+/** Só vira ficha quando houver nome e sobrenome. */
+export function nomeClienteValido(nome: string): boolean {
+  return nome.trim().split(/\s+/).filter((p) => p.length >= 2).length >= 2;
+}
+
+/**
+ * Cria ou atualiza a ficha do cliente a partir do orçamento.
+ * Reaproveita fichas com mesmo documento, telefone ou nome para não duplicar.
+ */
+export async function sincronizarClienteDoOrcamento(d: ClienteDoOrcamento): Promise<string | null> {
+  if (!nomeClienteValido(d.cliente)) return d.cliente_id ?? null;
+
+  let alvo: Cliente | null = null;
+  if (d.cliente_id) alvo = await obterCliente(d.cliente_id);
+
+  if (!alvo) {
+    const doc = soDigitos(d.cliente_documento);
+    const tel = soDigitos(d.cliente_telefone);
+    const nome = d.cliente.trim().toLowerCase();
+    const lista = await listarClientes();
+    alvo =
+      (doc ? lista.find((c) => soDigitos(c.documento) === doc) : undefined)
+      ?? (tel ? lista.find((c) => soDigitos(c.telefone) === tel || soDigitos(c.whatsapp) === tel) : undefined)
+      ?? lista.find((c) => c.nome.trim().toLowerCase() === nome)
+      ?? null;
+  }
+
+  const manter = (novo: string | undefined, atual: string | undefined) =>
+    (novo ?? "").trim() ? (novo as string).trim() : (atual ?? "");
+
+  const salvo = await salvarCliente({
+    ...(alvo ? { id: alvo.id, user_id: alvo.user_id } : {}),
+    nome: d.cliente.trim(),
+    documento: manter(d.cliente_documento, alvo?.documento),
+    email: manter(d.cliente_email, alvo?.email),
+    telefone: manter(d.cliente_telefone, alvo?.telefone),
+    whatsapp: manter(d.cliente_telefone, alvo?.whatsapp),
+    endereco: manter(d.cliente_endereco, alvo?.endereco),
+    bairro: manter(d.cliente_bairro, alvo?.bairro),
+    cidade: manter(d.cliente_cidade, alvo?.cidade),
+    cep: manter(d.cliente_cep, alvo?.cep),
+    origem: alvo?.origem ?? "",
+    estrategico: alvo?.estrategico ?? false,
+    observacoes: alvo?.observacoes ?? "",
+  });
+  return salvo.id;
+}
+
 // ---------- briefings ----------
 export async function listarBriefings(clienteId?: string): Promise<Briefing[]> {
   let q = supabase.from("briefings").select("*").order("created_at", { ascending: false });
