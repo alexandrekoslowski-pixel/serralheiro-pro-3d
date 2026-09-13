@@ -86,6 +86,7 @@ export default function Configurador() {
   const [aberto, setAberto] = useState(false);
   const [pecaSelId, setPecaSelId] = useState<string | null>(null);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [sugestoesAbertas, setSugestoesAbertas] = useState(false);
   const abrirChecklist = Boolean((location.state as { abrirChecklist?: boolean } | null)?.abrirChecklist);
   const [abaCadastro, setAbaCadastro] = useState(abrirChecklist ? "checklist" : "cliente");
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
