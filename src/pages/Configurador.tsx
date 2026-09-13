@@ -696,8 +696,9 @@ export default function Configurador() {
                 <Input className="h-9" type="date" value={projeto.prazo_entrega ?? ""} onChange={(e) => upd("prazo_entrega", e.target.value || null)} />
               </div>
               <div>
-                <Label className="text-xs">Valor faturado (R$)</Label>
+                <Label className="text-xs">Valor a cobrar (R$)</Label>
                 <Input className="h-9" mask="moeda" value={String(projeto.valor_faturado || 0).replace(".", ",")} onChange={(e) => upd("valor_faturado", numeroMascarado(e.target.value))} />
+                <p className="mt-1 text-[11px] text-muted-foreground">Em branco usa o valor do orçamento.</p>
               </div>
               <div>
                 <Label className="text-xs">Total orçado</Label>

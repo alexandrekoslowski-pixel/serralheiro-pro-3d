@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useDados } from "@/hooks/useDados";
 import {
   ProjetoLocal, listarProjetos, obterEmpresa, salvarProjeto, criarOrcamentoRapido, formatarBRL,
-  listarPagamentos, totalRecebido, OrdemStatus,
+  listarPagamentos, OrdemStatus,
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
@@ -300,7 +300,7 @@ export default function Painel() {
         {[
           { l: "Orçado no mês", v: resumo.atual.orcado, ant: resumo.anterior.orcado },
           { l: "Aprovado no mês", v: resumo.atual.aprovado, ant: resumo.anterior.aprovado },
-          { l: "Faturado no mês", v: resumo.atual.faturado, ant: resumo.anterior.faturado },
+          { l: "A cobrar no mês", v: resumo.atual.faturado, ant: resumo.anterior.faturado },
           { l: "Recebido no mês", v: resumo.atual.recebido, ant: resumo.anterior.recebido },
           { l: "Ticket médio", v: resumo.atual.ticket, ant: resumo.anterior.ticket },
           { l: "A receber (total)", v: resumo.aReceber, ant: null as number | null },
@@ -392,7 +392,7 @@ export default function Painel() {
         {lista.map((p) => {
           const cor = corPrazo(p, empresa);
           const cls = CLASSES_PRAZO[cor];
-          const recebido = totalRecebido(p.id);
+          const recebido = recebidoDe(p.id);
           const prox = proximoStatus(p.status);
           return (
             <div key={p.id} className="surface-card relative cursor-pointer overflow-hidden rounded-lg border border-border transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg">
@@ -438,8 +438,8 @@ export default function Painel() {
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                   <div><div className="text-[10px] uppercase text-muted-foreground">Orçado</div><div>{formatarBRL(totalComServicos(p))}</div></div>
-                  <div><div className="text-[10px] uppercase text-muted-foreground">Faturado</div><div>{formatarBRL(p.valor_faturado || 0)}</div></div>
-                  <div><div className="text-[10px] uppercase text-muted-foreground">Recebido</div><div>{formatarBRL(recebido)}</div></div>
+                  <div><div className="text-[10px] uppercase text-muted-foreground">Recebido</div><div className={recebido > 0 ? "text-emerald-500" : ""}>{formatarBRL(recebido)}</div></div>
+                  <div><div className="text-[10px] uppercase text-muted-foreground">Em aberto</div><div className={saldoDe(p) > 0 ? "text-amber-500" : "text-emerald-500"}>{formatarBRL(saldoDe(p))}</div></div>
                 </div>
 
                 <TrilhaOrcamento compacta className="mt-3" marcos={progressos.get(p.id)?.marcos ?? []} />
