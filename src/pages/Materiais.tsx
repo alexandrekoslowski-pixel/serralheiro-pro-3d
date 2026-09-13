@@ -14,6 +14,7 @@ import { CATALOGO_PADRAO } from "@/lib/catalogo";
 const CODIGOS_CALCULO = [
   ...CATALOGO_PADRAO.perfis.map((p) => ({ codigo: p.codigo, descricao: p.descricao })),
   ...CATALOGO_PADRAO.acessorios.map((a) => ({ codigo: a.codigo, descricao: a.descricao })),
+  { codigo: "VIDRO-M2", descricao: "Vidro temperado (preço por m²)" },
 ];
 
 const NOMES_CATEGORIAS: Record<string, string> = {

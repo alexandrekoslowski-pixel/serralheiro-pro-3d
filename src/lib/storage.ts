@@ -521,6 +521,7 @@ export async function hidratarNuvem(uid: string): Promise<void> {
         const m = vinculos.find((v) => v.codigo_calculo === a.codigo);
         return m && Number(m.custo) ? { ...a, preco: Number(m.custo) } : a;
       }),
+      vidroPorM2: Number(vinculos.find((v) => v.codigo_calculo === "VIDRO-M2")?.custo) || catalogo.vidroPorM2,
     };
   }
 
