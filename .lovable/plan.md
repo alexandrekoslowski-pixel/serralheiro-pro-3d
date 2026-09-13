@@ -4,8 +4,9 @@
 
 O campo "Nome do orçamento" deixa de exigir digitação: passa a ser montado a partir do cliente e das peças.
 
-- Formato: **Cliente — 2 peças: Portão de correr, Grade fixa** (até duas tipologias citadas; acima disso, "e mais 2").
-- Sem cliente ainda: só as peças ("Portão de correr 300 × 250 cm").
+- Formato curto: **Maria · Portão correr +1** — primeiro nome do cliente, primeira tipologia abreviada e quantidade restante.
+- Com uma única peça: **Maria · Portão correr**. Sem cliente ainda: **Portão correr**.
+- Limite de 40 caracteres, com redução segura para não estourar cartões, Kanban ou tela da oficina; o nome completo do cliente e todas as peças continuam visíveis dentro do orçamento e da ordem.
 - Atualiza sozinho enquanto a vendedora mexe no cliente ou nas peças, **até que ela digite um nome próprio** — a partir daí o nome dela é respeitado e nada mais sobrescreve.
 - O campo continua editável, com a dica "gerado automaticamente" e um botão pequeno para voltar ao nome automático.
 
