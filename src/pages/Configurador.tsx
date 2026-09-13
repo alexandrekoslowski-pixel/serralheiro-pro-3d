@@ -45,7 +45,7 @@ import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 import { STATUS_LABEL, somarDias } from "@/lib/ordens";
-import { abrirWhatsApp, numeroWhatsApp, textoOrcamento } from "@/lib/whatsapp";
+import { abrirWhatsApp, linkWhatsApp, numeroWhatsApp, textoOrcamento } from "@/lib/whatsapp";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
   FixacaoTipo, FixacaoLados, pontosFixacao, fixacaoTipo,
