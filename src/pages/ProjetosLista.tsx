@@ -21,9 +21,11 @@ import { useDados } from "@/hooks/useDados";
 import { cm } from "@/lib/medidas";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
+import { useSessao } from "@/lib/sessao";
 
 export default function ProjetosLista() {
   const navigate = useNavigate();
+  const { session } = useSessao();
   useDados();
   const projetos = listarProjetos();
   const [busca, setBusca] = useState("");
@@ -124,7 +126,8 @@ export default function ProjetosLista() {
   }, [projetos, busca, pend, ordem, progressos]);
 
   const criar = () => {
-    const novo = criarOrcamentoRapido();
+    const vendedor = (session?.user.user_metadata?.nome as string | undefined) ?? session?.user.email ?? "";
+    const novo = criarOrcamentoRapido(vendedor);
     navigate(`/app/projeto/${novo.id}`, { state: { novoOrcamento: true } });
   };
 

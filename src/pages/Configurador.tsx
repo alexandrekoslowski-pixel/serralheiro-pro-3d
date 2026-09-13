@@ -37,7 +37,7 @@ import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
 } from "@/lib/tipologias";
 import {
-  ProjetoLocal, Peca, obterProjeto, salvarProjeto, duplicarProjeto,
+  ProjetoLocal, Peca, obterProjeto, salvarProjeto, duplicarProjeto, nomeSugeridoOrcamento,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
 } from "@/lib/storage";
 import { progressoOrcamento, pendenciasOrdem } from "@/lib/progressoOrcamento";
@@ -206,6 +206,13 @@ export default function Configurador() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chaveCliente]);
 
+  // Mantém um título curto e útil enquanto a vendedora não escolher um nome próprio.
+  useEffect(() => {
+    if (!projeto || projeto.nome_manual) return;
+    const sugerido = nomeSugeridoOrcamento(projeto);
+    if (projeto.nome !== sugerido) setProjeto({ ...projeto, nome: sugerido });
+  }, [projeto]);
+
   const totalAnimado = useAnimatedNumber(resultado?.totalGeral ?? 0);
 
   // Plano de corte / produção (hooks must be called before any early return)
@@ -235,7 +242,7 @@ export default function Configurador() {
     const t = tipologiaPorId(pecaSel.tipologia);
     const nova: Peca = {
       id: gerarId(),
-      nome: `Peça ${projeto.pecas.length + 1}`,
+      nome: t.nome,
       tipologia: pecaSel.tipologia,
       largura_mm: t.larguraDefault,
       altura_mm: t.alturaDefault,
@@ -519,17 +526,17 @@ export default function Configurador() {
                           className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => {
-                            setProjeto({
+                             setProjeto({
                               ...projeto,
                               cliente_id: c.id,
                               cliente: c.nome,
-                              cliente_documento: c.documento,
-                              cliente_email: c.email,
-                              cliente_telefone: c.telefone || c.whatsapp,
-                              cliente_endereco: c.endereco,
-                              cliente_bairro: c.bairro,
-                              cliente_cidade: c.cidade,
-                              cliente_cep: c.cep,
+                               cliente_documento: projeto.cliente_documento || c.documento,
+                               cliente_email: projeto.cliente_email || c.email,
+                               cliente_telefone: projeto.cliente_telefone || c.telefone || c.whatsapp,
+                               cliente_endereco: projeto.cliente_endereco || c.endereco,
+                               cliente_bairro: projeto.cliente_bairro || c.bairro,
+                               cliente_cidade: projeto.cliente_cidade || c.cidade,
+                               cliente_cep: projeto.cliente_cep || c.cep,
                             });
                             setSugestoesAbertas(false);
                             setSalvo(false);
@@ -594,6 +601,7 @@ export default function Configurador() {
               <div>
                 <Label className="text-xs">Local de instalação</Label>
                 <Input className="h-9" placeholder="se for outro endereço" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} onBlur={arrumar("local_instalacao", nomeProprio)} />
+                <p className="mt-1 text-[11px] text-muted-foreground">Deixe vazio se for no endereço do cliente.</p>
               </div>
 
               <div className="sm:col-span-2 lg:col-span-4 border-t border-border pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -601,7 +609,28 @@ export default function Configurador() {
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Nome do orçamento</Label>
-                <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} onBlur={arrumar("nome", frasePrimeiraMaiuscula)} />
+                <div className="flex gap-2">
+                  <Input
+                    className="h-9"
+                    maxLength={40}
+                    value={projeto.nome}
+                    onChange={(e) => setProjeto({ ...projeto, nome: e.target.value, nome_manual: true })}
+                    onBlur={arrumar("nome", frasePrimeiraMaiuscula)}
+                  />
+                  {projeto.nome_manual && (
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant="outline"
+                      className="h-9 w-9 shrink-0"
+                      title="Voltar ao nome automático"
+                      onClick={() => setProjeto({ ...projeto, nome_manual: false, nome: nomeSugeridoOrcamento(projeto) })}
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">Gerado automaticamente com cliente e peças.</p>
               </div>
               <div>
                 <Label className="text-xs">Vendedor(a) responsável</Label>
@@ -755,8 +784,10 @@ export default function Configurador() {
                 <Label>Tipologia</Label>
                 <Select value={pecaSel.tipologia} onValueChange={(v) => {
                   const novo = tipologiaPorId(v as TipologiaId);
+                  const nomeAutomatico = pecaSel.nome === tipologiaPorId(pecaSel.tipologia).nome || /^Peça \d+$/i.test(pecaSel.nome);
                   updPeca({
                     tipologia: v as TipologiaId,
+                    ...(nomeAutomatico ? { nome: novo.nome } : {}),
                     largura_mm: Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax),
                     altura_mm: Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax),
                   });
