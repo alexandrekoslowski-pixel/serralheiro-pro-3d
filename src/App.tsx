@@ -22,6 +22,8 @@ import ModoAtendimento from "./pages/ModoAtendimento";
 import Calendario from "./pages/Calendario";
 import KanbanOficina from "./pages/KanbanOficina";
 import MinhasOrdens from "./pages/MinhasOrdens";
+import DownloadOrcamento from "./pages/DownloadOrcamento";
+
 
 import NotFound from "./pages/NotFound.tsx";
 
