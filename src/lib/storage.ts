@@ -53,6 +53,8 @@ export interface ProjetoLocal {
   cliente: string;
   cliente_documento: string;
   cliente_endereco: string;
+  cliente_numero: string;
+  cliente_complemento: string;
   cliente_bairro: string;
   cliente_cidade: string;
   cliente_cep: string;
@@ -173,7 +175,7 @@ export const TEXTO_TECNICO_PADRAO = [
 export const MSG_SOLICITAR_DADOS_PADRAO = [
   "Boa tarde, tudo bem?",
   "Para seguirmos com o orçamento, solicito as seguintes informações:",
-  "• RG ou CPF",
+  "• CPF ou CNPJ",
   "• Endereço completo",
   "• Nome e sobrenome",
 ].join("\n");
@@ -277,6 +279,8 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   vendedora: "",
   cliente_documento: "",
   cliente_endereco: "",
+  cliente_numero: "",
+  cliente_complemento: "",
   cliente_bairro: "",
   cliente_cidade: "",
   cliente_cep: "",
@@ -401,6 +405,8 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     vendedora: p.vendedora,
     cliente_documento: p.cliente_documento,
     cliente_endereco: p.cliente_endereco,
+    cliente_numero: p.cliente_numero,
+    cliente_complemento: p.cliente_complemento,
     cliente_bairro: p.cliente_bairro,
     cliente_cidade: p.cliente_cidade,
     cliente_cep: p.cliente_cep,
@@ -552,6 +558,8 @@ export function criarOrcamentoRapido(): ProjetoLocal {
     cliente: "",
     cliente_documento: "",
     cliente_endereco: "",
+    cliente_numero: "",
+    cliente_complemento: "",
     cliente_bairro: "",
     cliente_cidade: "",
     cliente_cep: "",

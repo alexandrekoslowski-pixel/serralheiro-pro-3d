@@ -1,5 +1,6 @@
 // Cadastros da gestão: clientes, briefings, catálogo de serviços, materiais e equipe.
 import { supabase } from "@/integrations/supabase/client";
+import { ruaComNumero } from "@/lib/endereco";
 
 export type Papel = "gestor" | "vendedora" | "serralheiro";
 
@@ -145,6 +146,8 @@ export interface ClienteDoOrcamento {
   cliente_email?: string;
   cliente_telefone?: string;
   cliente_endereco?: string;
+  cliente_numero?: string;
+  cliente_complemento?: string;
   cliente_bairro?: string;
   cliente_cidade?: string;
   cliente_cep?: string;
@@ -189,7 +192,7 @@ export async function sincronizarClienteDoOrcamento(d: ClienteDoOrcamento): Prom
     email: manter(d.cliente_email, alvo?.email),
     telefone: manter(d.cliente_telefone, alvo?.telefone),
     whatsapp: manter(d.cliente_telefone, alvo?.whatsapp),
-    endereco: manter(d.cliente_endereco, alvo?.endereco),
+    endereco: manter(ruaComNumero(d.cliente_endereco, d.cliente_numero, d.cliente_complemento), alvo?.endereco),
     bairro: manter(d.cliente_bairro, alvo?.bairro),
     cidade: manter(d.cliente_cidade, alvo?.cidade),
     cep: manter(d.cliente_cep, alvo?.cep),

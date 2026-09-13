@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ExternalLink, Upload } from "lucide-react";
+import { CheckCircle2, ExternalLink, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +25,7 @@ import { CampoArquivo } from "@/components/CampoArquivo";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
 
-export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: ProjetoLocal | null; onClose: () => void; foco?: "comprovante" }) {
+export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina }: { projeto: ProjetoLocal | null; onClose: () => void; foco?: "comprovante"; onMandarOficina?: () => void }) {
   useDados();
   const [valor, setValor] = useState("");
   const [data, setData] = useState(dataISO(new Date()));
@@ -33,6 +33,7 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: Pro
   const [obs, setObs] = useState("");
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
+  const [concluido, setConcluido] = useState(false);
 
   if (!projeto) return null;
   const atual = listarProjetos().find((p) => p.id === projeto.id) ?? projeto;
@@ -52,6 +53,7 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: Pro
       }
       setValor(""); setObs(""); setArquivo(null);
       toast.success(arquivo ? "Pagamento lançado com comprovante" : "Pagamento lançado");
+      if (foco === "comprovante") setConcluido(true);
     } catch (erro) {
       toast.error(erro instanceof Error ? erro.message : "Não foi possível lançar o pagamento");
     } finally {
@@ -64,6 +66,7 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: Pro
       const caminho = await anexarComprovante(pagamentoId, atual.id, f);
       registrarComprovanteLocal(pagamentoId, caminho, f.name, f.type);
       toast.success("Comprovante anexado");
+      if (foco === "comprovante") setConcluido(true);
     } catch (erro) {
       toast.error(erro instanceof Error ? erro.message : "Não foi possível anexar o comprovante");
     }
@@ -103,7 +106,7 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: Pro
   const blocoResumo = (
     <div className="rounded-lg border border-border p-3 text-sm">
       Recebido <strong>{formatarBRL(recebido)}</strong> · Em aberto{" "}
-      <strong className={saldo > 0 ? "text-amber-500" : "text-emerald-500"}>{formatarBRL(saldo)}</strong>
+      <strong className={saldo > 0 ? "text-amber-500" : "text-emerald-500"}>{formatarBRL(Math.max(saldo, 0))}</strong>
     </div>
   );
 
@@ -154,16 +157,34 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: Pro
     </div>
   );
 
+  const blocoConcluido = (
+    <div className="space-y-3 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4">
+      <p className="flex items-center gap-2 font-display text-sm font-semibold text-emerald-500">
+        <CheckCircle2 className="h-5 w-5" /> Comprovante anexado
+      </p>
+      <p className="text-xs text-muted-foreground">Pagamento registrado nesta ordem. Você já pode seguir para o próximo passo.</p>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Button className="flex-1 bg-gradient-orange text-primary-foreground" onClick={onClose}>Concluir e voltar ao orçamento</Button>
+        {onMandarOficina && (
+          <Button variant="soft" className="flex-1" onClick={() => { onClose(); onMandarOficina(); }}>Mandar para a oficina</Button>
+        )}
+      </div>
+      <Button variant="outline" size="sm" className="w-full" onClick={() => setConcluido(false)}>Lançar outro pagamento</Button>
+    </div>
+  );
+
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="font-display">{atual.nome}</DialogTitle></DialogHeader>
         {foco === "comprovante" ? (
-          <>{blocoPagamento}{blocoLista}{blocoResumo}</>
+          <>{concluido ? blocoConcluido : blocoPagamento}{blocoLista}{blocoResumo}</>
         ) : (
           <>{blocoSituacao}{blocoResumo}{blocoPagamento}{blocoLista}</>
         )}
-        <DialogFooter><Button variant="outline" onClick={onClose}>Fechar</Button></DialogFooter>
+        {!(foco === "comprovante" && concluido) && (
+          <DialogFooter><Button variant="outline" onClick={onClose}>Fechar</Button></DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

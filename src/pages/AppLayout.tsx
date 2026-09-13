@@ -1,6 +1,6 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, BookOpen, ShieldCheck, UserCircle } from "lucide-react";
+import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, ShieldCheck, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -38,7 +38,6 @@ export default function AppLayout() {
     { to: "/app/clientes", end: false, label: "Clientes", icon: Users, papeis: ["gestor", "vendedora"] },
     { to: "/app/projetos", end: false, label: "Orçamentos", icon: FolderKanban, papeis: ["gestor", "vendedora"] },
     { to: "/app/calendario", end: false, label: "Calendário", icon: CalendarDays, papeis: ["gestor", "vendedora"] },
-    { to: "/app/catalogo", end: false, label: "Serviços", icon: BookOpen, papeis: ["gestor"] },
     { to: "/app/materiais", end: false, label: "Materiais", icon: Package, papeis: ["gestor"] },
     { to: "/app/financeiro", end: false, label: "Financeiro", icon: Wallet, papeis: ["gestor"] },
     { to: "/app/equipe", end: false, label: "Equipe", icon: ShieldCheck, papeis: ["gestor"] },

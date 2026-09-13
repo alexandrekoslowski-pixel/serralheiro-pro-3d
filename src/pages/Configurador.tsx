@@ -77,6 +77,7 @@ export default function Configurador() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const clienteNomeRef = useRef<HTMLInputElement | null>(null);
   const focoInicialFeito = useRef(false);
+  const campoNumero = useRef<HTMLInputElement | null>(null);
 
   // Controles 3D
   const [preset, setPreset] = useState<CameraPreset>("iso");
@@ -99,6 +100,8 @@ export default function Configurador() {
   const [financeiroAberto, setFinanceiroAberto] = useState(false);
   const [pendenciasFila, setPendenciasFila] = useState<string[] | null>(null);
   const { session } = useSessao();
+  const digitosDocumento = (projeto?.cliente_documento ?? "").replace(/\D/g, "").length;
+  const documentoIncompleto = digitosDocumento > 0 && digitosDocumento !== 11 && digitosDocumento !== 14;
 
   useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
 
@@ -374,6 +377,7 @@ export default function Configurador() {
       const endereco = await buscarCep(cep);
       setProjeto({ ...projeto, cliente_endereco: endereco.logradouro || projeto.cliente_endereco, cliente_bairro: endereco.bairro || projeto.cliente_bairro, cliente_cidade: endereco.cidadeUf || projeto.cliente_cidade });
       toast.success("Endereço preenchido pelo CEP");
+      setTimeout(() => campoNumero.current?.focus(), 50);
     } catch (erro) { toast.error(erro instanceof Error ? erro.message : "CEP não encontrado"); }
     finally { setBuscandoCep(false); }
   };
@@ -513,8 +517,9 @@ export default function Configurador() {
                 </p>
               </div>
               <div>
-                <Label className="text-xs">RG ou CPF</Label>
-                <Input className="h-9" mask="rgCpf" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} placeholder="RG ou CPF" />
+                <Label className="text-xs">CPF / CNPJ</Label>
+                <Input className="h-9" mask="cpfCnpj" inputMode="numeric" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} placeholder="000.000.000-00" />
+                {documentoIncompleto && <p className="mt-1 text-[11px] text-amber-500">Faltam números para o CPF (11) ou o CNPJ (14).</p>}
               </div>
               <div>
                 <Label className="text-xs">Telefone / WhatsApp</Label>
@@ -532,8 +537,16 @@ export default function Configurador() {
                 </div>
               </div>
               <div className="sm:col-span-2">
-                <Label className="text-xs">Endereço (rua, número, complemento)</Label>
-                <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} />
+                <Label className="text-xs">Rua</Label>
+                <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} placeholder="Rua / avenida" />
+              </div>
+              <div>
+                <Label className="text-xs">Número</Label>
+                <Input ref={campoNumero} className="h-9" inputMode="numeric" maxLength={10} value={projeto.cliente_numero ?? ""} onChange={(e) => upd("cliente_numero", e.target.value)} placeholder="123" />
+              </div>
+              <div>
+                <Label className="text-xs">Complemento</Label>
+                <Input className="h-9" maxLength={60} value={projeto.cliente_complemento ?? ""} onChange={(e) => upd("cliente_complemento", e.target.value)} placeholder="apto, bloco, fundos" />
               </div>
               <div>
                 <Label className="text-xs">Bairro</Label>
@@ -1197,7 +1210,7 @@ export default function Configurador() {
           </Tabs>
         </div>
       {financeiroAberto && (
-        <DialogOrdemFinanceiro projeto={projeto} foco="comprovante" onClose={() => setFinanceiroAberto(false)} />
+        <DialogOrdemFinanceiro projeto={projeto} foco="comprovante" onClose={() => setFinanceiroAberto(false)} onMandarOficina={mandarParaOficina} />
       )}
 
       <AlertDialog open={pendenciasFila !== null} onOpenChange={(o) => !o && setPendenciasFila(null)}>
