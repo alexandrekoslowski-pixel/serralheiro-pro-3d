@@ -47,7 +47,14 @@ export default function Materiais() {
   const [categoria, setCategoria] = useState("todas");
   const [historico, setHistorico] = useState<{ material: Material; precos: MaterialPreco[] } | null>(null);
 
-  const recarregar = () => listarMateriais().then(setMateriais).catch(() => toast.error("Não foi possível carregar"));
+  const recarregar = async () => {
+    // Tenta de novo após 1s — cobre oscilações de conexão e de sessão.
+    for (let tentativa = 0; tentativa < 2; tentativa++) {
+      try { setMateriais(await listarMateriais()); return; } catch { /* tenta novamente */ }
+      await new Promise((r) => setTimeout(r, 1000));
+    }
+    try { setMateriais(await listarMateriais()); } catch { toast.error("Não foi possível carregar"); }
+  };
   useEffect(() => { void recarregar(); }, []);
 
   const lista = useMemo(() => {
