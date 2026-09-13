@@ -11,8 +11,8 @@ export function numeroWhatsApp(telefone: string | null | undefined): string | nu
   return d.startsWith("55") ? d : `55${d}`;
 }
 
-/** Mensagem padrão do envio do orçamento, com resumo das peças e do total. */
-export function textoOrcamento(projeto: ProjetoLocal, total: number, empresa: DadosEmpresa): string {
+/** Mensagem padrão do envio do orçamento, com resumo das peças, total e link do PDF. */
+export function textoOrcamento(projeto: ProjetoLocal, total: number, empresa: DadosEmpresa, linkPdf?: string): string {
   const pecas = projeto.pecas
     .map((p) => `• ${p.nome} — ${tipologiaPorId(p.tipologia).nome} ${cm(p.largura_mm)} × ${cm(p.altura_mm)} cm`)
     .join("\n");
