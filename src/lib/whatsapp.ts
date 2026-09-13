@@ -11,8 +11,8 @@ export function numeroWhatsApp(telefone: string | null | undefined): string | nu
   return d.startsWith("55") ? d : `55${d}`;
 }
 
-/** Mensagem padrão do envio do orçamento, com resumo das peças e do total. */
-export function textoOrcamento(projeto: ProjetoLocal, total: number, empresa: DadosEmpresa): string {
+/** Mensagem padrão do envio do orçamento, com resumo das peças, total e link do PDF. */
+export function textoOrcamento(projeto: ProjetoLocal, total: number, empresa: DadosEmpresa, linkPdf?: string): string {
   const pecas = projeto.pecas
     .map((p) => `• ${p.nome} — ${tipologiaPorId(p.tipologia).nome} ${cm(p.largura_mm)} × ${cm(p.altura_mm)} cm`)
     .join("\n");
@@ -28,10 +28,15 @@ export function textoOrcamento(projeto: ProjetoLocal, total: number, empresa: Da
     `Prazo de entrega: aproximadamente ${prazo} dias úteis após a confirmação do pagamento da entrada.`,
     `Validade do orçamento: ${empresa.validadeDias ?? 5} dias corridos.`,
     "",
-    "Vou enviar o PDF completo em seguida. Qualquer dúvida, estou à disposição!",
+    linkPdf ? `Orçamento em PDF: ${linkPdf}` : "Vou enviar o PDF completo em seguida.",
+    "Qualquer dúvida, estou à disposição!",
   ].filter((l) => l !== undefined).join("\n");
 }
 
+export function linkWhatsApp(numero: string, texto: string): string {
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
+
 export function abrirWhatsApp(numero: string, texto: string): void {
-  window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
+  window.open(linkWhatsApp(numero, texto), "_blank", "noopener,noreferrer");
 }

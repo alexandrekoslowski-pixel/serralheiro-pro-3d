@@ -1,4 +1,4 @@
-import { Check, Download, Send, CheckCircle2, FileSignature, Upload, Wrench } from "lucide-react";
+import { Check, Download, Send, CheckCircle2, FileSignature, Upload, Wrench, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { passosOrcamento, type PassoId } from "@/lib/progressoOrcamento";
@@ -19,10 +19,12 @@ interface Props {
   onPasso: (id: PassoId) => void;
   /** Mostra só o próximo passo (usado nos cartões da lista). */
   somenteProximo?: boolean;
+  /** Passo em andamento: fica desabilitado e com girinho. */
+  ocupado?: PassoId | null;
   className?: string;
 }
 
-export function PassosOrcamento({ projeto, pagamentos, onPasso, somenteProximo, className }: Props) {
+export function PassosOrcamento({ projeto, pagamentos, onPasso, somenteProximo, ocupado, className }: Props) {
   const passos = passosOrcamento(projeto, pagamentos);
   const visiveis = somenteProximo ? passos.filter((p) => p.atual) : passos;
   if (visiveis.length === 0) return null;
@@ -30,13 +32,15 @@ export function PassosOrcamento({ projeto, pagamentos, onPasso, somenteProximo, 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {visiveis.map((p) => {
-        const Icone = ICONES[p.id];
+        const carregando = ocupado === p.id;
+        const Icone = carregando ? Loader2 : ICONES[p.id];
         return (
           <Button
             key={p.id}
             type="button"
             size="sm"
             variant={p.atual ? "default" : "outline"}
+            disabled={carregando}
             onClick={() => onPasso(p.id)}
             title={p.detalhe}
             className={cn(
@@ -47,8 +51,8 @@ export function PassosOrcamento({ projeto, pagamentos, onPasso, somenteProximo, 
             )}
           >
             <span className="mr-1.5 text-[11px] font-semibold opacity-70">{p.numero}</span>
-            {p.feito ? <Check className="mr-1 h-4 w-4" /> : <Icone className="mr-1 h-4 w-4" />}
-            {p.feito ? p.labelFeito : p.label}
+            {p.feito && !carregando ? <Check className="mr-1 h-4 w-4" /> : <Icone className={cn("mr-1 h-4 w-4", carregando && "animate-spin")} />}
+            {carregando ? "Preparando PDF…" : p.feito ? p.labelFeito : p.label}
             {p.feito && p.detalhe && !somenteProximo && (
               <span className="ml-1.5 hidden text-[11px] opacity-70 sm:inline">{p.detalhe}</span>
             )}

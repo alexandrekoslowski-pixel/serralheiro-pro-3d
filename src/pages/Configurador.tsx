@@ -45,7 +45,7 @@ import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 import { STATUS_LABEL, somarDias } from "@/lib/ordens";
-import { abrirWhatsApp, numeroWhatsApp, textoOrcamento } from "@/lib/whatsapp";
+import { abrirWhatsApp, linkWhatsApp, numeroWhatsApp, textoOrcamento } from "@/lib/whatsapp";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
   FixacaoTipo, FixacaoLados, pontosFixacao, fixacaoTipo,
@@ -56,7 +56,8 @@ import { gerarOrcamentoPDF } from "@/lib/pdf";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
-import { numeroMascarado } from "@/lib/mascaras";
+import { numeroMascarado, nomeProprio, cidadeUf, emailNormalizado, frasePrimeiraMaiuscula } from "@/lib/mascaras";
+import { publicarOrcamentoPDF } from "@/lib/orcamentoPdfEnvio";
 import { buscarCep } from "@/lib/cep";
 import { gerarContratoPDF } from "@/lib/pdfContrato";
 import { useSessao } from "@/lib/sessao";
@@ -97,11 +98,14 @@ export default function Configurador() {
   const [abaCadastro, setAbaCadastro] = useState(abrirChecklist ? "checklist" : "cliente");
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [enviandoWhats, setEnviandoWhats] = useState(false);
   const [financeiroAberto, setFinanceiroAberto] = useState(false);
   const [pendenciasFila, setPendenciasFila] = useState<string[] | null>(null);
   const { session } = useSessao();
   const digitosDocumento = (projeto?.cliente_documento ?? "").replace(/\D/g, "").length;
   const documentoIncompleto = digitosDocumento > 0 && digitosDocumento !== 11 && digitosDocumento !== 14;
+  const digitosTelefone = (projeto?.cliente_telefone ?? "").replace(/\D/g, "").length;
+  const telefoneIncompleto = digitosTelefone > 0 && digitosTelefone < 10;
 
   useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
 
@@ -264,6 +268,12 @@ export default function Configurador() {
   const upd = <K extends keyof ProjetoLocal>(k: K, v: ProjetoLocal[K]) =>
     setProjeto({ ...projeto, [k]: v });
 
+  /** Arruma o texto do campo ao sair dele (maiúsculas, espaços, etc.). */
+  const arrumar = (k: keyof ProjetoLocal, fn: (v: string) => string) => (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const limpo = fn(e.target.value ?? "");
+    if (limpo !== (e.target.value ?? "")) upd(k, limpo as never);
+  };
+
   const setOverride = (key: string, ov: Partial<ItemOverride>) => {
     const cur = projeto.overrides[key] ?? {};
     setProjeto({ ...projeto, overrides: { ...projeto.overrides, [key]: { ...cur, ...ov } } });
@@ -356,18 +366,37 @@ export default function Configurador() {
     toast.success("Contrato gerado");
   };
 
-  const marcarEnviado = () => {
+  const marcarEnviado = async () => {
     const numero = numeroWhatsApp(projeto.cliente_telefone);
     if (!numero) {
       toast.error("Cadastre o telefone/WhatsApp do cliente para enviar");
       setAbaCadastro("cliente");
       return;
     }
-    abrirWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa));
+    // Abre a aba antes do envio do arquivo para não ser bloqueada pelo navegador.
+    const aba = window.open("about:blank", "_blank");
+    setEnviandoWhats(true);
+    let link: string | undefined;
+    try {
+      link = await publicarOrcamentoPDF(projeto, resultado, empresa);
+    } catch {
+      toast.warning("Não consegui subir o PDF — anexe o arquivo na conversa");
+    } finally {
+      setEnviandoWhats(false);
+    }
+    const url = linkWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa, link));
+    if (aba) aba.location.href = url;
+    else abrirWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa, link));
     const agora = new Date().toISOString();
     const nome = (session?.user.user_metadata?.nome as string) || session?.user.email || projeto.vendedora || "";
-    aplicar({ enviado_em: agora, enviado_por_nome: nome, followup_status: "aguardando" as const, followup_em: null });
-    toast.success("WhatsApp aberto — anexe o PDF na conversa");
+    aplicar({
+      enviado_em: agora,
+      enviado_por_nome: nome,
+      followup_status: "aguardando" as const,
+      followup_em: null,
+      orcamento_pdf_em: projeto.orcamento_pdf_em ?? agora,
+    });
+    toast.success(link ? "WhatsApp aberto com o PDF no texto" : "WhatsApp aberto");
   };
 
   const consultarCep = async (cep: string) => {
@@ -416,9 +445,10 @@ export default function Configurador() {
           <PassosOrcamento
             projeto={projeto}
             pagamentos={listarPagamentos(projeto.id)}
+            ocupado={enviandoWhats ? "enviar" : null}
             onPasso={(id) => {
               if (id === "orcamento") exportarOrcamento();
-              else if (id === "enviar") marcarEnviado();
+              else if (id === "enviar") void marcarEnviado();
               else if (id === "aprovar") aprovar();
               else if (id === "contrato") exportarContrato();
               else if (id === "comprovante") setFinanceiroAberto(true);
@@ -473,7 +503,11 @@ export default function Configurador() {
                   autoComplete="off"
                   onChange={(e) => { upd("cliente", e.target.value); setSugestoesAbertas(true); }}
                   onFocus={() => setSugestoesAbertas(true)}
-                  onBlur={() => window.setTimeout(() => setSugestoesAbertas(false), 150)}
+                  onBlur={(e) => {
+                    const arrumado = nomeProprio(e.target.value);
+                    if (arrumado !== e.target.value) upd("cliente", arrumado);
+                    window.setTimeout(() => setSugestoesAbertas(false), 150);
+                  }}
                   placeholder="Maria Silva"
                 />
                 {sugestoesAbertas && sugestoesCliente.length > 0 && (
@@ -524,10 +558,11 @@ export default function Configurador() {
               <div>
                 <Label className="text-xs">Telefone / WhatsApp</Label>
                 <Input className="h-9" type="tel" mask="telefone" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
+                {telefoneIncompleto && <p className="mt-1 text-[11px] text-amber-500">Faltam números — inclua o DDD.</p>}
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">E-mail</Label>
-                <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} />
+                <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} onBlur={arrumar("cliente_email", emailNormalizado)} />
               </div>
               <div>
                 <Label className="text-xs">CEP</Label>
@@ -538,7 +573,7 @@ export default function Configurador() {
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Rua</Label>
-                <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} placeholder="Rua / avenida" />
+                <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} onBlur={arrumar("cliente_endereco", nomeProprio)} placeholder="Rua / avenida" />
               </div>
               <div>
                 <Label className="text-xs">Número</Label>
@@ -546,19 +581,19 @@ export default function Configurador() {
               </div>
               <div>
                 <Label className="text-xs">Complemento</Label>
-                <Input className="h-9" maxLength={60} value={projeto.cliente_complemento ?? ""} onChange={(e) => upd("cliente_complemento", e.target.value)} placeholder="apto, bloco, fundos" />
+                <Input className="h-9" maxLength={60} value={projeto.cliente_complemento ?? ""} onChange={(e) => upd("cliente_complemento", e.target.value)} onBlur={arrumar("cliente_complemento", frasePrimeiraMaiuscula)} placeholder="apto, bloco, fundos" />
               </div>
               <div>
                 <Label className="text-xs">Bairro</Label>
-                <Input className="h-9" value={projeto.cliente_bairro ?? ""} onChange={(e) => upd("cliente_bairro", e.target.value)} />
+                <Input className="h-9" value={projeto.cliente_bairro ?? ""} onChange={(e) => upd("cliente_bairro", e.target.value)} onBlur={arrumar("cliente_bairro", nomeProprio)} />
               </div>
               <div>
                 <Label className="text-xs">Cidade/UF</Label>
-                <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} />
+                <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} onBlur={arrumar("cliente_cidade", cidadeUf)} />
               </div>
               <div>
                 <Label className="text-xs">Local de instalação</Label>
-                <Input className="h-9" placeholder="se for outro endereço" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} />
+                <Input className="h-9" placeholder="se for outro endereço" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} onBlur={arrumar("local_instalacao", nomeProprio)} />
               </div>
 
               <div className="sm:col-span-2 lg:col-span-4 border-t border-border pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -566,7 +601,7 @@ export default function Configurador() {
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Nome do orçamento</Label>
-                <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} />
+                <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} onBlur={arrumar("nome", frasePrimeiraMaiuscula)} />
               </div>
               <div>
                 <Label className="text-xs">Vendedor(a) responsável</Label>
@@ -930,6 +965,7 @@ export default function Configurador() {
                   maxLength={2000}
                   value={projeto.observacoes_proposta ?? ""}
                   onChange={(e) => upd("observacoes_proposta", e.target.value)}
+                  onBlur={arrumar("observacoes_proposta", frasePrimeiraMaiuscula)}
                 />
               </div>
             </div>
