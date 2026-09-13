@@ -322,8 +322,7 @@ export default function Configurador() {
     toast.success("Orçamento aprovado — gere o contrato e siga os passos");
   };
 
-  const mandarParaOficina = () => {
-    if (checklistPendente()) return;
+  const liberarOficina = () => {
     const agora = new Date().toISOString();
     aplicar({
       status: projeto.status === "orcamento" ? "aprovado" : projeto.status,
@@ -334,6 +333,12 @@ export default function Configurador() {
       prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
     });
     toast.success("Ordem liberada para a oficina");
+  };
+
+  const mandarParaOficina = () => {
+    const faltas = pendenciasOrdem(projeto, listarPagamentos(projeto.id));
+    if (faltas.length > 0) { setPendenciasFila(faltas); return; }
+    liberarOficina();
   };
 
   const exportarOrcamento = () => {
@@ -349,10 +354,17 @@ export default function Configurador() {
   };
 
   const marcarEnviado = () => {
+    const numero = numeroWhatsApp(projeto.cliente_telefone);
+    if (!numero) {
+      toast.error("Cadastre o telefone/WhatsApp do cliente para enviar");
+      setAbaCadastro("cliente");
+      return;
+    }
+    abrirWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa));
     const agora = new Date().toISOString();
     const nome = (session?.user.user_metadata?.nome as string) || session?.user.email || projeto.vendedora || "";
     aplicar({ enviado_em: agora, enviado_por_nome: nome, followup_status: "aguardando" as const, followup_em: null });
-    toast.success("Envio registrado; retorno em 3 dias se necessário");
+    toast.success("WhatsApp aberto — anexe o PDF na conversa");
   };
 
   const consultarCep = async (cep: string) => {
@@ -646,136 +658,156 @@ export default function Configurador() {
         </div>
 
         <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
-          {projeto.pecas.map((pc, i) => (
-            <div
-              key={pc.id}
-              onClick={() => setPecaSelId(pc.id)}
-              className={cn(
-                "relative min-w-[170px] shrink-0 cursor-pointer rounded-lg border-2 p-3 transition",
-                pc.id === pecaSel.id ? "border-primary bg-primary/10" : "border-border hover:border-primary/40",
-              )}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Peça {i + 1}</span>
-                <span
-                  className="h-3 w-3 rounded-full border border-border"
-                  style={{ backgroundColor: ACABAMENTOS.find((a) => a.id === pc.cor)?.hex }}
-                />
+          {projeto.pecas.map((pc, i) => {
+            const sel = pc.id === pecaSel.id;
+            return (
+              <div
+                key={pc.id}
+                onClick={() => setPecaSelId(pc.id)}
+                className={cn(
+                  "relative min-w-[210px] shrink-0 cursor-pointer rounded-xl border-2 p-3 transition",
+                  sel ? "border-primary bg-primary/10 shadow-orange" : "border-border hover:border-primary/40",
+                )}
+              >
+                <div className="flex items-center gap-2">
+                  <span
+                    className="h-4 w-4 shrink-0 rounded-full border border-border"
+                    style={{ backgroundColor: ACABAMENTOS.find((a) => a.id === pc.cor)?.hex }}
+                  />
+                  <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Peça {i + 1}</span>
+                </div>
+                <div className="mt-1 truncate text-sm font-semibold">{pc.nome}</div>
+                <div className="truncate text-xs text-muted-foreground">{tipologiaPorId(pc.tipologia).nome}</div>
+                <div className="mt-1 text-xs font-medium">{cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm</div>
+                {sel && projeto.pecas.length > 1 && (
+                  <button
+                    type="button"
+                    className="absolute right-1.5 top-1.5 rounded p-0.5 text-muted-foreground hover:text-destructive"
+                    onClick={(e) => { e.stopPropagation(); delPeca(pc.id); }}
+                    title="Remover peça"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
-              <div className="truncate text-sm font-medium">{pc.nome}</div>
-              <div className="text-xs text-muted-foreground">
-                {cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm
-              </div>
-              {projeto.pecas.length > 1 && (
-                <button
-                  type="button"
-                  className="absolute right-1.5 top-1 text-muted-foreground hover:text-destructive"
-                  onClick={(e) => { e.stopPropagation(); delPeca(pc.id); }}
-                  title="Remover peça"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <div className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2 lg:grid-cols-4">
-          <div>
-            <Label>Nome da peça</Label>
-            <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
-          </div>
-
-          <div className="sm:col-span-2">
-            <Label>Tipologia</Label>
-            <Select value={pecaSel.tipologia} onValueChange={(v) => {
-              const novo = tipologiaPorId(v as TipologiaId);
-              updPeca({
-                tipologia: v as TipologiaId,
-                largura_mm: Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax),
-                altura_mm: Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax),
-              });
-            }}>
-              <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {TIPOLOGIAS.map((t) => (
-                  <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="mt-1 text-[11px] text-muted-foreground">{tip.descricao}</p>
-          </div>
-
-          <div className="sm:col-span-2 lg:col-span-4 min-w-0">
-            <Label>Acabamento / cor</Label>
-            <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
-              {ACABAMENTOS.map((a) => (
-                <button
-                  key={a.id}
-                  type="button"
-                  onClick={() => updPeca({ cor: a.id as AcabamentoId })}
-                  className={cn(
-                    "h-8 w-8 shrink-0 rounded-full border-2 transition",
-                    pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
-                  )}
-                  style={{ backgroundColor: a.hex }}
-                  title={a.nome}
-                />
-              ))}
+        {/* Campos da peça escolhida, em blocos */}
+        <div className="space-y-4 border-t border-border pt-4">
+          <section className="rounded-lg border border-border p-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que é</h4>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div>
+                <Label>Nome da peça</Label>
+                <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
+              </div>
+              <div className="sm:col-span-2">
+                <Label>Tipologia</Label>
+                <Select value={pecaSel.tipologia} onValueChange={(v) => {
+                  const novo = tipologiaPorId(v as TipologiaId);
+                  updPeca({
+                    tipologia: v as TipologiaId,
+                    largura_mm: Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax),
+                    altura_mm: Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax),
+                  });
+                }}>
+                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {TIPOLOGIAS.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-[11px] text-muted-foreground">{tip.descricao}</p>
+              </div>
             </div>
-          </div>
+          </section>
 
+          <section className="rounded-lg border border-border p-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Medidas</h4>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <SliderMm
+                label="Largura"
+                value={pecaSel.largura_mm}
+                min={tip.larguraMin} max={tip.larguraMax}
+                onChange={(v) => updPeca({ largura_mm: v })}
+              />
+              <SliderMm
+                label="Altura"
+                value={pecaSel.altura_mm}
+                min={tip.alturaMin} max={tip.alturaMax}
+                onChange={(v) => updPeca({ altura_mm: v })}
+              />
+            </div>
+          </section>
 
-          <div className="sm:col-span-2">
-            <SliderMm
-              label="Largura"
-              value={pecaSel.largura_mm}
-              min={tip.larguraMin} max={tip.larguraMax}
-              onChange={(v) => updPeca({ largura_mm: v })}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <SliderMm
-              label="Altura"
-              value={pecaSel.altura_mm}
-              min={tip.alturaMin} max={tip.alturaMax}
-              onChange={(v) => updPeca({ altura_mm: v })}
-            />
-          </div>
+          <section className="rounded-lg border border-border p-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Acabamento e fixação</h4>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2 min-w-0">
+                <Label>Cor</Label>
+                <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
+                  {ACABAMENTOS.map((a) => (
+                    <button
+                      key={a.id}
+                      type="button"
+                      onClick={() => updPeca({ cor: a.id as AcabamentoId })}
+                      className={cn(
+                        "h-8 w-8 shrink-0 rounded-full border-2 transition",
+                        pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
+                      )}
+                      style={{ backgroundColor: a.hex }}
+                      title={a.nome}
+                    />
+                  ))}
+                </div>
+              </div>
 
-          <div className="sm:col-span-2">
-            <Label>Sistema de fixação</Label>
-            <Select
-              value={pecaSel.fixacao ?? FIXACAO_PADRAO}
-              onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}
-            >
-              <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FIXACAO_TIPOS.map((f) => (
-                  <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+              <div>
+                <Label>Sistema de fixação</Label>
+                <Select
+                  value={pecaSel.fixacao ?? FIXACAO_PADRAO}
+                  onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}
+                >
+                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FIXACAO_TIPOS.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-          <div className="sm:col-span-2">
-            <Label>Lados da fixação</Label>
-            <Select
-              value={pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO}
-              onValueChange={(v) => updPeca({ fixacaoLados: v as FixacaoLados })}
-            >
-              <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {FIXACAO_LADOS.map((f) => (
-                  <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="mt-2 text-xs text-muted-foreground">
-              {fixacaoTipo(pecaSel.fixacao).instrucao} ·{" "}
-              {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos de fixação.
-            </p>
-          </div>
+              <div>
+                <Label>Lados da fixação</Label>
+                <Select
+                  value={pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO}
+                  onValueChange={(v) => updPeca({ fixacaoLados: v as FixacaoLados })}
+                >
+                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FIXACAO_LADOS.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <p className="sm:col-span-2 text-xs text-muted-foreground">
+                {fixacaoTipo(pecaSel.fixacao).instrucao} ·{" "}
+                {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos de fixação.
+              </p>
+            </div>
+          </section>
+
+          <p className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
+            <strong>{tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
+            {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome} ·{" "}
+            {fixacaoTipo(pecaSel.fixacao).nome} ·{" "}
+            {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos
+          </p>
         </div>
       </div>
 
@@ -856,6 +888,37 @@ export default function Configurador() {
               <SliderPct label="Mão de obra" value={projeto.maoObraPct} onChange={(v) => upd("maoObraPct", v)} />
               <SliderPct label="Margem" value={projeto.margemPct} onChange={(v) => upd("margemPct", v)} />
               <SliderPct label="Desconto geral" value={projeto.descontoGeralPct} onChange={(v) => upd("descontoGeralPct", v)} max={50} />
+            </div>
+            <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
+              <div>
+                <Label className="text-xs">Serviços (R$)</Label>
+                <Input
+                  className="h-9"
+                  mask="moeda"
+                  placeholder="não incluso"
+                  value={projeto.servicos_valor == null ? "" : String(projeto.servicos_valor).replace(".", ",")}
+                  onChange={(e) => upd("servicos_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
+                />
+              </div>
+              <div>
+                <Label className="text-xs">Frete (R$)</Label>
+                <Input
+                  className="h-9"
+                  mask="moeda"
+                  placeholder="não incluso"
+                  value={projeto.frete_valor == null ? "" : String(projeto.frete_valor).replace(".", ",")}
+                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <Label className="text-xs">Observações da proposta</Label>
+                <Textarea
+                  rows={3}
+                  maxLength={2000}
+                  value={projeto.observacoes_proposta ?? ""}
+                  onChange={(e) => upd("observacoes_proposta", e.target.value)}
+                />
+              </div>
             </div>
           </div>
 
