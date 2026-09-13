@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/select";
 import { useDados } from "@/hooks/useDados";
 import { listarProjetos, listarPagamentos, formatarBRL, obterEmpresa } from "@/lib/storage";
-import { STATUS_LABEL, corPrazo, CLASSES_PRAZO, textoPrazo } from "@/lib/ordens";
+import { STATUS_LABEL, corPrazo, CLASSES_PRAZO, textoPrazo, totalComServicos } from "@/lib/ordens";
 import { useVendedores } from "@/hooks/useVendedores";
 
 const mesDe = (iso: string) => iso.slice(0, 7);
@@ -39,7 +39,7 @@ export default function Financeiro() {
       const k = p.vendedora || "Sem vendedor(a)";
       if (!mapa.has(k)) mapa.set(k, { orcado: 0, faturado: 0, recebido: 0, qtd: 0 });
       const v = mapa.get(k)!;
-      v.orcado += p.total;
+      v.orcado += totalComServicos(p);
       v.faturado += p.valor_faturado || 0;
       v.recebido += listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
       v.qtd += 1;
@@ -54,7 +54,7 @@ export default function Financeiro() {
       return mapa.get(m)!;
     };
     projetos.forEach((p) => {
-      get(mesDe(p.created_at)).orcado += p.total;
+      get(mesDe(p.created_at)).orcado += totalComServicos(p);
       if (p.valor_faturado) get(mesDe(p.faturado_em ?? p.updated_at)).faturado += p.valor_faturado;
     });
     pagamentos.forEach((p) => { get(mesDe(p.data)).recebido += p.valor; });
@@ -82,7 +82,7 @@ export default function Financeiro() {
         const rec = listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
         return [
           p.nome, p.cliente, p.vendedora || "", STATUS_LABEL[p.status], p.prazo_entrega ?? "",
-          p.total.toFixed(2), (p.valor_faturado || 0).toFixed(2), rec.toFixed(2),
+          totalComServicos(p).toFixed(2), (p.valor_faturado || 0).toFixed(2), rec.toFixed(2),
           ((p.valor_faturado || 0) - rec).toFixed(2),
         ].join(";");
       }),
