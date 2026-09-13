@@ -5,6 +5,10 @@ import {
   RotateCw, Box as BoxIcon, Grid3x3, Ruler, Plus, Trash2, RefreshCw, EyeOff, Eye,
   Wrench, FileText, FileSpreadsheet, Smartphone, Sun, Moon, User, Car, Play, MoreHorizontal,
 } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -33,14 +37,15 @@ import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
 } from "@/lib/tipologias";
 import {
-  ProjetoLocal, Peca, OrdemStatus, obterProjeto, salvarProjeto, duplicarProjeto,
+  ProjetoLocal, Peca, obterProjeto, salvarProjeto, duplicarProjeto,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
 } from "@/lib/storage";
-import { progressoOrcamento } from "@/lib/progressoOrcamento";
+import { progressoOrcamento, pendenciasOrdem } from "@/lib/progressoOrcamento";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
-import { STATUS_ORDEM, STATUS_LABEL, somarDias } from "@/lib/ordens";
+import { STATUS_LABEL, somarDias } from "@/lib/ordens";
+import { abrirWhatsApp, numeroWhatsApp, textoOrcamento } from "@/lib/whatsapp";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
   FixacaoTipo, FixacaoLados, pontosFixacao, fixacaoTipo,
@@ -92,6 +97,7 @@ export default function Configurador() {
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [financeiroAberto, setFinanceiroAberto] = useState(false);
+  const [pendenciasFila, setPendenciasFila] = useState<string[] | null>(null);
   const { session } = useSessao();
 
   useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
@@ -435,9 +441,8 @@ export default function Configurador() {
         <Tabs value={abaCadastro} onValueChange={setAbaCadastro}>
           <TabsList className="w-full justify-start overflow-x-auto rounded-b-none border-b border-border bg-transparent p-0">
             <TabsTrigger value="cliente">1 · Cliente</TabsTrigger>
-            <TabsTrigger value="proposta">2 · Proposta</TabsTrigger>
-            <TabsTrigger value="checklist">3 · Checklist do pedido</TabsTrigger>
-            <TabsTrigger value="ordem">4 · Ordem de serviço</TabsTrigger>
+            <TabsTrigger value="checklist">2 · Checklist do pedido</TabsTrigger>
+            <TabsTrigger value="ordem">3 · Ordem de serviço</TabsTrigger>
           </TabsList>
 
           <TabsContent value="cliente" className="mt-0 p-4">
@@ -530,16 +535,15 @@ export default function Configurador() {
                 <Label className="text-xs">Local de instalação</Label>
                 <Input className="h-9" placeholder="se for outro endereço" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} />
               </div>
-            </div>
-          </TabsContent>
 
-          <TabsContent value="proposta" className="mt-0 p-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="sm:col-span-2 lg:col-span-4 border-t border-border pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Dados do orçamento
+              </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Nome do orçamento</Label>
                 <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} />
               </div>
-              <div className="sm:col-span-2">
+              <div>
                 <Label className="text-xs">Vendedor(a) responsável</Label>
                 {vendedores.length > 0 ? (
                   <Select
@@ -571,37 +575,9 @@ export default function Configurador() {
                   onChange={(e) => upd("prazo_dias_uteis", e.target.value === "" ? null : Math.max(1, Number(e.target.value)))}
                 />
               </div>
-              <div>
-                <Label className="text-xs">Serviços (R$)</Label>
-                <Input
-                  className="h-9"
-                  mask="moeda"
-                  placeholder="não incluso"
-                  value={projeto.servicos_valor == null ? "" : String(projeto.servicos_valor).replace(".", ",")}
-                  onChange={(e) => upd("servicos_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Frete (R$)</Label>
-                <Input
-                  className="h-9"
-                  mask="moeda"
-                  placeholder="não incluso"
-                  value={projeto.frete_valor == null ? "" : String(projeto.frete_valor).replace(".", ",")}
-                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
-                />
-              </div>
-              <div className="sm:col-span-2 lg:col-span-4">
-                <Label className="text-xs">Observações da proposta</Label>
-                <Textarea
-                  rows={3}
-                  maxLength={2000}
-                  value={projeto.observacoes_proposta ?? ""}
-                  onChange={(e) => upd("observacoes_proposta", e.target.value)}
-                />
-              </div>
             </div>
           </TabsContent>
+
 
           <TabsContent value="checklist" className="mt-0 p-4">
             <ChecklistPedido
@@ -625,12 +601,10 @@ export default function Configurador() {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <div>
                 <Label className="text-xs">Situação</Label>
-                <Select value={projeto.status} onValueChange={(v) => upd("status", v as OrdemStatus)}>
-                  <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
-                  </SelectContent>
-                </Select>
+                <div className="flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
+                  {STATUS_LABEL[projeto.status]}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">Muda sozinha conforme os passos.</p>
               </div>
               <div>
                 <Label className="text-xs">Prazo de entrega</Label>
