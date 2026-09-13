@@ -27,7 +27,7 @@ import Visualizador3DClient from "@/components/Visualizador3DClient";
 import type { CameraPreset } from "@/components/Visualizador3D";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { useVendedores } from "@/hooks/useVendedores";
-import { type Cliente, listarClientes } from "@/lib/gestao";
+import { type Cliente, listarClientes, nomeClienteValido, sincronizarClienteDoOrcamento } from "@/lib/gestao";
 
 import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
@@ -86,6 +86,7 @@ export default function Configurador() {
   const [aberto, setAberto] = useState(false);
   const [pecaSelId, setPecaSelId] = useState<string | null>(null);
   const [clientes, setClientes] = useState<Cliente[]>([]);
+  const [sugestoesAbertas, setSugestoesAbertas] = useState(false);
   const abrirChecklist = Boolean((location.state as { abrirChecklist?: boolean } | null)?.abrirChecklist);
   const [abaCadastro, setAbaCadastro] = useState(abrirChecklist ? "checklist" : "cliente");
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
@@ -148,6 +149,49 @@ export default function Configurador() {
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projeto, resultado?.totalGeral]);
+
+  // Sugestões de clientes já cadastrados enquanto digita o nome
+  const sugestoesCliente = useMemo(() => {
+    const termo = (projeto?.cliente ?? "").trim().toLowerCase();
+    const base = termo ? clientes.filter((c) => c.nome.toLowerCase().includes(termo)) : clientes;
+    return base.slice(0, 6);
+  }, [clientes, projeto?.cliente]);
+
+  // Cadastra/atualiza a ficha do cliente automaticamente a partir do orçamento
+  const chaveCliente = projeto
+    ? [
+      projeto.cliente, projeto.cliente_documento, projeto.cliente_telefone, projeto.cliente_email,
+      projeto.cliente_endereco, projeto.cliente_bairro, projeto.cliente_cidade, projeto.cliente_cep,
+    ].join("|")
+    : "";
+  const ultimaChaveCliente = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!projeto || !nomeClienteValido(projeto.cliente)) return;
+    if (ultimaChaveCliente.current === chaveCliente) return;
+    const t = window.setTimeout(() => {
+      ultimaChaveCliente.current = chaveCliente;
+      void sincronizarClienteDoOrcamento({
+        cliente_id: projeto.cliente_id,
+        cliente: projeto.cliente,
+        cliente_documento: projeto.cliente_documento,
+        cliente_email: projeto.cliente_email,
+        cliente_telefone: projeto.cliente_telefone,
+        cliente_endereco: projeto.cliente_endereco,
+        cliente_bairro: projeto.cliente_bairro,
+        cliente_cidade: projeto.cliente_cidade,
+        cliente_cep: projeto.cliente_cep,
+      })
+        .then((idCliente) => {
+          if (!idCliente) return;
+          setProjeto((atual) => (atual && atual.cliente_id !== idCliente ? { ...atual, cliente_id: idCliente } : atual));
+          void listarClientes().then(setClientes).catch(() => undefined);
+        })
+        .catch(() => undefined);
+    }, 1500);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveCliente]);
 
   const totalAnimado = useAnimatedNumber(resultado?.totalGeral ?? 0);
 
@@ -397,44 +441,59 @@ export default function Configurador() {
           </TabsList>
 
           <TabsContent value="cliente" className="mt-0 p-4">
-            <div className="mb-3 flex flex-wrap items-end gap-2">
-              <div className="min-w-[240px] flex-1">
-                <Label className="text-xs">Buscar cliente já cadastrado</Label>
-                <Select
-                  value={projeto.cliente_id ?? ""}
-                  onValueChange={(v) => {
-                    const c = clientes.find((x) => x.id === v);
-                    if (!c) return;
-                    setProjeto({
-                      ...projeto,
-                      cliente_id: c.id,
-                      cliente: c.nome,
-                      cliente_documento: c.documento,
-                      cliente_email: c.email,
-                      cliente_telefone: c.telefone || c.whatsapp,
-                      cliente_endereco: c.endereco,
-                      cliente_bairro: c.bairro,
-                      cliente_cidade: c.cidade,
-                      cliente_cep: c.cep,
-                    });
-                    setSalvo(false);
-                  }}
-                >
-                  <SelectTrigger className="h-9"><SelectValue placeholder="Selecionar cliente" /></SelectTrigger>
-                  <SelectContent>
-                    {clientes.map((c) => <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button variant="outline" size="sm" asChild>
-                <Link to="/app/clientes">Cadastrar cliente</Link>
-              </Button>
-            </div>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
 
-              <div className="sm:col-span-2">
+              <div className="relative sm:col-span-2">
                 <Label className="text-xs">Cliente (nome e sobrenome)</Label>
-                <Input ref={clienteNomeRef} className="h-9" value={projeto.cliente} onChange={(e) => upd("cliente", e.target.value)} placeholder="Maria Silva" />
+                <Input
+                  ref={clienteNomeRef}
+                  className="h-9"
+                  value={projeto.cliente}
+                  autoComplete="off"
+                  onChange={(e) => { upd("cliente", e.target.value); setSugestoesAbertas(true); }}
+                  onFocus={() => setSugestoesAbertas(true)}
+                  onBlur={() => window.setTimeout(() => setSugestoesAbertas(false), 150)}
+                  placeholder="Maria Silva"
+                />
+                {sugestoesAbertas && sugestoesCliente.length > 0 && (
+                  <ul className="absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-y-auto rounded-md border border-border bg-popover shadow-md">
+                    {sugestoesCliente.map((c) => (
+                      <li key={c.id}>
+                        <button
+                          type="button"
+                          className="w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => {
+                            setProjeto({
+                              ...projeto,
+                              cliente_id: c.id,
+                              cliente: c.nome,
+                              cliente_documento: c.documento,
+                              cliente_email: c.email,
+                              cliente_telefone: c.telefone || c.whatsapp,
+                              cliente_endereco: c.endereco,
+                              cliente_bairro: c.bairro,
+                              cliente_cidade: c.cidade,
+                              cliente_cep: c.cep,
+                            });
+                            setSugestoesAbertas(false);
+                            setSalvo(false);
+                          }}
+                        >
+                          <span className="font-medium">{c.nome}</span>
+                          {(c.telefone || c.cidade) && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              {[c.telefone || c.whatsapp, c.cidade].filter(Boolean).join(" · ")}
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Comece a digitar para reaproveitar um cliente. Cliente novo é cadastrado sozinho ao salvar.
+                </p>
               </div>
               <div>
                 <Label className="text-xs">RG ou CPF</Label>
