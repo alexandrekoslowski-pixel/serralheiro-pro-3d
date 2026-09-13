@@ -28,7 +28,8 @@ export function textoOrcamento(projeto: ProjetoLocal, total: number, empresa: Da
     `Prazo de entrega: aproximadamente ${prazo} dias úteis após a confirmação do pagamento da entrada.`,
     `Validade do orçamento: ${empresa.validadeDias ?? 5} dias corridos.`,
     "",
-    "Vou enviar o PDF completo em seguida. Qualquer dúvida, estou à disposição!",
+    linkPdf ? `Orçamento em PDF: ${linkPdf}` : "Vou enviar o PDF completo em seguida.",
+    "Qualquer dúvida, estou à disposição!",
   ].filter((l) => l !== undefined).join("\n");
 }
 
