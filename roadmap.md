@@ -27,3 +27,5 @@
 - [x] Medição com foto anotada (cotas, linhas e textos) salva na ordem e visível na OS da oficina
 - [x] Checklist de pós-venda com ocorrências; card só vai para Pronto sem pendências
 - [x] Trilha de progresso do orçamento (enviado, retorno, comprovante, oficina) e lista "o que falta fazer"
+- [x] Link curto do PDF do orçamento (/o/<código>) — cliente baixa sem ver a URL assinada enorme
+- [x] Remover lista de materiais do PDF do orçamento (cliente vê só peças, serviços, frete e total)
