@@ -95,6 +95,8 @@ export default function Configurador() {
   const [abaCadastro, setAbaCadastro] = useState(abrirChecklist ? "checklist" : "cliente");
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [ajustandoValor, setAjustandoValor] = useState(false);
+
   const [enviandoWhats, setEnviandoWhats] = useState(false);
   const [enviandoContrato, setEnviandoContrato] = useState(false);
   const [financeiroAberto, setFinanceiroAberto] = useState(false);
