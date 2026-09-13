@@ -9,6 +9,7 @@ import { useDados } from "@/hooks/useDados";
 import { listarProjetos, listarPagamentos, formatarBRL, obterEmpresa } from "@/lib/storage";
 import { STATUS_LABEL, corPrazo, CLASSES_PRAZO, textoPrazo, totalComServicos } from "@/lib/ordens";
 import { useVendedores } from "@/hooks/useVendedores";
+import { recebidoDe, saldoDe, valorACobrar } from "@/lib/financeiro";
 
 const mesDe = (iso: string) => iso.slice(0, 7);
 const rotuloMes = (m: string) => {
@@ -40,8 +41,8 @@ export default function Financeiro() {
       if (!mapa.has(k)) mapa.set(k, { orcado: 0, faturado: 0, recebido: 0, qtd: 0 });
       const v = mapa.get(k)!;
       v.orcado += totalComServicos(p);
-      v.faturado += p.valor_faturado || 0;
-      v.recebido += listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
+      v.faturado += valorACobrar(p);
+      v.recebido += recebidoDe(p.id);
       v.qtd += 1;
     });
     return [...mapa.entries()].sort((a, b) => b[1].faturado - a[1].faturado);
@@ -55,7 +56,8 @@ export default function Financeiro() {
     };
     projetos.forEach((p) => {
       get(mesDe(p.created_at)).orcado += totalComServicos(p);
-      if (p.valor_faturado) get(mesDe(p.faturado_em ?? p.updated_at)).faturado += p.valor_faturado;
+      const cobrar = valorACobrar(p);
+      if (cobrar > 0) get(mesDe(p.faturado_em ?? p.aprovado_em ?? p.updated_at)).faturado += cobrar;
     });
     pagamentos.forEach((p) => { get(mesDe(p.data)).recebido += p.valor; });
     return [...mapa.entries()].sort((a, b) => b[0].localeCompare(a[0]));
@@ -63,7 +65,7 @@ export default function Financeiro() {
 
   const aReceber = useMemo(
     () => projetos
-      .map((p) => ({ p, saldo: (p.valor_faturado || 0) - listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0) }))
+      .map((p) => ({ p, saldo: saldoDe(p) }))
       .filter((x) => x.saldo > 0.01)
       .sort((a, b) => b.saldo - a.saldo),
     [projetos, pagamentos],
@@ -79,11 +81,11 @@ export default function Financeiro() {
     const linhas = [
       ["Ordem", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
       ...projetos.map((p) => {
-        const rec = listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
+        const rec = recebidoDe(p.id);
         return [
           p.nome, p.cliente, p.vendedora || "", STATUS_LABEL[p.status], p.prazo_entrega ?? "",
-          totalComServicos(p).toFixed(2), (p.valor_faturado || 0).toFixed(2), rec.toFixed(2),
-          ((p.valor_faturado || 0) - rec).toFixed(2),
+          totalComServicos(p).toFixed(2), valorACobrar(p).toFixed(2), rec.toFixed(2),
+          saldoDe(p).toFixed(2),
         ].join(";");
       }),
     ].join("\n");
