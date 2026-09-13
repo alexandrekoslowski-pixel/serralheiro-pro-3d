@@ -27,7 +27,7 @@ import Visualizador3DClient from "@/components/Visualizador3DClient";
 import type { CameraPreset } from "@/components/Visualizador3D";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { useVendedores } from "@/hooks/useVendedores";
-import { type Cliente, listarClientes } from "@/lib/gestao";
+import { type Cliente, listarClientes, nomeClienteValido, sincronizarClienteDoOrcamento } from "@/lib/gestao";
 
 import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
