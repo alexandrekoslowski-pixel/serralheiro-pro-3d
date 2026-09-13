@@ -15,7 +15,7 @@ import {
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
-  diasRestantes, somarDias, ETAPA_LABEL,
+  diasRestantes, somarDias, ETAPA_LABEL, totalComServicos,
 } from "@/lib/ordens";
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
@@ -86,10 +86,10 @@ export default function Painel() {
 
     const calc = (mes: string) => {
       const criados = base.filter((p) => chave(p.created_at) === mes);
-      const orcado = criados.reduce((s, p) => s + p.total, 0);
+      const orcado = criados.reduce((s, p) => s + totalComServicos(p), 0);
       const aprovado = base
         .filter((p) => chave(p.aprovado_em) === mes)
-        .reduce((s, p) => s + p.total, 0);
+        .reduce((s, p) => s + totalComServicos(p), 0);
       const faturado = base
         .filter((p) => chave(p.faturado_em) === mes)
         .reduce((s, p) => s + (p.valor_faturado || 0), 0);
@@ -191,7 +191,7 @@ export default function Painel() {
     if (prox === "entregue") patch.entregue_em = agora;
     if (prox === "faturado") {
       patch.faturado_em = agora;
-      if (!p.valor_faturado) patch.valor_faturado = p.total;
+      if (!p.valor_faturado) patch.valor_faturado = totalComServicos(p);
     }
     salvarProjeto({ ...p, ...patch });
     toast.success(`Ordem em ${STATUS_LABEL[prox]}`);
@@ -439,7 +439,7 @@ export default function Painel() {
                 </div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                  <div><div className="text-[10px] uppercase text-muted-foreground">Orçado</div><div>{formatarBRL(p.total)}</div></div>
+                  <div><div className="text-[10px] uppercase text-muted-foreground">Orçado</div><div>{formatarBRL(totalComServicos(p))}</div></div>
                   <div><div className="text-[10px] uppercase text-muted-foreground">Faturado</div><div>{formatarBRL(p.valor_faturado || 0)}</div></div>
                   <div><div className="text-[10px] uppercase text-muted-foreground">Recebido</div><div>{formatarBRL(recebido)}</div></div>
                 </div>

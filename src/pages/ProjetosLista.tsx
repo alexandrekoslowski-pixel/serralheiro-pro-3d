@@ -16,7 +16,7 @@ import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { tipologiaPorId } from "@/lib/tipologias";
-import { STATUS_LABEL, somarDias } from "@/lib/ordens";
+import { STATUS_LABEL, somarDias, totalComServicos } from "@/lib/ordens";
 import { useDados } from "@/hooks/useDados";
 import { cm } from "@/lib/medidas";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
@@ -206,7 +206,7 @@ export default function ProjetosLista() {
                 </div>
                 <div>
                   <p className="text-sm font-medium">{ROTULO_PENDENCIA[tipo]}</p>
-                  <p className="text-xs text-muted-foreground">{formatarBRL(p.total)}</p>
+                  <p className="text-xs text-muted-foreground">{formatarBRL(totalComServicos(p))}</p>
                 </div>
                 <span className={`w-fit rounded px-2 py-1 text-xs ${dias >= 3 ? "bg-destructive/15 text-destructive" : "bg-muted text-muted-foreground"}`}>
                   parado há {dias} {dias === 1 ? "dia" : "dias"}
@@ -251,7 +251,7 @@ export default function ProjetosLista() {
                 <div className="mt-3 flex items-end justify-between">
                   <div>
                     <div className="text-[10px] uppercase text-muted-foreground">Total</div>
-                    <div className="font-display text-lg text-gradient-orange">{formatarBRL(p.total)}</div>
+                    <div className="font-display text-lg text-gradient-orange">{formatarBRL(totalComServicos(p))}</div>
                   </div>
                   <div className="text-[10px] text-muted-foreground">
                     {new Date(p.updated_at).toLocaleDateString("pt-BR")}
