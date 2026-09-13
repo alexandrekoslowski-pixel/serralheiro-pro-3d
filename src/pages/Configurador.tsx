@@ -1199,6 +1199,31 @@ export default function Configurador() {
       {financeiroAberto && (
         <DialogOrdemFinanceiro projeto={projeto} foco="comprovante" onClose={() => setFinanceiroAberto(false)} />
       )}
+
+      <AlertDialog open={pendenciasFila !== null} onOpenChange={(o) => !o && setPendenciasFila(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Falta informação para a oficina</AlertDialogTitle>
+            <AlertDialogDescription>
+              Você pode mandar assim mesmo, mas o serralheiro vai começar sem estes dados:
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <ul className="list-disc space-y-1 pl-5 text-sm">
+            {(pendenciasFila ?? []).map((f) => <li key={f}>{f}</li>)}
+          </ul>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setPendenciasFila(null); checklistPendente(); }}>
+              Voltar e completar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-gradient-orange text-primary-foreground"
+              onClick={() => { setPendenciasFila(null); liberarOficina(); }}
+            >
+              Mandar assim mesmo
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

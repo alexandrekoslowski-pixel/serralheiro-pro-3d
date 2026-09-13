@@ -69,14 +69,24 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: Pro
     }
   };
 
+  const avancar = proximoStatus(atual.status);
   const blocoSituacao = (
     <div className="grid gap-3 sm:grid-cols-2">
       <div>
         <Label>Situação</Label>
-        <Select value={atual.status} onValueChange={(v) => salvarProjeto({ ...atual, status: v as OrdemStatus })}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>{STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}</SelectContent>
-        </Select>
+        <div className="flex h-10 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
+          {STATUS_LABEL[atual.status]}
+        </div>
+        {avancar && (
+          <Button
+            size="sm"
+            variant="soft"
+            className="mt-2 w-full"
+            onClick={() => salvarProjeto({ ...atual, status: avancar })}
+          >
+            Marcar como {STATUS_LABEL[avancar].toLowerCase()}
+          </Button>
+        )}
       </div>
       <div>
         <Label>Prazo de entrega</Label>
