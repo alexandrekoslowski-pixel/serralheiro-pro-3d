@@ -24,6 +24,7 @@ import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklis
 import { progressoOrcamento, ROTULO_PENDENCIA } from "@/lib/progressoOrcamento";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
+import { recebidoDe, saldoDe, valorACobrar } from "@/lib/financeiro";
 
 export default function Painel() {
   const navigate = useNavigate();
@@ -91,17 +92,14 @@ export default function Painel() {
         .filter((p) => chave(p.aprovado_em) === mes)
         .reduce((s, p) => s + totalComServicos(p), 0);
       const faturado = base
-        .filter((p) => chave(p.faturado_em) === mes)
-        .reduce((s, p) => s + (p.valor_faturado || 0), 0);
+        .filter((p) => chave(p.faturado_em ?? p.aprovado_em) === mes)
+        .reduce((s, p) => s + valorACobrar(p), 0);
       const recebido = pagamentosBase.filter((p) => p.data.slice(0, 7) === mes).reduce((s, p) => s + p.valor, 0);
       const ticket = criados.length ? orcado / criados.length : 0;
       return { orcado, aprovado, faturado, recebido, ticket, qtd: criados.length };
     };
 
-    const aReceber = base.reduce(
-      (s, p) => s + Math.max(0, (p.valor_faturado || 0) - totalRecebido(p.id)),
-      0,
-    );
+    const aReceber = base.reduce((s, p) => s + saldoDe(p), 0);
     return { atual: calc(mesAtual), anterior: calc(mesAnterior), aReceber };
   }, [base, pagamentosBase]);
 
@@ -113,8 +111,8 @@ export default function Painel() {
     const inicio = `${seg.getFullYear()}-${String(seg.getMonth() + 1).padStart(2, "0")}-${String(seg.getDate()).padStart(2, "0")}`;
     const recebido = pagamentosBase.filter((p) => p.data >= inicio).reduce((s, p) => s + p.valor, 0);
     const faturado = base
-      .filter((p) => (p.faturado_em ?? "") >= inicio)
-      .reduce((s, p) => s + (p.valor_faturado || 0), 0);
+      .filter((p) => (p.faturado_em ?? p.aprovado_em ?? "") >= inicio)
+      .reduce((s, p) => s + valorACobrar(p), 0);
     const meta = empresa.metaSemanal || 0;
     const pct = meta > 0 ? Math.min(100, (recebido / meta) * 100) : 0;
     return { recebido, faturado, meta, pct };
