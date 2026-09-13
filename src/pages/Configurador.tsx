@@ -581,19 +581,19 @@ export default function Configurador() {
               </div>
               <div>
                 <Label className="text-xs">Complemento</Label>
-                <Input className="h-9" maxLength={60} value={projeto.cliente_complemento ?? ""} onChange={(e) => upd("cliente_complemento", e.target.value)} placeholder="apto, bloco, fundos" />
+                <Input className="h-9" maxLength={60} value={projeto.cliente_complemento ?? ""} onChange={(e) => upd("cliente_complemento", e.target.value)} onBlur={arrumar("cliente_complemento", frasePrimeiraMaiuscula)} placeholder="apto, bloco, fundos" />
               </div>
               <div>
                 <Label className="text-xs">Bairro</Label>
-                <Input className="h-9" value={projeto.cliente_bairro ?? ""} onChange={(e) => upd("cliente_bairro", e.target.value)} />
+                <Input className="h-9" value={projeto.cliente_bairro ?? ""} onChange={(e) => upd("cliente_bairro", e.target.value)} onBlur={arrumar("cliente_bairro", nomeProprio)} />
               </div>
               <div>
                 <Label className="text-xs">Cidade/UF</Label>
-                <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} />
+                <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} onBlur={arrumar("cliente_cidade", cidadeUf)} />
               </div>
               <div>
                 <Label className="text-xs">Local de instalação</Label>
-                <Input className="h-9" placeholder="se for outro endereço" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} />
+                <Input className="h-9" placeholder="se for outro endereço" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} onBlur={arrumar("local_instalacao", nomeProprio)} />
               </div>
 
               <div className="sm:col-span-2 lg:col-span-4 border-t border-border pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
