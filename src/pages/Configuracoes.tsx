@@ -1,19 +1,18 @@
 import { useEffect, useState } from "react";
-import { Building2, Save, Plus, Trash2, RotateCcw } from "lucide-react";
+import { Building2, Save, Plus, Trash2, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import {
-  obterEmpresa, salvarEmpresa, obterCatalogo, salvarCatalogo,
-  restaurarCatalogoPadrao, DadosEmpresa,
-} from "@/lib/storage";
-import { Catalogo, Perfil, Acessorio } from "@/lib/catalogo";
+import { obterEmpresa, salvarEmpresa, obterCatalogo, salvarCatalogo, DadosEmpresa } from "@/lib/storage";
+import { Catalogo } from "@/lib/catalogo";
 import { numeroMascarado } from "@/lib/mascaras";
 import { documentoOpcionalSchema, emailOpcionalSchema, primeiraMensagem, telefoneOpcionalSchema } from "@/lib/validacao";
 
 export default function Configuracoes() {
+  const navigate = useNavigate();
   const [empresa, setEmpresa] = useState<DadosEmpresa>(obterEmpresa());
   const [cat, setCat] = useState<Catalogo>(obterCatalogo());
 
@@ -32,32 +31,6 @@ export default function Configuracoes() {
     salvarCatalogo(cat);
     toast.success("Configurações salvas");
   };
-
-  const restaurar = () => {
-    const padrao = restaurarCatalogoPadrao();
-    setCat(padrao);
-    toast.success("Catálogo restaurado para o padrão");
-  };
-
-  const updPerfil = (i: number, patch: Partial<Perfil>) => {
-    const next = [...cat.perfis];
-    next[i] = { ...next[i], ...patch };
-    setCat({ ...cat, perfis: next });
-  };
-  const addPerfil = () =>
-    setCat({ ...cat, perfis: [...cat.perfis, { codigo: "NOVO", descricao: "Novo perfil", precoPorMetro: 0, pesoLinear: 0 }] });
-  const delPerfil = (i: number) =>
-    setCat({ ...cat, perfis: cat.perfis.filter((_, idx) => idx !== i) });
-
-  const updAce = (i: number, patch: Partial<Acessorio>) => {
-    const next = [...cat.acessorios];
-    next[i] = { ...next[i], ...patch };
-    setCat({ ...cat, acessorios: next });
-  };
-  const addAce = () =>
-    setCat({ ...cat, acessorios: [...cat.acessorios, { codigo: "NOVO", descricao: "Novo acessório", preco: 0, unidade: "un" }] });
-  const delAce = (i: number) =>
-    setCat({ ...cat, acessorios: cat.acessorios.filter((_, idx) => idx !== i) });
 
   return (
     <section className="container py-6 md:py-10 space-y-8">
