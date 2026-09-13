@@ -1,18 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft, Save, Copy, Download, Settings2, DollarSign, Send, FileSignature, Loader2,
+  ArrowLeft, Save, Download, Settings2, DollarSign, Send, FileSignature, Loader2,
   RotateCw, Box as BoxIcon, Grid3x3, Ruler, Plus, Trash2, RefreshCw, EyeOff, Eye,
-  Wrench, FileText, FileSpreadsheet, Smartphone, Sun, Moon, User, Car, Play, MoreHorizontal,
+  Wrench, FileText, FileSpreadsheet, Sun, Moon, User, Car, Play,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -37,7 +34,7 @@ import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
 } from "@/lib/tipologias";
 import {
-  ProjetoLocal, Peca, obterProjeto, salvarProjeto, duplicarProjeto, nomeSugeridoOrcamento,
+  ProjetoLocal, Peca, obterProjeto, salvarProjeto, nomeSugeridoOrcamento,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
 } from "@/lib/storage";
 import { progressoOrcamento, pendenciasOrdem } from "@/lib/progressoOrcamento";
@@ -45,7 +42,7 @@ import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 import { STATUS_LABEL, somarDias } from "@/lib/ordens";
-import { abrirWhatsApp, linkWhatsApp, numeroWhatsApp, textoOrcamento } from "@/lib/whatsapp";
+import { abrirWhatsApp, linkWhatsApp, numeroWhatsApp, textoContrato, textoOrcamento } from "@/lib/whatsapp";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
   FixacaoTipo, FixacaoLados, pontosFixacao, fixacaoTipo,
@@ -57,7 +54,7 @@ import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 import { numeroMascarado, nomeProprio, cidadeUf, emailNormalizado, frasePrimeiraMaiuscula } from "@/lib/mascaras";
-import { publicarOrcamentoPDF } from "@/lib/orcamentoPdfEnvio";
+import { publicarContratoPDF, publicarOrcamentoPDF } from "@/lib/orcamentoPdfEnvio";
 import { buscarCep } from "@/lib/cep";
 import { gerarContratoPDF } from "@/lib/pdfContrato";
 import { useSessao } from "@/lib/sessao";
@@ -99,6 +96,7 @@ export default function Configurador() {
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
   const [buscandoCep, setBuscandoCep] = useState(false);
   const [enviandoWhats, setEnviandoWhats] = useState(false);
+  const [enviandoContrato, setEnviandoContrato] = useState(false);
   const [financeiroAberto, setFinanceiroAberto] = useState(false);
   const [pendenciasFila, setPendenciasFila] = useState<string[] | null>(null);
   const { session } = useSessao();
@@ -300,15 +298,6 @@ export default function Configurador() {
   const delExtra = (id: string) =>
     setProjeto({ ...projeto, extras: projeto.extras.filter((e) => e.id !== id) });
 
-  const duplicar = () => {
-    salvarProjeto({ ...projeto, total: resultado.totalGeral });
-    const novo = duplicarProjeto(projeto.id);
-    if (novo) {
-      toast.success("Duplicado");
-      navigate(`/app/projeto/${novo.id}`);
-    }
-  };
-
   const aplicar = (patch: Partial<ProjetoLocal>) => {
     const atualizado: ProjetoLocal = { ...projeto, total: resultado.totalGeral, ...patch };
     setProjeto(atualizado);
@@ -367,10 +356,38 @@ export default function Configurador() {
     toast.success("Orçamento gerado");
   };
 
-  const exportarContrato = () => {
+  const enviarContrato = async () => {
+    const numero = numeroWhatsApp(projeto.cliente_telefone);
+    if (!numero) {
+      toast.error("Cadastre o telefone/WhatsApp do cliente para enviar o contrato");
+      setAbaCadastro("cliente");
+      return;
+    }
+    // Abre a aba antes do upload para não ser bloqueada pelo navegador.
+    const aba = window.open("about:blank", "_blank");
+    setEnviandoContrato(true);
     const atualizado = aplicar({ contrato_pdf_em: new Date().toISOString() });
-    gerarContratoPDF(atualizado, empresa);
-    toast.success("Contrato gerado");
+    let link: string | undefined;
+    try {
+      const publicado = await publicarContratoPDF(atualizado, empresa);
+      link = publicado.link;
+      // Também baixa o PDF para a vendedora ter o arquivo em mãos.
+      const url = URL.createObjectURL(publicado.blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `contrato-${projeto.id}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.warning("Não consegui subir o PDF — anexe o contrato na conversa");
+      gerarContratoPDF(atualizado, empresa);
+    } finally {
+      setEnviandoContrato(false);
+    }
+    const texto = textoContrato(atualizado, empresa, link);
+    if (aba) aba.location.href = linkWhatsApp(numero, texto);
+    else abrirWhatsApp(numero, texto);
+    toast.success(link ? "WhatsApp aberto com o contrato no texto" : "WhatsApp aberto");
   };
 
   const marcarEnviado = async () => {
@@ -452,12 +469,12 @@ export default function Configurador() {
           <PassosOrcamento
             projeto={projeto}
             pagamentos={listarPagamentos(projeto.id)}
-            ocupado={enviandoWhats ? "enviar" : null}
+            ocupado={enviandoWhats ? "enviar" : enviandoContrato ? "contrato" : null}
             onPasso={(id) => {
               if (id === "orcamento") exportarOrcamento();
               else if (id === "enviar") void marcarEnviado();
               else if (id === "aprovar") aprovar();
-              else if (id === "contrato") exportarContrato();
+              else if (id === "contrato") void enviarContrato();
               else if (id === "comprovante") setFinanceiroAberto(true);
               else mandarParaOficina();
             }}
@@ -465,27 +482,6 @@ export default function Configurador() {
           <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); toast.success("Salvo"); }}>
             <Save className="mr-1 h-4 w-4" /> Salvar
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="soft" size="sm" className="shrink-0">
-                <MoreHorizontal className="mr-1 h-4 w-4" /> Mais ações
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem onClick={duplicar}>
-                <Copy className="mr-2 h-4 w-4" /> Duplicar orçamento
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); navigate(`/app/projeto/${projeto.id}/atender`); }}>
-                <Smartphone className="mr-2 h-4 w-4" /> Abrir atendimento
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={exportarOP}>
-                <FileSpreadsheet className="mr-2 h-4 w-4" /> Imprimir OS
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); window.open(`/op/${projeto.id}`, "_blank"); }}>
-                <Wrench className="mr-2 h-4 w-4" /> Abrir modo TV
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
