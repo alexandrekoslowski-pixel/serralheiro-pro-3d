@@ -7,6 +7,7 @@ import { acabamentoPorId, tipologiaPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
 import { fixacaoTipo, fixacaoLados } from "./fixacao";
 import { linhasChecklistProjeto } from "./checklistPedido";
+import { enderecoCompleto } from "@/lib/endereco";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -104,16 +105,11 @@ export function gerarOrcamentoPDF(
   doc.setLineWidth(0.2);
   doc.line(margin, y - 4, pageW - margin, y - 4);
 
-  const enderecoLinha = [
-    projeto.cliente_endereco,
-    projeto.cliente_bairro,
-    projeto.cliente_cidade,
-    projeto.cliente_cep ? `CEP ${projeto.cliente_cep}` : "",
-  ].filter(Boolean).join(" — ");
+  const enderecoLinha = enderecoCompleto(projeto);
 
   const camposCliente: [string, string][] = [
     ["Cliente", projeto.cliente || "—"],
-    ["RG / CPF", projeto.cliente_documento || "—"],
+    ["CPF / CNPJ", projeto.cliente_documento || "—"],
     ["Endereço", enderecoLinha || "—"],
     ["Contato", [projeto.cliente_telefone, projeto.cliente_email].filter(Boolean).join(" · ") || "—"],
   ];

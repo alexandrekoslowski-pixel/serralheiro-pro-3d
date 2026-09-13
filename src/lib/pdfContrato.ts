@@ -3,6 +3,7 @@ import autoTable from "jspdf-autotable";
 import { type DadosEmpresa, type ProjetoLocal, formatarBRL } from "./storage";
 import { cm } from "./medidas";
 import { tipologiaPorId } from "./tipologias";
+import { enderecoCompleto } from "@/lib/endereco";
 
 export function gerarContratoPDF(projeto: ProjetoLocal, empresa: DadosEmpresa) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
@@ -23,7 +24,7 @@ export function gerarContratoPDF(projeto: ProjetoLocal, empresa: DadosEmpresa) {
   doc.text("CONTRATO DE PRESTAÇÃO DE SERVIÇOS", doc.internal.pageSize.getWidth() / 2, y, { align: "center" });
   y += 12;
   texto(`CONTRATADA: ${empresa.nome}, CNPJ ${empresa.cnpj || "não informado"}, com endereço em ${empresa.endereco || "não informado"}.`);
-  texto(`CONTRATANTE: ${projeto.cliente || "não informado"}, RG/CPF ${projeto.cliente_documento || "não informado"}, com endereço em ${[projeto.cliente_endereco, projeto.cliente_bairro, projeto.cliente_cidade, projeto.cliente_cep].filter(Boolean).join(", ") || "não informado"}.`);
+  texto(`CONTRATANTE: ${projeto.cliente || "não informado"}, CPF/CNPJ ${projeto.cliente_documento || "não informado"}, com endereço em ${enderecoCompleto(projeto, ", ") || "não informado"}.`);
   titulo("1. OBJETO");
   texto("Prestação dos serviços de fabricação, acabamento, transporte e/ou instalação descritos abaixo, conforme condições confirmadas entre as partes.");
   autoTable(doc, {
