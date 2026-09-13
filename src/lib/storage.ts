@@ -49,6 +49,8 @@ export interface PosVendaOS {
 export interface ProjetoLocal {
   id: string;
   nome: string;
+  /** Quando verdadeiro, preserva o nome digitado pela vendedora. */
+  nome_manual?: boolean;
   vendedora: string;
   cliente: string;
   cliente_documento: string;
@@ -291,6 +293,7 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   servicos_valor: null,
   frete_valor: null,
   observacoes_proposta: "",
+  nome_manual: false,
   ...(p as ProjetoLocal),
   } as ProjetoLocal;
 
@@ -392,6 +395,7 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
   responsavel_id: p.responsavel_id,
   prioridade_manual: p.prioridade_manual,
   dados: {
+    nome_manual: p.nome_manual ?? false,
     tipologia: p.tipologia,
     largura_mm: p.largura_mm,
     altura_mm: p.altura_mm,
@@ -547,14 +551,15 @@ export function obterProjeto(id: string): ProjetoLocal | undefined {
 }
 
 /** Cria um orçamento padrão e o disponibiliza imediatamente para preenchimento. */
-export function criarOrcamentoRapido(): ProjetoLocal {
+export function criarOrcamentoRapido(vendedora = ""): ProjetoLocal {
   const agora = new Date().toISOString();
   const tipologia: TipologiaId = "portao_correr";
   const tip = tipologiaPorId(tipologia);
   const novo: ProjetoLocal = {
     id: gerarId(),
-    nome: "Novo orçamento",
-    vendedora: "",
+    nome: tipologiaPorId(tipologia).nome.replace(" de ", " ").slice(0, 40),
+    nome_manual: false,
+    vendedora,
     cliente: "",
     cliente_documento: "",
     cliente_endereco: "",
@@ -581,7 +586,7 @@ export function criarOrcamentoRapido(): ProjetoLocal {
     descontoGeralPct: 0,
     pecas: [{
       id: gerarId(),
-      nome: "Peça 1",
+      nome: tip.nome,
       tipologia,
       largura_mm: tip.larguraDefault,
       altura_mm: tip.alturaDefault,
@@ -621,6 +626,19 @@ export function criarOrcamentoRapido(): ProjetoLocal {
   };
   salvarProjeto(novo);
   return novo;
+}
+
+/** Nome curto para cartões, Kanban e tela da oficina. */
+export function nomeSugeridoOrcamento(projeto: Pick<ProjetoLocal, "cliente" | "pecas">): string {
+  const primeiroNome = projeto.cliente.trim().split(/\s+/)[0] ?? "";
+  const primeira = projeto.pecas[0];
+  const tipo = primeira
+    ? tipologiaPorId(primeira.tipologia).nome.replace(/\b(de|da|do|das|dos)\b/gi, "").replace(/\s+/g, " ").trim()
+    : "Orçamento";
+  const restantes = Math.max(0, projeto.pecas.length - 1);
+  const partes = [primeiroNome, tipo, restantes ? `+${restantes}` : ""].filter(Boolean);
+  const nome = partes.join(" · ");
+  return nome.length <= 40 ? nome : `${nome.slice(0, 39).trimEnd()}…`;
 }
 
 export function salvarProjeto(p: ProjetoLocal): void {

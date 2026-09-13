@@ -28,7 +28,7 @@ import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 export default function Painel() {
   const navigate = useNavigate();
   useDados();
-  const { papel } = useSessao();
+  const { papel, session } = useSessao();
   const projetos = listarProjetos();
   const empresa = obterEmpresa();
   const [busca, setBusca] = useState("");
@@ -198,7 +198,8 @@ export default function Painel() {
   };
 
   const criar = () => {
-    const novo = criarOrcamentoRapido();
+    const vendedor = (session?.user.user_metadata?.nome as string | undefined) ?? session?.user.email ?? "";
+    const novo = criarOrcamentoRapido(vendedor);
     navigate(`/app/projeto/${novo.id}`, { state: { novoOrcamento: true } });
   };
 
