@@ -77,6 +77,7 @@ export default function Configurador() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const clienteNomeRef = useRef<HTMLInputElement | null>(null);
   const focoInicialFeito = useRef(false);
+  const campoNumero = useRef<HTMLInputElement | null>(null);
 
   // Controles 3D
   const [preset, setPreset] = useState<CameraPreset>("iso");
