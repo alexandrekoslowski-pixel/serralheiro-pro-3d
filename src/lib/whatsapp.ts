@@ -33,6 +33,10 @@ export function textoOrcamento(projeto: ProjetoLocal, total: number, empresa: Da
   ].filter((l) => l !== undefined).join("\n");
 }
 
+export function linkWhatsApp(numero: string, texto: string): string {
+  return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
+}
+
 export function abrirWhatsApp(numero: string, texto: string): void {
-  window.open(`https://wa.me/${numero}?text=${encodeURIComponent(texto)}`, "_blank", "noopener,noreferrer");
+  window.open(linkWhatsApp(numero, texto), "_blank", "noopener,noreferrer");
 }
