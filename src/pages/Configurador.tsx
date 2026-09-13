@@ -150,6 +150,49 @@ export default function Configurador() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projeto, resultado?.totalGeral]);
 
+  // Sugestões de clientes já cadastrados enquanto digita o nome
+  const sugestoesCliente = useMemo(() => {
+    const termo = (projeto?.cliente ?? "").trim().toLowerCase();
+    const base = termo ? clientes.filter((c) => c.nome.toLowerCase().includes(termo)) : clientes;
+    return base.slice(0, 6);
+  }, [clientes, projeto?.cliente]);
+
+  // Cadastra/atualiza a ficha do cliente automaticamente a partir do orçamento
+  const chaveCliente = projeto
+    ? [
+      projeto.cliente, projeto.cliente_documento, projeto.cliente_telefone, projeto.cliente_email,
+      projeto.cliente_endereco, projeto.cliente_bairro, projeto.cliente_cidade, projeto.cliente_cep,
+    ].join("|")
+    : "";
+  const ultimaChaveCliente = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!projeto || !nomeClienteValido(projeto.cliente)) return;
+    if (ultimaChaveCliente.current === chaveCliente) return;
+    const t = window.setTimeout(() => {
+      ultimaChaveCliente.current = chaveCliente;
+      void sincronizarClienteDoOrcamento({
+        cliente_id: projeto.cliente_id,
+        cliente: projeto.cliente,
+        cliente_documento: projeto.cliente_documento,
+        cliente_email: projeto.cliente_email,
+        cliente_telefone: projeto.cliente_telefone,
+        cliente_endereco: projeto.cliente_endereco,
+        cliente_bairro: projeto.cliente_bairro,
+        cliente_cidade: projeto.cliente_cidade,
+        cliente_cep: projeto.cliente_cep,
+      })
+        .then((idCliente) => {
+          if (!idCliente) return;
+          setProjeto((atual) => (atual && atual.cliente_id !== idCliente ? { ...atual, cliente_id: idCliente } : atual));
+          void listarClientes().then(setClientes).catch(() => undefined);
+        })
+        .catch(() => undefined);
+    }, 1500);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chaveCliente]);
+
   const totalAnimado = useAnimatedNumber(resultado?.totalGeral ?? 0);
 
   // Plano de corte / produção (hooks must be called before any early return)
