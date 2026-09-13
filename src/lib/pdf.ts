@@ -1,7 +1,7 @@
 // Geração do PDF da proposta comercial (orçamento + condições).
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { ResultadoCalculo, ItemCusto } from "./calculator";
+import { ResultadoCalculo } from "./calculator";
 import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
 import { acabamentoPorId, tipologiaPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
@@ -13,17 +13,7 @@ const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
 const GRAY: [number, number, number] = [110, 110, 110];
 
-function rotuloCategoria(c: ItemCusto["categoria"]): string {
-  return {
-    perfil: "Perfil",
-    acessorio: "Acessório",
-    vidro: "Vidro",
-    mao_obra: "Mão de obra",
-    margem: "Margem",
-    desconto: "Desconto",
-    extra: "Extra",
-  }[c];
-}
+
 
 export interface AssinaturaInfo {
   dataUrl: string;
