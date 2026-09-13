@@ -444,11 +444,12 @@ export async function hidratarNuvem(uid: string): Promise<void> {
   const { data: donoRpc } = await supabase.rpc("dono_atual", { _user_id: uid });
   donoId = (donoRpc as string | null) ?? uid;
 
-  const [proj, pag, emp, cat] = await Promise.all([
+  const [proj, pag, emp, cat, vinc] = await Promise.all([
     supabase.from("projetos").select("*").order("updated_at", { ascending: false }),
     supabase.from("pagamentos").select("*").order("data", { ascending: false }),
     supabase.from("empresa").select("*").order("updated_at", { ascending: false }).limit(1),
     supabase.from("catalogo").select("*").maybeSingle(),
+    supabase.from("materiais").select("codigo_calculo,custo,unidade_compra,comprimento_comercial_mm").neq("codigo_calculo", ""),
   ]);
 
   projetos = (proj.data ?? []).map((r) => linhaParaProjeto(r as Record<string, unknown>));
@@ -503,6 +504,24 @@ export async function hidratarNuvem(uid: string): Promise<void> {
     };
   } else {
     catalogo = CATALOGO_PADRAO;
+  }
+
+  // Aplica os preços reais dos materiais ligados a um código de cálculo.
+  const vinculos = (vinc.data ?? []) as { codigo_calculo: string; custo: number; comprimento_comercial_mm: number | null }[];
+  if (vinculos.length) {
+    catalogo = {
+      ...catalogo,
+      perfis: catalogo.perfis.map((p) => {
+        const m = vinculos.find((v) => v.codigo_calculo === p.codigo);
+        if (!m || !Number(m.custo)) return p;
+        const compM = (Number(m.comprimento_comercial_mm) || 6000) / 1000;
+        return { ...p, precoPorMetro: Number((Number(m.custo) / compM).toFixed(2)) };
+      }),
+      acessorios: catalogo.acessorios.map((a) => {
+        const m = vinculos.find((v) => v.codigo_calculo === a.codigo);
+        return m && Number(m.custo) ? { ...a, preco: Number(m.custo) } : a;
+      }),
+    };
   }
 
   notificar();

@@ -9,6 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Material, MaterialPreco, listarMateriais, listarHistoricoMaterial, salvarMaterial, excluirMaterial } from "@/lib/gestao";
 import { formatarBRL } from "@/lib/storage";
 import { numeroMascarado } from "@/lib/mascaras";
+import { CATALOGO_PADRAO } from "@/lib/catalogo";
+
+const CODIGOS_CALCULO = [
+  ...CATALOGO_PADRAO.perfis.map((p) => ({ codigo: p.codigo, descricao: p.descricao })),
+  ...CATALOGO_PADRAO.acessorios.map((a) => ({ codigo: a.codigo, descricao: a.descricao })),
+];
 
 const NOMES_CATEGORIAS: Record<string, string> = {
   "automatizadores": "Automatizadores",
@@ -98,7 +104,7 @@ export default function Materiais() {
             )}
             {lista.map((m) => (
               <tr key={m.id} className="border-b border-border/60 last:border-0">
-                 <td className="p-3"><div className="font-mono text-xs text-muted-foreground">{m.codigo_fornecedor || "SEM CÓDIGO"}</div><div className="font-medium">{m.nome}</div><div className="text-xs text-muted-foreground">{m.fornecedor || "—"}</div></td>
+                 <td className="p-3"><div className="font-mono text-xs text-muted-foreground">{m.codigo_fornecedor || "SEM CÓDIGO"}</div><div className="font-medium">{m.nome}</div><div className="text-xs text-muted-foreground">{m.fornecedor || "—"}</div>{m.codigo_calculo ? <div className="mt-1"><span className="rounded bg-primary/15 px-1.5 py-0.5 text-[11px] font-medium text-primary">Cálculo: {m.codigo_calculo}</span></div> : null}</td>
                  <td className="p-3"><span className="rounded bg-card px-2 py-1 text-xs">{nomeCategoria(m.categoria)}</span><div className="mt-1 text-xs text-muted-foreground">{m.subtipo}</div></td>
                  <td className="p-3 text-muted-foreground">{m.comprimento_comercial_mm ? `${Number(m.comprimento_comercial_mm) / 1000} m` : m.largura_mm ? `${Number(m.largura_mm) / 1000} m` : "—"}<div className="text-xs">{m.espessura_mm ? `${m.espessura_mm} mm` : m.unidade_compra}</div></td>
                  <td className="p-3 font-medium">{formatarBRL(Number(m.preco_atual ?? m.custo))}<div className="text-xs font-normal text-muted-foreground">por {m.preco_unidade || m.unidade_compra || m.unidade}</div></td>
@@ -149,6 +155,17 @@ export default function Materiais() {
             </div>
              <div><Label>Unidade de compra</Label><Input className="mt-1.5" value={edit?.unidade_compra ?? "un"} onChange={(e) => setEdit((m) => ({ ...m, unidade_compra: e.target.value, unidade: e.target.value }))} /></div>
               <div><Label>Comprimento comercial (mm)</Label><Input className="mt-1.5" mask="inteiro" value={edit?.comprimento_comercial_mm ?? ""} onChange={(e) => setEdit((m) => ({ ...m, comprimento_comercial_mm: e.target.value ? Number(e.target.value) : null }))} /></div>
+              <div className="sm:col-span-2">
+                <Label>Código de cálculo (liga este material ao orçamento)</Label>
+                <Select value={edit?.codigo_calculo || "nenhum"} onValueChange={(v) => setEdit((m) => ({ ...m, codigo_calculo: v === "nenhum" ? "" : v }))}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhum">Nenhum — não entra no cálculo</SelectItem>
+                    {CODIGOS_CALCULO.map((c) => <SelectItem key={c.codigo} value={c.codigo}>{c.codigo} — {c.descricao}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <p className="mt-1 text-xs text-muted-foreground">Quando ligado, o orçamento usa o preço vigente deste material automaticamente.</p>
+              </div>
               <div><Label>Espessura (mm)</Label><Input className="mt-1.5" mask="decimal" value={edit?.espessura_mm == null ? "" : String(edit.espessura_mm).replace(".", ",")} onChange={(e) => setEdit((m) => ({ ...m, espessura_mm: e.target.value ? numeroMascarado(e.target.value) : null }))} /></div>
             <div className="sm:col-span-2">
               <Label>Fornecedor</Label>
