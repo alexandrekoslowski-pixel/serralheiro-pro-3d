@@ -558,10 +558,11 @@ export default function Configurador() {
               <div>
                 <Label className="text-xs">Telefone / WhatsApp</Label>
                 <Input className="h-9" type="tel" mask="telefone" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
+                {telefoneIncompleto && <p className="mt-1 text-[11px] text-amber-500">Faltam números — inclua o DDD.</p>}
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">E-mail</Label>
-                <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} />
+                <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} onBlur={arrumar("cliente_email", emailNormalizado)} />
               </div>
               <div>
                 <Label className="text-xs">CEP</Label>
