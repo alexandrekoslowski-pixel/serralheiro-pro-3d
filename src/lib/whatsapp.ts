@@ -33,6 +33,21 @@ export function textoOrcamento(projeto: ProjetoLocal, total: number, empresa: Da
   ].filter((l) => l !== undefined).join("\n");
 }
 
+/** Mensagem padrão do envio do contrato, com link do PDF para assinatura. */
+export function textoContrato(projeto: ProjetoLocal, empresa: DadosEmpresa, linkPdf?: string): string {
+  const primeiroNome = (projeto.cliente || "").trim().split(" ")[0];
+  const prazo = projeto.prazo_dias_uteis ?? empresa.prazoDiasUteis ?? 22;
+  return [
+    `Olá${primeiroNome ? ` ${primeiroNome}` : ""}, tudo bem? Aqui é da ${empresa.nome || "serralheria"}.`,
+    "",
+    `Conforme a aprovação do orçamento ${projeto.nome || ""}, segue o contrato de prestação de serviços:`,
+    `Prazo estimado: ${prazo} dias úteis após a confirmação da entrada.`,
+    "",
+    linkPdf ? `Contrato em PDF: ${linkPdf}` : "Vou enviar o PDF do contrato em seguida.",
+    "Qualquer dúvida, estou à disposição!",
+  ].join("\n");
+}
+
 export function linkWhatsApp(numero: string, texto: string): string {
   return `https://wa.me/${numero}?text=${encodeURIComponent(texto)}`;
 }
