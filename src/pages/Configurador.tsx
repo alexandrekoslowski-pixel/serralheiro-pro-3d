@@ -503,7 +503,11 @@ export default function Configurador() {
                   autoComplete="off"
                   onChange={(e) => { upd("cliente", e.target.value); setSugestoesAbertas(true); }}
                   onFocus={() => setSugestoesAbertas(true)}
-                  onBlur={() => window.setTimeout(() => setSugestoesAbertas(false), 150)}
+                  onBlur={(e) => {
+                    const arrumado = nomeProprio(e.target.value);
+                    if (arrumado !== e.target.value) upd("cliente", arrumado);
+                    window.setTimeout(() => setSugestoesAbertas(false), 150);
+                  }}
                   placeholder="Maria Silva"
                 />
                 {sugestoesAbertas && sugestoesCliente.length > 0 && (
