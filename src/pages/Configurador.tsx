@@ -38,6 +38,8 @@ import {
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
 } from "@/lib/storage";
 import { progressoOrcamento, pendenciasOrdem } from "@/lib/progressoOrcamento";
+import { valorACobrar } from "@/lib/financeiro";
+
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
