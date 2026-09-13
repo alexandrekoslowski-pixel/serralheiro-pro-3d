@@ -32,13 +32,15 @@ export function PassosOrcamento({ projeto, pagamentos, onPasso, somenteProximo, 
   return (
     <div className={cn("flex flex-wrap items-center gap-2", className)}>
       {visiveis.map((p) => {
-        const Icone = ICONES[p.id];
+        const carregando = ocupado === p.id;
+        const Icone = carregando ? Loader2 : ICONES[p.id];
         return (
           <Button
             key={p.id}
             type="button"
             size="sm"
             variant={p.atual ? "default" : "outline"}
+            disabled={carregando}
             onClick={() => onPasso(p.id)}
             title={p.detalhe}
             className={cn(
