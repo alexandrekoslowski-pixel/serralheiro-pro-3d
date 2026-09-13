@@ -100,6 +100,8 @@ export default function Configurador() {
   const [financeiroAberto, setFinanceiroAberto] = useState(false);
   const [pendenciasFila, setPendenciasFila] = useState<string[] | null>(null);
   const { session } = useSessao();
+  const digitosDocumento = (projeto?.cliente_documento ?? "").replace(/\D/g, "").length;
+  const documentoIncompleto = digitosDocumento > 0 && digitosDocumento !== 11 && digitosDocumento !== 14;
 
   useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
 
