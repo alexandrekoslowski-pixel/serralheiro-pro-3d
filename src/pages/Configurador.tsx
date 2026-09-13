@@ -573,7 +573,7 @@ export default function Configurador() {
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Rua</Label>
-                <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} placeholder="Rua / avenida" />
+                <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} onBlur={arrumar("cliente_endereco", nomeProprio)} placeholder="Rua / avenida" />
               </div>
               <div>
                 <Label className="text-xs">Número</Label>
