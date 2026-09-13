@@ -38,6 +38,8 @@ import {
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
 } from "@/lib/storage";
 import { progressoOrcamento, pendenciasOrdem } from "@/lib/progressoOrcamento";
+import { valorACobrar } from "@/lib/financeiro";
+
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
@@ -95,6 +97,8 @@ export default function Configurador() {
   const [abaCadastro, setAbaCadastro] = useState(abrirChecklist ? "checklist" : "cliente");
   const [mostrarPendencias, setMostrarPendencias] = useState(abrirChecklist);
   const [buscandoCep, setBuscandoCep] = useState(false);
+  const [ajustandoValor, setAjustandoValor] = useState(false);
+
   const [enviandoWhats, setEnviandoWhats] = useState(false);
   const [enviandoContrato, setEnviandoContrato] = useState(false);
   const [financeiroAberto, setFinanceiroAberto] = useState(false);
@@ -697,9 +701,18 @@ export default function Configurador() {
               </div>
               <div>
                 <Label className="text-xs">Valor a cobrar (R$)</Label>
-                <Input className="h-9" mask="moeda" value={String(projeto.valor_faturado || 0).replace(".", ",")} onChange={(e) => upd("valor_faturado", numeroMascarado(e.target.value))} />
-                <p className="mt-1 text-[11px] text-muted-foreground">Em branco usa o valor do orçamento.</p>
+                {ajustandoValor ? (
+                  <Input className="h-9" autoFocus mask="moeda" value={String(projeto.valor_faturado || 0).replace(".", ",")} onChange={(e) => upd("valor_faturado", numeroMascarado(e.target.value))} />
+                ) : (
+                  <div className="flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
+                    {formatarBRL(valorACobrar(projeto) || resultado.totalGeral)}
+                  </div>
+                )}
+                <Button type="button" size="sm" variant="outline" className="mt-1 h-7 w-full text-[11px]" onClick={() => setAjustandoValor((v) => !v)}>
+                  {ajustandoValor ? "Pronto" : "Ajustar (desconto ou acréscimo)"}
+                </Button>
               </div>
+
               <div>
                 <Label className="text-xs">Total orçado</Label>
                 <Input className="h-9" readOnly value={formatarBRL(resultado.totalGeral)} />
