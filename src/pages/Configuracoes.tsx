@@ -233,77 +233,14 @@ export default function Configuracoes() {
         )}
       </div>
 
-      {/* Perfis */}
+      {/* Materiais usados no cálculo */}
       <div className="surface-card rounded-lg border border-border p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg">Perfis</h2>
-          <div className="flex gap-2">
-            <Button size="sm" variant="outline" onClick={restaurar}>
-              <RotateCcw className="mr-1 h-3.5 w-3.5" /> Restaurar padrão
-            </Button>
-            <Button size="sm" onClick={addPerfil} className="bg-primary text-primary-foreground">
-              <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar
-            </Button>
-          </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead>
-              <tr className="border-b border-border text-xs uppercase text-muted-foreground">
-                <th className="text-left py-2 pr-2">Código</th>
-                <th className="text-left py-2 pr-2">Descrição</th>
-                <th className="text-right py-2 pr-2">R$/m</th>
-                <th className="text-right py-2 pr-2">kg/m</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {cat.perfis.map((p, i) => (
-                <tr key={i} className="border-b border-border/50">
-                  <td className="py-1 pr-2"><Input className="h-8" mask="codigo" value={p.codigo} onChange={(e) => updPerfil(i, { codigo: e.target.value })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8" value={p.descricao} onChange={(e) => updPerfil(i, { descricao: e.target.value })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8 text-right" mask="moeda" value={String(p.precoPorMetro).replace(".", ",")} onChange={(e) => updPerfil(i, { precoPorMetro: numeroMascarado(e.target.value) })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8 text-right" mask="decimal" value={String(p.pesoLinear).replace(".", ",")} onChange={(e) => updPerfil(i, { pesoLinear: numeroMascarado(e.target.value) })} /></td>
-                  <td className="py-1"><Button size="icon" variant="dangerOutline" title="Excluir" onClick={() => delPerfil(i)}><Trash2 className="h-4 w-4" /></Button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Acessórios */}
-      <div className="surface-card rounded-lg border border-border p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="font-display text-lg">Acessórios</h2>
-          <Button size="sm" onClick={addAce} className="bg-primary text-primary-foreground">
-            <Plus className="mr-1 h-3.5 w-3.5" /> Adicionar
-          </Button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] text-sm">
-            <thead>
-              <tr className="border-b border-border text-xs uppercase text-muted-foreground">
-                <th className="text-left py-2 pr-2">Código</th>
-                <th className="text-left py-2 pr-2">Descrição</th>
-                <th className="text-right py-2 pr-2">Preço</th>
-                <th className="text-left py-2 pr-2">Unidade</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {cat.acessorios.map((a, i) => (
-                <tr key={i} className="border-b border-border/50">
-                  <td className="py-1 pr-2"><Input className="h-8" mask="codigo" value={a.codigo} onChange={(e) => updAce(i, { codigo: e.target.value })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8" value={a.descricao} onChange={(e) => updAce(i, { descricao: e.target.value })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8 text-right" mask="moeda" value={String(a.preco).replace(".", ",")} onChange={(e) => updAce(i, { preco: numeroMascarado(e.target.value) })} /></td>
-                  <td className="py-1 pr-2"><Input className="h-8" value={a.unidade} onChange={(e) => updAce(i, { unidade: e.target.value })} /></td>
-                  <td className="py-1"><Button size="icon" variant="dangerOutline" title="Excluir" onClick={() => delAce(i)}><Trash2 className="h-4 w-4" /></Button></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <h2 className="font-display text-lg flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Perfis e acessórios do cálculo</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Os materiais agora ficam na tela <strong>Materiais</strong>, com preço vigente e histórico do fornecedor.
+          Para o orçamento usar o preço real, edite o material lá e escolha o <strong>código de cálculo</strong> correspondente.
+        </p>
+        <Button className="mt-3" onClick={() => navigate("/app/materiais")}>Abrir materiais</Button>
       </div>
 
       {/* Vidro */}
