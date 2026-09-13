@@ -79,7 +79,7 @@ export default function Financeiro() {
 
   const exportarCSV = () => {
     const linhas = [
-      ["Ordem", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
+      ["Ordem", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "A cobrar", "Recebido", "Em aberto"].join(";"),
       ...projetos.map((p) => {
         const rec = recebidoDe(p.id);
         return [
@@ -118,9 +118,9 @@ export default function Financeiro() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           { l: "Orçado", v: totalGeral.orcado },
-          { l: "Faturado", v: totalGeral.faturado },
+          { l: "A cobrar", v: totalGeral.faturado },
           { l: "Recebido", v: totalGeral.recebido },
-          { l: "A receber", v: totalGeral.faturado - totalGeral.recebido },
+          { l: "Em aberto", v: aReceber.reduce((s2, x) => s2 + x.saldo, 0) },
         ].map((c) => (
           <div key={c.l} className="surface-card rounded-lg border border-border p-4">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{c.l}</div>
@@ -137,7 +137,7 @@ export default function Financeiro() {
             <div key={nome} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border px-3 py-2 text-sm">
               <span className="font-medium">{nome} <span className="text-xs text-muted-foreground">· {v.qtd} orçamento(s)</span></span>
               <span className="text-xs text-muted-foreground">
-                Orçado {formatarBRL(v.orcado)} · Faturado {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
+                Orçado {formatarBRL(v.orcado)} · A cobrar {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
               </span>
             </div>
           ))}
@@ -153,11 +153,11 @@ export default function Financeiro() {
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium capitalize">{rotuloMes(m)}</span>
                 <span className="text-xs text-muted-foreground">
-                  Orçado {formatarBRL(v.orcado)} · Faturado {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
+                  Orçado {formatarBRL(v.orcado)} · A cobrar {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
                 </span>
               </div>
               <div className="mt-2 space-y-1">
-                {([["Orçado", v.orcado, "bg-muted-foreground/40"], ["Faturado", v.faturado, "bg-primary"], ["Recebido", v.recebido, "bg-emerald-500"]] as const).map(([l, val, cls]) => (
+                {([["Orçado", v.orcado, "bg-muted-foreground/40"], ["A cobrar", v.faturado, "bg-primary"], ["Recebido", v.recebido, "bg-emerald-500"]] as const).map(([l, val, cls]) => (
                   <div key={l} className="flex items-center gap-2">
                     <span className="w-16 text-[10px] uppercase text-muted-foreground">{l}</span>
                     <div className="h-2 flex-1 rounded bg-card">
