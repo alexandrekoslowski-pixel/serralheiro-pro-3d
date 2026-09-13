@@ -427,6 +427,27 @@ export type Database = {
           },
         ]
       }
+      orcamento_links: {
+        Row: {
+          codigo: string
+          criado_em: string
+          projeto_id: string
+          signed_url: string
+        }
+        Insert: {
+          codigo: string
+          criado_em?: string
+          projeto_id: string
+          signed_url: string
+        }
+        Update: {
+          codigo?: string
+          criado_em?: string
+          projeto_id?: string
+          signed_url?: string
+        }
+        Relationships: []
+      }
       ordem_etapas: {
         Row: {
           concluida_em: string | null
@@ -805,6 +826,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      link_orcamento: { Args: { _codigo: string }; Returns: string }
       mover_etapa_oficina: {
         Args: {
           _codigo: string

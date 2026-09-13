@@ -1,7 +1,7 @@
 // Geração do PDF da proposta comercial (orçamento + condições).
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { ResultadoCalculo, ItemCusto } from "./calculator";
+import { ResultadoCalculo } from "./calculator";
 import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
 import { acabamentoPorId, tipologiaPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
@@ -13,17 +13,7 @@ const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
 const GRAY: [number, number, number] = [110, 110, 110];
 
-function rotuloCategoria(c: ItemCusto["categoria"]): string {
-  return {
-    perfil: "Perfil",
-    acessorio: "Acessório",
-    vidro: "Vidro",
-    mao_obra: "Mão de obra",
-    margem: "Margem",
-    desconto: "Desconto",
-    extra: "Extra",
-  }[c];
-}
+
 
 export interface AssinaturaInfo {
   dataUrl: string;
@@ -157,38 +147,11 @@ export function gerarOrcamentoPDF(
   // @ts-expect-error lastAutoTable é fornecido pelo autotable
   nextY = (doc.lastAutoTable?.finalY ?? nextY) + 6;
 
-  // ===== Tabela de itens =====
-  const itens = resultado.custos.filter((i) => !i.oculto && i.categoria !== "mao_obra" && i.categoria !== "margem" && i.categoria !== "desconto");
-
-  autoTable(doc, {
-    startY: nextY,
-    head: [["Categoria", "Descrição", "Qtd", "Un", "Preço un.", "Total"]],
-    body: itens.map((i) => [
-      rotuloCategoria(i.categoria),
-      i.descricao + (i.codigo ? ` (${i.codigo})` : ""),
-      i.qtd.toLocaleString("pt-BR"),
-      i.unidade,
-      formatarBRL(i.precoUnit),
-      formatarBRL(i.total),
-    ]),
-    styles: { fontSize: 9, cellPadding: 2.2 },
-    headStyles: { fillColor: ORANGE, textColor: 255, fontStyle: "bold" },
-    alternateRowStyles: { fillColor: [248, 246, 244] },
-    columnStyles: {
-      2: { halign: "right" },
-      4: { halign: "right" },
-      5: { halign: "right" },
-    },
-    margin: { left: margin, right: margin },
-  });
-
   // ===== Totais =====
+  // O orçamento do cliente mostra apenas o total — sem detalhar perfis, acessórios,
+  // vidros, mão de obra ou margem (essas são composições internas de custo).
   // @ts-expect-error lastAutoTable é fornecido pelo autotable
   let yTot = (doc.lastAutoTable?.finalY ?? nextY + 50) + 6;
-
-  const mo = resultado.custos.find((i) => i.categoria === "mao_obra" && !i.oculto);
-  const mg = resultado.custos.find((i) => i.categoria === "margem" && !i.oculto);
-  const desc = resultado.custos.find((i) => i.categoria === "desconto");
 
   doc.setFontSize(10);
   doc.setTextColor(...DARK);
@@ -199,9 +162,6 @@ export function gerarOrcamentoPDF(
     yTot += 5;
   };
   
-  if (mo) escreverLinha(mo.descricao, mo.total);
-  if (mg) escreverLinha(mg.descricao, mg.total);
-  if (desc) escreverLinha(desc.descricao, desc.total);
   escreverLinha("Serviços", projeto.servicos_valor != null ? projeto.servicos_valor : "não incluso");
   escreverLinha("Frete", projeto.frete_valor != null ? projeto.frete_valor : "não incluso");
 

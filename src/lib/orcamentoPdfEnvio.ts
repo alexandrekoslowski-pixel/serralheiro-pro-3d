@@ -1,4 +1,6 @@
-// Gera o PDF do orçamento, guarda na nuvem e devolve um link temporário para o cliente.
+// Gera o PDF do orçamento, guarda na nuvem e devolve um link curto na própria aplicação.
+// O cliente abre /o/<código>, que resolve o PDF e dispara o download — a URL assinada
+// enorme nunca aparece na mensagem do WhatsApp.
 import { supabase } from "@/integrations/supabase/client";
 import { gerarOrcamentoPDF } from "./pdf";
 import type { ResultadoCalculo } from "./calculator";
@@ -7,7 +9,11 @@ import type { DadosEmpresa, ProjetoLocal } from "./storage";
 const BUCKET = "orcamentos-pdf";
 const DIAS = 30;
 
-/** Sobe o PDF do orçamento e devolve uma URL assinada válida por 30 dias. */
+function codigoCurto(): string {
+  return Math.random().toString(36).slice(2, 8).padEnd(6, "0");
+}
+
+/** Sobe o PDF do orçamento, registra um código curto e devolve um link limpo (/o/<código>). */
 export async function publicarOrcamentoPDF(
   projeto: ProjetoLocal,
   resultado: ResultadoCalculo,
@@ -28,5 +34,20 @@ export async function publicarOrcamentoPDF(
     .from(BUCKET)
     .createSignedUrl(caminho, DIAS * 24 * 60 * 60, { download: `orcamento-${projeto.id}.pdf` });
   if (erroLink || !assinado?.signedUrl) throw erroLink ?? new Error("Não foi possível gerar o link do PDF.");
-  return assinado.signedUrl;
+
+  let codigo = codigoCurto();
+  for (let tentativa = 0; tentativa < 4; tentativa++) {
+    const { error: insErr } = await supabase.from("orcamento_links").insert({
+      codigo,
+      projeto_id: projeto.id,
+      signed_url: assinado.signedUrl,
+    });
+    if (!insErr) break;
+    if (insErr.code === "23505") {
+      codigo = codigoCurto();
+      continue;
+    }
+    throw insErr;
+  }
+  return `${window.location.origin}/o/${codigo}`;
 }
