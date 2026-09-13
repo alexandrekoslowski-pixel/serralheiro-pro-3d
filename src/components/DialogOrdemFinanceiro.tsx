@@ -149,7 +149,7 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco }: { projeto: Pro
       <DialogContent className="max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle className="font-display">{atual.nome}</DialogTitle></DialogHeader>
         {foco === "comprovante" ? (
-          <>{blocoPagamento}{blocoLista}{blocoResumo}{blocoSituacao}</>
+          <>{blocoPagamento}{blocoLista}{blocoResumo}</>
         ) : (
           <>{blocoSituacao}{blocoResumo}{blocoPagamento}{blocoLista}</>
         )}

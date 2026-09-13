@@ -114,7 +114,8 @@ export function textoPrazo(p: ProjetoLocal): string {
   return `Faltam ${d} d · ${data}`;
 }
 
-export const dataISO = (d: Date): string => d.toISOString().slice(0, 10);
+export const dataISO = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
 export const somarDias = (dias: number): string => {
   const d = new Date();
