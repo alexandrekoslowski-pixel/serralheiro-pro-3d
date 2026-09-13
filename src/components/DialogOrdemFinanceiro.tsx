@@ -14,10 +14,10 @@ import {
   registrarComprovanteLocal,
   removerPagamento,
   salvarProjeto,
-  type OrdemStatus,
+
   type ProjetoLocal,
 } from "@/lib/storage";
-import { STATUS_LABEL, STATUS_ORDEM, dataISO } from "@/lib/ordens";
+import { STATUS_LABEL, dataISO, proximoStatus } from "@/lib/ordens";
 import { numeroMascarado } from "@/lib/mascaras";
 import { anexarComprovante, abrirComprovante } from "@/lib/comprovantes";
 import { useDados } from "@/hooks/useDados";
