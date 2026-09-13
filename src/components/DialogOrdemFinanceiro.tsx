@@ -17,7 +17,7 @@ import {
 
   type ProjetoLocal,
 } from "@/lib/storage";
-import { STATUS_LABEL, dataISO, proximoStatus } from "@/lib/ordens";
+import { STATUS_LABEL, dataISO, proximoStatus, totalComServicos } from "@/lib/ordens";
 import { numeroMascarado } from "@/lib/mascaras";
 import { anexarComprovante, abrirComprovante } from "@/lib/comprovantes";
 import { useDados } from "@/hooks/useDados";
@@ -85,7 +85,12 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
             size="sm"
             variant="soft"
             className="mt-2 w-full"
-            onClick={() => salvarProjeto({ ...atual, status: avancar })}
+            onClick={() => salvarProjeto({
+              ...atual,
+              status: avancar,
+              ...(avancar === "faturado" && !atual.valor_faturado ? { valor_faturado: totalComServicos(atual), faturado_em: new Date().toISOString() } : {}),
+              ...(avancar === "entregue" ? { entregue_em: new Date().toISOString() } : {}),
+            })}
           >
             Marcar como {STATUS_LABEL[avancar].toLowerCase()}
           </Button>
@@ -95,7 +100,7 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
         <Label>Prazo de entrega</Label>
         <Input type="date" value={atual.prazo_entrega ?? ""} onChange={(e) => salvarProjeto({ ...atual, prazo_entrega: e.target.value || null })} />
       </div>
-      <div><Label>Valor orçado</Label><Input value={formatarBRL(atual.total)} readOnly /></div>
+      <div><Label>Valor orçado</Label><Input value={formatarBRL(totalComServicos(atual))} readOnly /></div>
       <div>
         <Label>Valor faturado</Label>
         <Input mask="moeda" value={String(atual.valor_faturado || 0).replace(".", ",")} onChange={(e) => salvarProjeto({ ...atual, valor_faturado: numeroMascarado(e.target.value) })} />

@@ -191,7 +191,7 @@ export default function Painel() {
     if (prox === "entregue") patch.entregue_em = agora;
     if (prox === "faturado") {
       patch.faturado_em = agora;
-      if (!p.valor_faturado) patch.valor_faturado = p.total;
+      if (!p.valor_faturado) patch.valor_faturado = totalComServicos(p);
     }
     salvarProjeto({ ...p, ...patch });
     toast.success(`Ordem em ${STATUS_LABEL[prox]}`);

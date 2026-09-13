@@ -73,6 +73,10 @@ export const STATUS_CORES: Record<OrdemStatus, { badge: string; chip: string; ch
   },
 };
 
+/** Total do orçamento como sai no PDF: peças + serviços + frete (quando lançados). */
+export const totalComServicos = (p: ProjetoLocal): number =>
+  Number((p.total + (p.servicos_valor ?? 0) + (p.frete_valor ?? 0)).toFixed(2));
+
 export const proximoStatus = (s: OrdemStatus): OrdemStatus | null => {
   const i = STATUS_ORDEM.indexOf(s);
   return i >= 0 && i < STATUS_ORDEM.length - 1 ? STATUS_ORDEM[i + 1] : null;
