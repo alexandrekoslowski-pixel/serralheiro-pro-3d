@@ -268,6 +268,12 @@ export default function Configurador() {
   const upd = <K extends keyof ProjetoLocal>(k: K, v: ProjetoLocal[K]) =>
     setProjeto({ ...projeto, [k]: v });
 
+  /** Arruma o texto do campo ao sair dele (maiúsculas, espaços, etc.). */
+  const arrumar = (k: keyof ProjetoLocal, fn: (v: string) => string) => (e: React.FocusEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const limpo = fn(e.target.value ?? "");
+    if (limpo !== (e.target.value ?? "")) upd(k, limpo as never);
+  };
+
   const setOverride = (key: string, ov: Partial<ItemOverride>) => {
     const cur = projeto.overrides[key] ?? {};
     setProjeto({ ...projeto, overrides: { ...projeto.overrides, [key]: { ...cur, ...ov } } });
