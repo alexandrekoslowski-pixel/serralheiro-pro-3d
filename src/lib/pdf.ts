@@ -163,10 +163,6 @@ export function gerarOrcamentoPDF(
   // @ts-expect-error lastAutoTable é fornecido pelo autotable
   let yTot = (doc.lastAutoTable?.finalY ?? nextY + 50) + 6;
 
-  const mo = resultado.custos.find((i) => i.categoria === "mao_obra" && !i.oculto);
-  const mg = resultado.custos.find((i) => i.categoria === "margem" && !i.oculto);
-  const desc = resultado.custos.find((i) => i.categoria === "desconto");
-
   doc.setFontSize(10);
   doc.setTextColor(...DARK);
   const escreverLinha = (label: string, valor: number | string, bold = false) => {
@@ -176,9 +172,6 @@ export function gerarOrcamentoPDF(
     yTot += 5;
   };
   
-  if (mo) escreverLinha(mo.descricao, mo.total);
-  if (mg) escreverLinha(mg.descricao, mg.total);
-  if (desc) escreverLinha(desc.descricao, desc.total);
   escreverLinha("Serviços", projeto.servicos_valor != null ? projeto.servicos_valor : "não incluso");
   escreverLinha("Frete", projeto.frete_valor != null ? projeto.frete_valor : "não incluso");
 
