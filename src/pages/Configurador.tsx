@@ -104,6 +104,8 @@ export default function Configurador() {
   const { session } = useSessao();
   const digitosDocumento = (projeto?.cliente_documento ?? "").replace(/\D/g, "").length;
   const documentoIncompleto = digitosDocumento > 0 && digitosDocumento !== 11 && digitosDocumento !== 14;
+  const digitosTelefone = (projeto?.cliente_telefone ?? "").replace(/\D/g, "").length;
+  const telefoneIncompleto = digitosTelefone > 0 && digitosTelefone < 10;
 
   useEffect(() => { void listarClientes().then(setClientes).catch(() => undefined); }, []);
 
