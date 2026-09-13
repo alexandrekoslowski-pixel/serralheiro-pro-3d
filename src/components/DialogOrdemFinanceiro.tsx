@@ -21,6 +21,7 @@ import { STATUS_LABEL, dataISO, proximoStatus, totalComServicos } from "@/lib/or
 import { numeroMascarado } from "@/lib/mascaras";
 import { anexarComprovante, abrirComprovante } from "@/lib/comprovantes";
 import { useDados } from "@/hooks/useDados";
+import { recebidoDe, saldoDe, valorACobrar } from "@/lib/financeiro";
 import { CampoArquivo } from "@/components/CampoArquivo";
 
 const FORMAS = ["pix", "dinheiro", "cartão", "boleto", "transferência"];
@@ -38,8 +39,9 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
   if (!projeto) return null;
   const atual = listarProjetos().find((p) => p.id === projeto.id) ?? projeto;
   const pagos = listarPagamentos(atual.id);
-  const recebido = pagos.reduce((s, p) => s + p.valor, 0);
-  const saldo = (atual.valor_faturado || 0) - recebido;
+  const recebido = recebidoDe(atual.id);
+  const aCobrar = valorACobrar(atual);
+  const saldo = saldoDe(atual);
 
   const lancar = async () => {
     const v = numeroMascarado(valor);
