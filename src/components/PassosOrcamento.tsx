@@ -19,10 +19,12 @@ interface Props {
   onPasso: (id: PassoId) => void;
   /** Mostra só o próximo passo (usado nos cartões da lista). */
   somenteProximo?: boolean;
+  /** Passo em andamento: fica desabilitado e com girinho. */
+  ocupado?: PassoId | null;
   className?: string;
 }
 
-export function PassosOrcamento({ projeto, pagamentos, onPasso, somenteProximo, className }: Props) {
+export function PassosOrcamento({ projeto, pagamentos, onPasso, somenteProximo, ocupado, className }: Props) {
   const passos = passosOrcamento(projeto, pagamentos);
   const visiveis = somenteProximo ? passos.filter((p) => p.atual) : passos;
   if (visiveis.length === 0) return null;
