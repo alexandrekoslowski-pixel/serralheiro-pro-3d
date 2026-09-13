@@ -601,7 +601,7 @@ export default function Configurador() {
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Nome do orçamento</Label>
-                <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} />
+                <Input className="h-9" value={projeto.nome} onChange={(e) => upd("nome", e.target.value)} onBlur={arrumar("nome", frasePrimeiraMaiuscula)} />
               </div>
               <div>
                 <Label className="text-xs">Vendedor(a) responsável</Label>
