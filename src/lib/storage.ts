@@ -175,7 +175,7 @@ export const TEXTO_TECNICO_PADRAO = [
 export const MSG_SOLICITAR_DADOS_PADRAO = [
   "Boa tarde, tudo bem?",
   "Para seguirmos com o orçamento, solicito as seguintes informações:",
-  "• RG ou CPF",
+  "• CPF ou CNPJ",
   "• Endereço completo",
   "• Nome e sobrenome",
 ].join("\n");
