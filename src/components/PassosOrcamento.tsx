@@ -51,8 +51,8 @@ export function PassosOrcamento({ projeto, pagamentos, onPasso, somenteProximo, 
             )}
           >
             <span className="mr-1.5 text-[11px] font-semibold opacity-70">{p.numero}</span>
-            {p.feito ? <Check className="mr-1 h-4 w-4" /> : <Icone className="mr-1 h-4 w-4" />}
-            {p.feito ? p.labelFeito : p.label}
+            {p.feito && !carregando ? <Check className="mr-1 h-4 w-4" /> : <Icone className={cn("mr-1 h-4 w-4", carregando && "animate-spin")} />}
+            {carregando ? "Preparando PDF…" : p.feito ? p.labelFeito : p.label}
             {p.feito && p.detalhe && !somenteProximo && (
               <span className="ml-1.5 hidden text-[11px] opacity-70 sm:inline">{p.detalhe}</span>
             )}
