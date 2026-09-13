@@ -9,6 +9,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Material, MaterialPreco, listarMateriais, listarHistoricoMaterial, salvarMaterial, excluirMaterial } from "@/lib/gestao";
 import { formatarBRL } from "@/lib/storage";
 import { numeroMascarado } from "@/lib/mascaras";
+import { CATALOGO_PADRAO } from "@/lib/catalogo";
+
+const CODIGOS_CALCULO = [
+  ...CATALOGO_PADRAO.perfis.map((p) => ({ codigo: p.codigo, descricao: p.descricao })),
+  ...CATALOGO_PADRAO.acessorios.map((a) => ({ codigo: a.codigo, descricao: a.descricao })),
+];
 
 const NOMES_CATEGORIAS: Record<string, string> = {
   "automatizadores": "Automatizadores",
