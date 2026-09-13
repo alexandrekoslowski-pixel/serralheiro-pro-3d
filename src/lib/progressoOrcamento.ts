@@ -45,8 +45,9 @@ export function retornoVencido(p: ProjetoLocal): boolean {
   );
 }
 
+/** Todo dinheiro que entrou tem comprovante anexado. */
 export function temComprovante(pagamentos: Pagamento[]): boolean {
-  return pagamentos.some((x) => !!x.comprovante_caminho);
+  return pagamentos.some((x) => !!x.comprovante_caminho) && !pagamentos.some((x) => x.valor > 0 && !x.comprovante_caminho);
 }
 
 /**
@@ -153,7 +154,8 @@ export function pendenciasOrdem(p: ProjetoLocal, pagamentos: Pagamento[]): strin
     ...p.pecas.flatMap((pc) => pendentesPecaChecklist(pc.tipologia, pc.checklist_respostas ?? {})),
   ];
   if (checklist.length > 0) faltas.push(`Checklist do pedido com ${checklist.length} resposta(s) em branco`);
-  if (!temComprovante(pagamentos)) faltas.push("Comprovante de pagamento não anexado");
+  if (pagamentos.some((x) => x.valor > 0 && !x.comprovante_caminho)) faltas.push("Pagamento recebido sem comprovante anexado");
+  else if (!temComprovante(pagamentos)) faltas.push("Comprovante de pagamento não anexado");
   if (!p.prazo_entrega) faltas.push("Prazo de entrega não definido");
   if (!(p.cliente_telefone ?? "").trim()) faltas.push("Telefone do cliente em branco");
   if (!(p.cliente_endereco ?? "").trim()) faltas.push("Endereço de instalação em branco");

@@ -9,6 +9,7 @@ import { useDados } from "@/hooks/useDados";
 import { listarProjetos, listarPagamentos, formatarBRL, obterEmpresa } from "@/lib/storage";
 import { STATUS_LABEL, corPrazo, CLASSES_PRAZO, textoPrazo, totalComServicos } from "@/lib/ordens";
 import { useVendedores } from "@/hooks/useVendedores";
+import { recebidoDe, saldoDe, valorACobrar } from "@/lib/financeiro";
 
 const mesDe = (iso: string) => iso.slice(0, 7);
 const rotuloMes = (m: string) => {
@@ -40,8 +41,8 @@ export default function Financeiro() {
       if (!mapa.has(k)) mapa.set(k, { orcado: 0, faturado: 0, recebido: 0, qtd: 0 });
       const v = mapa.get(k)!;
       v.orcado += totalComServicos(p);
-      v.faturado += p.valor_faturado || 0;
-      v.recebido += listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
+      v.faturado += valorACobrar(p);
+      v.recebido += recebidoDe(p.id);
       v.qtd += 1;
     });
     return [...mapa.entries()].sort((a, b) => b[1].faturado - a[1].faturado);
@@ -55,7 +56,8 @@ export default function Financeiro() {
     };
     projetos.forEach((p) => {
       get(mesDe(p.created_at)).orcado += totalComServicos(p);
-      if (p.valor_faturado) get(mesDe(p.faturado_em ?? p.updated_at)).faturado += p.valor_faturado;
+      const cobrar = valorACobrar(p);
+      if (cobrar > 0) get(mesDe(p.faturado_em ?? p.aprovado_em ?? p.updated_at)).faturado += cobrar;
     });
     pagamentos.forEach((p) => { get(mesDe(p.data)).recebido += p.valor; });
     return [...mapa.entries()].sort((a, b) => b[0].localeCompare(a[0]));
@@ -63,7 +65,7 @@ export default function Financeiro() {
 
   const aReceber = useMemo(
     () => projetos
-      .map((p) => ({ p, saldo: (p.valor_faturado || 0) - listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0) }))
+      .map((p) => ({ p, saldo: saldoDe(p) }))
       .filter((x) => x.saldo > 0.01)
       .sort((a, b) => b.saldo - a.saldo),
     [projetos, pagamentos],
@@ -77,13 +79,13 @@ export default function Financeiro() {
 
   const exportarCSV = () => {
     const linhas = [
-      ["Ordem", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "Faturado", "Recebido", "Em aberto"].join(";"),
+      ["Ordem", "Cliente", "Vendedora", "Situação", "Prazo", "Orçado", "A cobrar", "Recebido", "Em aberto"].join(";"),
       ...projetos.map((p) => {
-        const rec = listarPagamentos(p.id).reduce((s, x) => s + x.valor, 0);
+        const rec = recebidoDe(p.id);
         return [
           p.nome, p.cliente, p.vendedora || "", STATUS_LABEL[p.status], p.prazo_entrega ?? "",
-          totalComServicos(p).toFixed(2), (p.valor_faturado || 0).toFixed(2), rec.toFixed(2),
-          ((p.valor_faturado || 0) - rec).toFixed(2),
+          totalComServicos(p).toFixed(2), valorACobrar(p).toFixed(2), rec.toFixed(2),
+          saldoDe(p).toFixed(2),
         ].join(";");
       }),
     ].join("\n");
@@ -116,9 +118,9 @@ export default function Financeiro() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
           { l: "Orçado", v: totalGeral.orcado },
-          { l: "Faturado", v: totalGeral.faturado },
+          { l: "A cobrar", v: totalGeral.faturado },
           { l: "Recebido", v: totalGeral.recebido },
-          { l: "A receber", v: totalGeral.faturado - totalGeral.recebido },
+          { l: "Em aberto", v: aReceber.reduce((s2, x) => s2 + x.saldo, 0) },
         ].map((c) => (
           <div key={c.l} className="surface-card rounded-lg border border-border p-4">
             <div className="text-[10px] uppercase tracking-wide text-muted-foreground">{c.l}</div>
@@ -135,7 +137,7 @@ export default function Financeiro() {
             <div key={nome} className="flex flex-wrap items-center justify-between gap-2 rounded border border-border px-3 py-2 text-sm">
               <span className="font-medium">{nome} <span className="text-xs text-muted-foreground">· {v.qtd} orçamento(s)</span></span>
               <span className="text-xs text-muted-foreground">
-                Orçado {formatarBRL(v.orcado)} · Faturado {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
+                Orçado {formatarBRL(v.orcado)} · A cobrar {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
               </span>
             </div>
           ))}
@@ -151,11 +153,11 @@ export default function Financeiro() {
               <div className="flex items-center justify-between text-sm">
                 <span className="font-medium capitalize">{rotuloMes(m)}</span>
                 <span className="text-xs text-muted-foreground">
-                  Orçado {formatarBRL(v.orcado)} · Faturado {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
+                  Orçado {formatarBRL(v.orcado)} · A cobrar {formatarBRL(v.faturado)} · Recebido {formatarBRL(v.recebido)}
                 </span>
               </div>
               <div className="mt-2 space-y-1">
-                {([["Orçado", v.orcado, "bg-muted-foreground/40"], ["Faturado", v.faturado, "bg-primary"], ["Recebido", v.recebido, "bg-emerald-500"]] as const).map(([l, val, cls]) => (
+                {([["Orçado", v.orcado, "bg-muted-foreground/40"], ["A cobrar", v.faturado, "bg-primary"], ["Recebido", v.recebido, "bg-emerald-500"]] as const).map(([l, val, cls]) => (
                   <div key={l} className="flex items-center gap-2">
                     <span className="w-16 text-[10px] uppercase text-muted-foreground">{l}</span>
                     <div className="h-2 flex-1 rounded bg-card">

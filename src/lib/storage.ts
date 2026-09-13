@@ -702,6 +702,34 @@ export function totalRecebido(projetoId: string): number {
   return listarPagamentos(projetoId).reduce((s, p) => s + p.valor, 0);
 }
 
+/**
+ * Dinheiro que entrou reflete na ordem: define o valor a cobrar quando ainda está zerado
+ * e registra a quitação assim que o recebido cobre o total.
+ */
+export function reconciliarFinanceiro(projetoId: string): void {
+  const p = obterProjeto(projetoId);
+  if (!p || p.status === "orcamento") return;
+  const recebido = totalRecebido(projetoId);
+  if (recebido <= 0) return;
+
+  const orcado = Number((p.total + (p.servicos_valor ?? 0) + (p.frete_valor ?? 0)).toFixed(2));
+  const alvo = p.valor_faturado > 0 ? p.valor_faturado : orcado;
+  if (alvo <= 0) return;
+
+  const patch: ProjetoLocal = { ...p };
+  let mudou = false;
+
+  if (!p.valor_faturado) { patch.valor_faturado = alvo; mudou = true; }
+
+  if (recebido >= alvo - 0.01) {
+    if (!p.faturado_em) { patch.faturado_em = new Date().toISOString(); mudou = true; }
+    // Só muda a situação quando a ordem já foi entregue — a produção segue seu curso.
+    if (p.status === "entregue") { patch.status = "faturado"; mudou = true; }
+  }
+
+  if (mudou) salvarProjeto(patch);
+}
+
 export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<Pagamento> {
   if (!userId) return;
   const { data, error } = await supabase
@@ -712,12 +740,15 @@ export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<Paga
   if (error) throw error;
   const criado = { ...p, id: (data as { id: string }).id };
   pagamentos = [criado, ...pagamentos];
+  reconciliarFinanceiro(p.projeto_id);
   notificar();
   return criado;
 }
 
 export async function removerPagamento(id: string): Promise<void> {
+  const alvo = pagamentos.find((p) => p.id === id);
   pagamentos = pagamentos.filter((p) => p.id !== id);
+  if (alvo) reconciliarFinanceiro(alvo.projeto_id);
   notificar();
   await supabase.from("pagamentos").delete().eq("id", id);
 }
@@ -730,6 +761,8 @@ export function registrarComprovanteLocal(id: string, caminho: string, nome: str
     comprovante_tipo: tipo,
     comprovante_enviado_em: new Date().toISOString(),
   } : p);
+  const alvo = pagamentos.find((p) => p.id === id);
+  if (alvo) reconciliarFinanceiro(alvo.projeto_id);
   notificar();
 }
 
