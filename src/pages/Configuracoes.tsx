@@ -6,8 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { obterEmpresa, salvarEmpresa, obterCatalogo, salvarCatalogo, DadosEmpresa } from "@/lib/storage";
-import { Catalogo } from "@/lib/catalogo";
+import { obterEmpresa, salvarEmpresa, DadosEmpresa } from "@/lib/storage";
 import { numeroMascarado } from "@/lib/mascaras";
 import { documentoOpcionalSchema, emailOpcionalSchema, primeiraMensagem, telefoneOpcionalSchema } from "@/lib/validacao";
 
@@ -241,13 +240,6 @@ export default function Configuracoes() {
           Para o orçamento usar o preço real, edite o material lá e escolha o <strong>código de cálculo</strong> correspondente.
         </p>
         <Button className="mt-3" onClick={() => navigate("/app/materiais")}>Abrir materiais</Button>
-      </div>
-
-      {/* Vidro */}
-      <div className="surface-card rounded-lg border border-border p-5 md:max-w-md">
-        <h2 className="font-display text-lg mb-3">Vidro temperado</h2>
-        <Label>Preço por m² (R$)</Label>
-        <Input mask="moeda" value={String(cat.vidroPorM2).replace(".", ",")} onChange={(e) => setCat({ ...cat, vidroPorM2: numeroMascarado(e.target.value) })} />
       </div>
     </section>
   );
