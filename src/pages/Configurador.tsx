@@ -437,9 +437,10 @@ export default function Configurador() {
           <PassosOrcamento
             projeto={projeto}
             pagamentos={listarPagamentos(projeto.id)}
+            ocupado={enviandoWhats ? "enviar" : null}
             onPasso={(id) => {
               if (id === "orcamento") exportarOrcamento();
-              else if (id === "enviar") marcarEnviado();
+              else if (id === "enviar") void marcarEnviado();
               else if (id === "aprovar") aprovar();
               else if (id === "contrato") exportarContrato();
               else if (id === "comprovante") setFinanceiroAberto(true);
