@@ -13,11 +13,9 @@ import { documentoOpcionalSchema, emailOpcionalSchema, primeiraMensagem, telefon
 export default function Configuracoes() {
   const navigate = useNavigate();
   const [empresa, setEmpresa] = useState<DadosEmpresa>(obterEmpresa());
-  const [cat, setCat] = useState<Catalogo>(obterCatalogo());
 
   useEffect(() => {
     setEmpresa(obterEmpresa());
-    setCat(obterCatalogo());
   }, []);
 
   const salvarTudo = () => {
@@ -27,7 +25,6 @@ export default function Configuracoes() {
     if (!empresa.nome.trim()) { toast.error("Informe o nome da empresa"); return; }
     const empresaLimpa = { ...empresa, nome: empresa.nome.trim(), email: empresa.email.trim().toLowerCase() };
     salvarEmpresa(empresaLimpa);
-    salvarCatalogo(cat);
     toast.success("Configurações salvas");
   };
 
