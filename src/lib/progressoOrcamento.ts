@@ -1,5 +1,6 @@
 // Progresso do orçamento até virar ordem na oficina (para as vendedoras).
 import { ProjetoLocal, Pagamento } from "./storage";
+import { pendentesComunsChecklist, pendentesPecaChecklist } from "./checklistPedido";
 
 export type EstadoMarco = "feito" | "pendente" | "atrasado" | "neutro";
 
@@ -134,7 +135,7 @@ export function passosOrcamento(p: ProjetoLocal, pagamentos: Pagamento[]): Passo
   const aprovado = p.status !== "orcamento";
   const base: Omit<Passo, "numero" | "atual">[] = [
     { id: "orcamento", label: "Baixar orçamento", labelFeito: "Baixar de novo", feito: !!p.orcamento_pdf_em, detalhe: dataBR(p.orcamento_pdf_em) },
-    { id: "enviar", label: "Marcar como enviado", labelFeito: "Registrar novo envio", feito: !!p.enviado_em, detalhe: dataBR(p.enviado_em) },
+    { id: "enviar", label: "Enviar no WhatsApp", labelFeito: "Enviar de novo", feito: !!p.enviado_em, detalhe: dataBR(p.enviado_em) },
     { id: "aprovar", label: "Aprovar", labelFeito: "Aprovado", feito: aprovado, detalhe: dataBR(p.aprovado_em) },
     { id: "contrato", label: "Gerar contrato", labelFeito: "Gerar de novo", feito: !!p.contrato_pdf_em, detalhe: dataBR(p.contrato_pdf_em) },
     { id: "comprovante", label: "Anexar comprovante", labelFeito: "Ver comprovante", feito: temComprovante(pagamentos), detalhe: temComprovante(pagamentos) ? "anexado" : "opcional" },
