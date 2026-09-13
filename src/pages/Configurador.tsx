@@ -965,6 +965,7 @@ export default function Configurador() {
                   maxLength={2000}
                   value={projeto.observacoes_proposta ?? ""}
                   onChange={(e) => upd("observacoes_proposta", e.target.value)}
+                  onBlur={arrumar("observacoes_proposta", frasePrimeiraMaiuscula)}
                 />
               </div>
             </div>
