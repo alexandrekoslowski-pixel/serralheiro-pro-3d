@@ -56,6 +56,7 @@ const App = () => (
             </Route>
             <Route path="/app/projeto/:id/atender" element={<ExigirLogin><ExigirGestao><ModoAtendimento /></ExigirGestao></ExigirLogin>} />
             <Route path="/oficina/:codigo" element={<KanbanOficina />} />
+            <Route path="/o/:codigo" element={<DownloadOrcamento />} />
             <Route path="/oficina/:codigo/os/:id" element={<ModoOficina />} />
             <Route path="/op/:id" element={<ExigirLogin><ModoOficina /></ExigirLogin>} />
             <Route path="*" element={<NotFound />} />
