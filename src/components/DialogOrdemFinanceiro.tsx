@@ -35,6 +35,7 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
   const [arquivo, setArquivo] = useState<File | null>(null);
   const [enviando, setEnviando] = useState(false);
   const [concluido, setConcluido] = useState(false);
+  const [ajustando, setAjustando] = useState(false);
 
   if (!projeto) return null;
   const atual = listarProjetos().find((p) => p.id === projeto.id) ?? projeto;
@@ -104,16 +105,32 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
       </div>
       <div><Label>Valor orçado</Label><Input value={formatarBRL(totalComServicos(atual))} readOnly /></div>
       <div>
-        <Label>Valor faturado</Label>
-        <Input mask="moeda" value={String(atual.valor_faturado || 0).replace(".", ",")} onChange={(e) => salvarProjeto({ ...atual, valor_faturado: numeroMascarado(e.target.value) })} />
+        <Label>Valor a cobrar</Label>
+        {ajustando ? (
+          <Input
+            autoFocus
+            mask="moeda"
+            value={String(atual.valor_faturado || 0).replace(".", ",")}
+            onChange={(e) => salvarProjeto({ ...atual, valor_faturado: numeroMascarado(e.target.value) })}
+            onBlur={() => setAjustando(false)}
+          />
+        ) : (
+          <>
+            <Input value={formatarBRL(aCobrar)} readOnly />
+            <Button size="sm" variant="outline" className="mt-2 w-full" onClick={() => setAjustando(true)}>
+              Ajustar valor (desconto ou acréscimo)
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
 
   const blocoResumo = (
     <div className="rounded-lg border border-border p-3 text-sm">
-      Recebido <strong>{formatarBRL(recebido)}</strong> · Em aberto{" "}
-      <strong className={saldo > 0 ? "text-amber-500" : "text-emerald-500"}>{formatarBRL(Math.max(saldo, 0))}</strong>
+      A cobrar <strong>{formatarBRL(aCobrar)}</strong> · Recebido <strong className="text-emerald-500">{formatarBRL(recebido)}</strong> · Em aberto{" "}
+      <strong className={saldo > 0 ? "text-amber-500" : "text-emerald-500"}>{formatarBRL(saldo)}</strong>
+      {aCobrar > 0 && saldo <= 0 && <span className="ml-2 rounded bg-emerald-500/15 px-2 py-0.5 text-xs text-emerald-500">Quitado</span>}
     </div>
   );
 
