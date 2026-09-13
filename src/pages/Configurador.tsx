@@ -356,18 +356,37 @@ export default function Configurador() {
     toast.success("Contrato gerado");
   };
 
-  const marcarEnviado = () => {
+  const marcarEnviado = async () => {
     const numero = numeroWhatsApp(projeto.cliente_telefone);
     if (!numero) {
       toast.error("Cadastre o telefone/WhatsApp do cliente para enviar");
       setAbaCadastro("cliente");
       return;
     }
-    abrirWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa));
+    // Abre a aba antes do envio do arquivo para não ser bloqueada pelo navegador.
+    const aba = window.open("about:blank", "_blank");
+    setEnviandoWhats(true);
+    let link: string | undefined;
+    try {
+      link = await publicarOrcamentoPDF(projeto, resultado, empresa);
+    } catch {
+      toast.warning("Não consegui subir o PDF — anexe o arquivo na conversa");
+    } finally {
+      setEnviandoWhats(false);
+    }
+    const url = linkWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa, link));
+    if (aba) aba.location.href = url;
+    else abrirWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa, link));
     const agora = new Date().toISOString();
     const nome = (session?.user.user_metadata?.nome as string) || session?.user.email || projeto.vendedora || "";
-    aplicar({ enviado_em: agora, enviado_por_nome: nome, followup_status: "aguardando" as const, followup_em: null });
-    toast.success("WhatsApp aberto — anexe o PDF na conversa");
+    aplicar({
+      enviado_em: agora,
+      enviado_por_nome: nome,
+      followup_status: "aguardando" as const,
+      followup_em: null,
+      orcamento_pdf_em: projeto.orcamento_pdf_em ?? agora,
+    });
+    toast.success(link ? "WhatsApp aberto com o PDF no texto" : "WhatsApp aberto");
   };
 
   const consultarCep = async (cep: string) => {
