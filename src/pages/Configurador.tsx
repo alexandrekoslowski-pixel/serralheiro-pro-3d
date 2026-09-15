@@ -28,7 +28,7 @@ import Visualizador3DClient from "@/components/Visualizador3DClient";
 import type { CameraPreset } from "@/components/Visualizador3D";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { useVendedores } from "@/hooks/useVendedores";
-import { type Cliente, listarClientes, nomeClienteValido, sincronizarClienteDoOrcamento } from "@/lib/gestao";
+import { type Cliente, type Material, listarClientes, listarMateriais, nomeClienteValido, sincronizarClienteDoOrcamento } from "@/lib/gestao";
 
 import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
@@ -53,8 +53,9 @@ import { calcularProjeto, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
 import {
-  FRETE_MINIMO, SERVICOS_POLITICA, UNIDADE_LABEL, politicaComValores,
-  precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica,
+  FRETE_MINIMO, SERVICOS_POLITICA, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
+  precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
+  precoAutomacaoPeca, precoMotorPeca, precoMotorSugerido, tipologiaDoItem,
 } from "@/lib/politicaPrecos";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
