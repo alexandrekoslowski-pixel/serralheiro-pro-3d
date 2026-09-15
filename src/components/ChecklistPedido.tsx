@@ -26,9 +26,11 @@ interface Props {
   onChangePeca: (id: string, respostas: RespostasChecklist) => void;
   onSelecionarPeca: (id: string) => void;
   mostrarPendencias?: boolean;
+  /** Campos extras da peça escolhida (cor, fixação…). */
+  extraPeca?: React.ReactNode;
 }
 
-export function ChecklistPedido({ pecas, selecionadaId, respostas, onChange, onChangePeca, onSelecionarPeca, mostrarPendencias = false }: Props) {
+export function ChecklistPedido({ pecas, selecionadaId, respostas, onChange, onChangePeca, onSelecionarPeca, mostrarPendencias = false, extraPeca }: Props) {
   const peca = pecas.find((item) => item.id === selecionadaId) ?? pecas[0];
   const perguntasComuns = useMemo(() => perguntasComunsChecklist(), []);
   const perguntasPeca = useMemo(() => perguntasPecaChecklist(peca.tipologia, peca.checklist_respostas), [peca]);
@@ -106,6 +108,7 @@ export function ChecklistPedido({ pecas, selecionadaId, respostas, onChange, onC
           {pecas.map((item, index) => <Button key={item.id} type="button" variant={item.id === peca.id ? "default" : "outline"} className="shrink-0" onClick={() => onSelecionarPeca(item.id)}>Peça {index + 1} · {item.nome}</Button>)}
         </div>
         <p className="text-sm font-semibold">{peca.nome}</p>
+        {extraPeca}
         {perguntasPeca.length ? renderPerguntas(perguntasPeca, peca.checklist_respostas, true) : <p className="text-sm text-muted-foreground">Esta peça não exige perguntas técnicas adicionais.</p>}
       </section>
     </div>
