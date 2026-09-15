@@ -162,10 +162,26 @@ export default function Configurador() {
 
   // ---- preço pela política da Kochinski ----
   const politica = useMemo(() => politicaComValores(empresa.politicaValores), [empresa.politicaValores]);
+  const margemMotor = empresa.margemMotorPct ?? 30;
   const totalPecas = useMemo(
-    () => (projeto ? totalPecasPolitica(projeto.pecas, politica) : 0),
-    [projeto, politica],
+    () => (projeto ? totalPecasPolitica(projeto.pecas, politica, margemMotor) : 0),
+    [projeto, politica, margemMotor],
   );
+
+  // Motores e kits cadastrados em Materiais, para escolher na peça
+  const [motores, setMotores] = useState<Material[]>([]);
+  const [buscaMotor, setBuscaMotor] = useState("");
+  useEffect(() => {
+    let vivo = true;
+    void listarMateriais()
+      .then((lista) => {
+        if (!vivo) return;
+        setMotores(lista.filter((m) => m.ativo !== false && ["automatizadores", "kits-basculantes"].includes(m.categoria)));
+      })
+      .catch(() => undefined);
+    return () => { vivo = false; };
+  }, []);
+
   const servicosEscolhidos = projeto?.servicos_politica ?? [];
   const servicosTotal = servicosEscolhidos.reduce((s, x) => s + Number(x.valor || 0), 0);
   const totalProposta = Number((totalPecas + servicosTotal + (projeto?.frete_valor ?? 0)).toFixed(2));
