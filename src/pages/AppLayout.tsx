@@ -1,5 +1,5 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, ShieldCheck, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -7,6 +7,8 @@ import { cn } from "@/lib/utils";
 import { useSessao } from "@/lib/sessao";
 import { projetosLocaisPendentes, importarLocaisParaNuvem } from "@/lib/storage";
 import { meuPerfil, PAPEIS, type Papel } from "@/lib/gestao";
+import { supabase } from "@/integrations/supabase/client";
+import { useRealtimeProjetos } from "@/hooks/useRealtimeProjetos";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -24,6 +26,18 @@ export default function AppLayout() {
 
   useEffect(() => { setPendentes(projetosLocaisPendentes()); }, []);
 
+  const [medicoes, setMedicoes] = useState(0);
+  const contarMedicoes = useCallback(async () => {
+    if (papel === "serralheiro") return;
+    const { count } = await supabase
+      .from("projetos")
+      .select("id", { count: "exact", head: true })
+      .eq("etapa", "medicao");
+    setMedicoes(count ?? 0);
+  }, [papel]);
+  useEffect(() => { void contarMedicoes(); }, [contarMedicoes]);
+  useRealtimeProjetos(() => void contarMedicoes());
+
   const importar = async () => {
     try {
       const n = await importarLocaisParaNuvem();
@@ -34,7 +48,7 @@ export default function AppLayout() {
 
   const todos: { to: string; end: boolean; label: string; icon: typeof Users; papeis: Papel[] }[] = [
     { to: "/app", end: true, label: "Painel", icon: LayoutDashboard, papeis: ["gestor", "vendedora"] },
-    { to: "/app/oficina", end: false, label: papel === "serralheiro" ? "Minhas ordens" : "Oficina", icon: Wrench, papeis: ["gestor", "vendedora", "serralheiro"] },
+    { to: "/app/oficina", end: false, label: papel === "serralheiro" ? "Minhas ordens" : "Kanban", icon: Wrench, papeis: ["gestor", "vendedora", "serralheiro"] },
     { to: "/app/clientes", end: false, label: "Clientes", icon: Users, papeis: ["gestor", "vendedora"] },
     { to: "/app/projetos", end: false, label: "Orçamentos", icon: FolderKanban, papeis: ["gestor", "vendedora"] },
     { to: "/app/calendario", end: false, label: "Calendário", icon: CalendarDays, papeis: ["gestor", "vendedora"] },
@@ -105,6 +119,9 @@ export default function AppLayout() {
             >
               <it.icon className="h-4 w-4" />
               {it.label}
+              {it.to === "/app/oficina" && medicoes > 0 && (
+                <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-background">{medicoes}</span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -124,6 +141,9 @@ export default function AppLayout() {
                 >
                   <it.icon className="h-4 w-4" />
                   {it.label}
+                  {it.to === "/app/oficina" && medicoes > 0 && (
+                    <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-background">{medicoes}</span>
+                  )}
                 </NavLink>
               ))}
             </nav>
