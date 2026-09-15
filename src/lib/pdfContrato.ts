@@ -30,7 +30,10 @@ export function gerarContratoPDF(projeto: ProjetoLocal, empresa: DadosEmpresa, r
   autoTable(doc, {
     startY: y,
     head: [["Item", "Serviço / peça", "Medidas"]],
-    body: projeto.pecas.map((p, i) => [String(i + 1), `${p.nome} — ${tipologiaPorId(p.tipologia).nome}`, `${cm(p.largura_mm)} × ${cm(p.altura_mm)}`]),
+    body: projeto.pecas.map((p, i) => {
+      const extras = [p.automacao_id ? "com automação" : "", p.motor_nome || ""].filter(Boolean).join(" · ");
+      return [String(i + 1), `${p.nome} — ${tipologiaPorId(p.tipologia).nome}${extras ? ` (${extras})` : ""}`, `${cm(p.largura_mm)} × ${cm(p.altura_mm)}`];
+    }),
     theme: "grid", styles: { fontSize: 9 }, margin: { left: margem, right: margem },
   });
   y = ((doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ?? y) + 8;

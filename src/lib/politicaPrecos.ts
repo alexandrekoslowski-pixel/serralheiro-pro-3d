@@ -112,19 +112,29 @@ export const POLITICA_PADRAO: ItemPolitica[] = [
   { id: "trilho", produto: "Trilho", modelo: "", unidade: "sob_orcamento", valor: 0 },
 ];
 
-/** Serviços de instalação e automação da política (valores de referência). */
+/** Serviços de instalação da política (valores de referência, escolhidos no orçamento todo). */
 export const SERVICOS_POLITICA: { id: string; nome: string; valor: number }[] = [
   { id: "instalacao-simples", nome: "Instalação simples", valor: 260 },
   { id: "instalacao-complexa", nome: "Instalação complexa", valor: 500 },
-  { id: "automacao-deslizante", nome: "Automação · motor deslizante", valor: 380 },
-  { id: "automacao-pivotante", nome: "Automação · motor pivotante", valor: 750 },
-  { id: "automacao-basculante", nome: "Automação · motor basculante", valor: 450 },
-  { id: "automacao-fechadura-eletrica", nome: "Automação · fechadura elétrica", valor: 350 },
-  { id: "automacao-eletroima", nome: "Automação · eletroímã", valor: 400 },
 ];
+
+/** Automações escolhidas peça a peça. */
+export const AUTOMACOES_POLITICA: { id: string; nome: string; valor: number }[] = [
+  { id: "automacao-deslizante", nome: "Motor deslizante", valor: 380 },
+  { id: "automacao-pivotante", nome: "Motor pivotante", valor: 750 },
+  { id: "automacao-basculante", nome: "Motor basculante", valor: 450 },
+  { id: "automacao-fechadura-eletrica", nome: "Fechadura elétrica", valor: 350 },
+  { id: "automacao-eletroima", nome: "Eletroímã", valor: 400 },
+];
+
+export const automacaoPolitica = (id?: string | null) => AUTOMACOES_POLITICA.find((a) => a.id === id);
+
+/** Margem padrão aplicada sobre o custo do motor vindo dos materiais. */
+export const MARGEM_MOTOR_PADRAO = 30;
 
 /** Deslocamento mínimo cobrado. */
 export const FRETE_MINIMO = 180;
+
 
 /** Aplica os valores editados pela empresa por cima da tabela padrão. */
 export function politicaComValores(overrides?: Record<string, number>): ItemPolitica[] {
@@ -160,6 +170,28 @@ export const POLITICA_POR_TIPOLOGIA: Record<string, string> = {
   grade_fixa_trabalhada: "grade-fixa-trabalhado",
 };
 
+/** Tipologia técnica correspondente a cada item da tabela (deriva do mapa acima). */
+export const TIPOLOGIA_POR_POLITICA: Record<string, string> = Object.fromEntries(
+  Object.entries(POLITICA_POR_TIPOLOGIA).map(([tip, id]) => [id, tip]),
+);
+
+/** Tipologia técnica de um item da tabela, caindo no produto quando não houver mapa direto. */
+export function tipologiaDoItem(politicaId?: string | null, lista: ItemPolitica[] = POLITICA_PADRAO): string | undefined {
+  if (!politicaId) return undefined;
+  if (TIPOLOGIA_POR_POLITICA[politicaId]) return TIPOLOGIA_POR_POLITICA[politicaId];
+  const produto = itemPolitica(politicaId, lista)?.produto;
+  if (!produto) return undefined;
+  const irmao = lista.find((i) => i.produto === produto && TIPOLOGIA_POR_POLITICA[i.id]);
+  return irmao ? TIPOLOGIA_POR_POLITICA[irmao.id] : undefined;
+}
+
+/** Nome curto sugerido para a peça a partir do item da tabela. */
+export function nomeSugeridoPeca(politicaId?: string | null, lista: ItemPolitica[] = POLITICA_PADRAO): string {
+  const item = itemPolitica(politicaId, lista);
+  return item ? item.produto : "";
+}
+
+
 /** Quantidade cobrada conforme a unidade, com mínimo de 1. */
 export function quantidadeCobrada(unidade: UnidadePolitica, largura_mm: number, altura_mm: number): number {
   if (unidade === "m2") return Math.max(1, Number(((largura_mm / 1000) * (altura_mm / 1000)).toFixed(3)));
@@ -186,6 +218,32 @@ export function precoPeca(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO): 
   return { item, quantidade, sugerido, valor: manual ? Number(peca.preco_manual) : sugerido, manual };
 }
 
-/** Soma das peças pela política. */
-export const totalPecasPolitica = (pecas: Peca[], lista: ItemPolitica[] = POLITICA_PADRAO): number =>
-  Number(pecas.reduce((s, p) => s + precoPeca(p, lista).valor, 0).toFixed(2));
+/** Valor da automação escolhida na peça (editável). */
+export function precoAutomacaoPeca(peca: Peca): number {
+  if (!peca.automacao_id) return 0;
+  if (peca.automacao_valor != null) return Number(peca.automacao_valor);
+  return automacaoPolitica(peca.automacao_id)?.valor ?? 0;
+}
+
+/** Preço de venda sugerido do motor: custo do material + margem da empresa. */
+export function precoMotorSugerido(custo?: number | null, margemPct = MARGEM_MOTOR_PADRAO): number {
+  if (!custo) return 0;
+  return Number((Number(custo) * (1 + Number(margemPct || 0) / 100)).toFixed(2));
+}
+
+/** Valor do motor da peça (digitado ou sugerido pelo custo + margem). */
+export function precoMotorPeca(peca: Peca, margemPct = MARGEM_MOTOR_PADRAO): number {
+  if (!peca.motor_material_id) return 0;
+  if (peca.motor_valor != null) return Number(peca.motor_valor);
+  return precoMotorSugerido(peca.motor_custo, margemPct);
+}
+
+/** Total cobrado por uma peça: tabela + automação + motor. */
+export function totalPeca(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO, margemPct = MARGEM_MOTOR_PADRAO): number {
+  return Number((precoPeca(peca, lista).valor + precoAutomacaoPeca(peca) + precoMotorPeca(peca, margemPct)).toFixed(2));
+}
+
+/** Soma das peças pela política, já com automação e motor. */
+export const totalPecasPolitica = (pecas: Peca[], lista: ItemPolitica[] = POLITICA_PADRAO, margemPct = MARGEM_MOTOR_PADRAO): number =>
+  Number(pecas.reduce((s, p) => s + totalPeca(p, lista, margemPct), 0).toFixed(2));
+

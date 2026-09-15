@@ -33,7 +33,16 @@ export interface Peca {
   politica_id?: string;
   /** Valor digitado à mão (sobrepõe a tabela). */
   preco_manual?: number | null;
+  /** Automação escolhida para esta peça. */
+  automacao_id?: string | null;
+  automacao_valor?: number | null;
+  /** Motor vindo do cadastro de materiais. */
+  motor_material_id?: string | null;
+  motor_nome?: string;
+  motor_custo?: number | null;
+  motor_valor?: number | null;
   checklist_respostas: RespostasChecklist;
+
 }
 
 /** Medição fina feita no local (em cima das fotos anotadas). */
@@ -163,6 +172,8 @@ export interface DadosEmpresa {
   clausulasContrato: string;
   /** Valores editados da política de preços (id do item → valor). */
   politicaValores: Record<string, number>;
+  /** Margem (%) aplicada sobre o custo do motor vindo dos materiais. */
+  margemMotorPct: number;
 }
 
 export const TEXTO_PAGAMENTO_PADRAO = [
@@ -235,6 +246,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   msgVisitaTecnica: MSG_VISITA_PADRAO,
   clausulasContrato: "A contratada executará os serviços conforme as especificações aprovadas. O contratante deverá garantir acesso ao local, condições adequadas para instalação e os pagamentos acordados. Alterações solicitadas após a aprovação poderão mudar valor e prazo. A garantia não cobre mau uso, intervenção de terceiros ou alterações no local.",
   politicaValores: {},
+  margemMotorPct: 30,
 };
 
 // ---------- estado em memória ----------
@@ -339,7 +351,14 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
     fixacaoLados: pc.fixacaoLados ?? FIXACAO_LADOS_PADRAO,
     politica_id: pc.politica_id ?? POLITICA_POR_TIPOLOGIA[pc.tipologia] ?? "",
     preco_manual: pc.preco_manual ?? null,
+    automacao_id: pc.automacao_id ?? null,
+    automacao_valor: pc.automacao_valor ?? null,
+    motor_material_id: pc.motor_material_id ?? null,
+    motor_nome: pc.motor_nome ?? "",
+    motor_custo: pc.motor_custo ?? null,
+    motor_valor: pc.motor_valor ?? null,
   }));
+
   base.servicos_politica = Array.isArray(base.servicos_politica) ? base.servicos_politica : [];
   // Campos antigos continuam refletindo a primeira peça (compatibilidade).
   const p0 = base.pecas[0];
@@ -832,6 +851,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
         msgVisitaTecnica: empresa.msgVisitaTecnica,
         clausulasContrato: empresa.clausulasContrato,
         politicaValores: empresa.politicaValores ?? {},
+        margemMotorPct: empresa.margemMotorPct ?? 30,
         metaSemanal: empresa.metaSemanal,
       },
       prazo_padrao_dias: empresa.prazoPadraoDias,

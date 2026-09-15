@@ -248,6 +248,18 @@ export default function Configuracoes() {
         <p className="mt-1 text-sm text-muted-foreground">
           É esta tabela que define o preço de cada peça no orçamento. Altere o valor e clique em salvar.
         </p>
+        <div className="mt-3 max-w-xs">
+          <Label>Margem sobre o motor (%)</Label>
+          <Input
+            className="mt-2"
+            inputMode="numeric"
+            value={String(empresa.margemMotorPct ?? 30)}
+            onChange={(e) => setEmpresa({ ...empresa, margemMotorPct: Number(e.target.value.replace(/\D/g, "")) || 0 })}
+          />
+          <p className="mt-1 text-xs text-muted-foreground">
+            Aplicada sobre o custo do motor cadastrado em Materiais para sugerir o preço ao cliente.
+          </p>
+        </div>
         <Input
           className="mt-3 max-w-sm"
           placeholder="Buscar produto ou modelo"

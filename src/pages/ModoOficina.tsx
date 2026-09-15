@@ -15,6 +15,7 @@ import { calcularProjeto } from "@/lib/calculator";
 import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import { resumoFixacao, fixacaoTipo } from "@/lib/fixacao";
+import { automacaoPolitica } from "@/lib/politicaPrecos";
 import { listarFotos, FotoOrdem } from "@/lib/fotos";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 
@@ -200,7 +201,13 @@ export default function ModoOficina() {
                 {resumoFixacao(pc.largura_mm, pc.altura_mm, pc.fixacao, pc.fixacaoLados)}
               </p>
               <p className="text-sm text-zinc-300 print:text-black">{fixacaoTipo(pc.fixacao).instrucao}</p>
+              {(pc.automacao_id || pc.motor_nome) && (
+                <p className="mt-1 text-lg font-bold uppercase">
+                  Automação: {[pc.automacao_id ? automacaoPolitica(pc.automacao_id)?.nome : "", pc.motor_nome].filter(Boolean).join(" · ")}
+                </p>
+              )}
             </div>
+
           ))}
         </div>
         {projeto.cliente && (
