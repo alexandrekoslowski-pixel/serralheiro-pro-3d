@@ -246,6 +246,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   msgVisitaTecnica: MSG_VISITA_PADRAO,
   clausulasContrato: "A contratada executará os serviços conforme as especificações aprovadas. O contratante deverá garantir acesso ao local, condições adequadas para instalação e os pagamentos acordados. Alterações solicitadas após a aprovação poderão mudar valor e prazo. A garantia não cobre mau uso, intervenção de terceiros ou alterações no local.",
   politicaValores: {},
+  margemMotorPct: 30,
 };
 
 // ---------- estado em memória ----------
