@@ -894,32 +894,72 @@ export default function Configurador() {
         {/* Campos da peça escolhida, em blocos */}
         <div className="space-y-4 border-t border-border pt-4">
           <section className="rounded-lg border border-border p-3">
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que é</h4>
-            <div className="grid gap-3 sm:grid-cols-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que é e quanto custa</h4>
+            <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <Label>Nome da peça</Label>
-                <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
+                <Label>Produto</Label>
+                <Select
+                  value={precoSel.item?.produto ?? ""}
+                  onValueChange={(produto) => {
+                    const primeiro = modelosPolitica(produto, politica)[0];
+                    escolherPolitica(primeiro?.id ?? "");
+                  }}
+                >
+                  <SelectTrigger className="mt-2"><SelectValue placeholder="Escolha o produto" /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {produtosPolitica(politica).map((pr) => <SelectItem key={pr} value={pr}>{pr}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="sm:col-span-2">
-                <Label>Tipologia</Label>
-                <Select value={pecaSel.tipologia} onValueChange={(v) => {
-                  const novo = tipologiaPorId(v as TipologiaId);
-                  const nomeAutomatico = pecaSel.nome === tipologiaPorId(pecaSel.tipologia).nome || /^Peça \d+$/i.test(pecaSel.nome);
-                  updPeca({
-                    tipologia: v as TipologiaId,
-                    ...(nomeAutomatico ? { nome: novo.nome } : {}),
-                    largura_mm: Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax),
-                    altura_mm: Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax),
-                  });
-                }}>
-                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {TIPOLOGIAS.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>
+              <div>
+                <Label>Modelo</Label>
+                <Select
+                  value={pecaSel.politica_id || ""}
+                  onValueChange={(v) => escolherPolitica(v)}
+                  disabled={!precoSel.item}
+                >
+                  <SelectTrigger className="mt-2"><SelectValue placeholder="Escolha o modelo" /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {modelosPolitica(precoSel.item?.produto ?? "", politica).map((m) => (
+                      <SelectItem key={m.id} value={m.id}>{m.modelo || "Padrão"}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-                <p className="mt-1 text-[11px] text-muted-foreground">{tip.descricao}</p>
+              </div>
+              <div>
+                <Label>Nome da peça</Label>
+                <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
+                <p className="mt-1 text-[11px] text-muted-foreground">Aparece na oficina e nos documentos.</p>
+              </div>
+              <div>
+                <Label>Valor desta peça (R$)</Label>
+                <Input
+                  className="mt-2"
+                  mask="moeda"
+                  placeholder={formatarBRL(precoSel.sugerido)}
+                  value={pecaSel.preco_manual == null ? "" : String(pecaSel.preco_manual).replace(".", ",")}
+                  onChange={(e) => updPeca({ preco_manual: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
+                />
+                {precoSel.manual && (
+                  <Button type="button" size="sm" variant="outline" className="mt-1 h-7 text-[11px]" onClick={() => updPeca({ preco_manual: null })}>
+                    Voltar ao valor da tabela
+                  </Button>
+                )}
+              </div>
+              <div className="sm:col-span-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                {precoSel.item ? (
+                  precoSel.item.unidade === "sob_orcamento" ? (
+                    <>Item sob orçamento — digite o valor desta peça.</>
+                  ) : (
+                    <>
+                      {formatarBRL(precoSel.item.valor)} {UNIDADE_LABEL[precoSel.item.unidade]} ×{" "}
+                      {precoSel.quantidade.toLocaleString("pt-BR")} = <strong>{formatarBRL(precoSel.sugerido)}</strong>
+                      {precoSel.manual && <span className="ml-1 text-warning">(valor ajustado à mão)</span>}
+                    </>
+                  )
+                ) : (
+                  <>Escolha o produto da tabela para calcular o preço.</>
+                )}
               </div>
             </div>
           </section>
@@ -943,78 +983,128 @@ export default function Configurador() {
           </section>
 
           <section className="rounded-lg border border-border p-3">
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preço pela tabela</h4>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
-                <Label>Produto</Label>
-                <Select
-                  value={precoSel.item?.produto ?? ""}
-                  onValueChange={(produto) => {
-                    const primeiro = modelosPolitica(produto, politica)[0];
-                    updPeca({ politica_id: primeiro?.id ?? "", preco_manual: null });
-                  }}
-                >
-                  <SelectTrigger className="mt-2"><SelectValue placeholder="Escolha o produto" /></SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {produtosPolitica(politica).map((pr) => <SelectItem key={pr} value={pr}>{pr}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Modelo</Label>
-                <Select
-                  value={pecaSel.politica_id || ""}
-                  onValueChange={(v) => updPeca({ politica_id: v, preco_manual: null })}
-                  disabled={!precoSel.item}
-                >
-                  <SelectTrigger className="mt-2"><SelectValue placeholder="Escolha o modelo" /></SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {modelosPolitica(precoSel.item?.produto ?? "", politica).map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.modelo || "Padrão"}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="sm:col-span-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                {precoSel.item ? (
-                  precoSel.item.unidade === "sob_orcamento" ? (
-                    <>Item sob orçamento — digite o valor desta peça.</>
-                  ) : (
-                    <>
-                      {formatarBRL(precoSel.item.valor)} {UNIDADE_LABEL[precoSel.item.unidade]} ×{" "}
-                      {precoSel.quantidade.toLocaleString("pt-BR")} = <strong>{formatarBRL(precoSel.sugerido)}</strong>
-                      {precoSel.manual && <span className="ml-1 text-warning">(valor ajustado à mão)</span>}
-                    </>
-                  )
-                ) : (
-                  <>Escolha o produto da tabela para calcular o preço.</>
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Automação e motor desta peça</h4>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button" size="sm"
+                variant={pecaSel.automacao_id ? "outline" : "default"}
+                className={cn("h-auto min-h-10", !pecaSel.automacao_id && "bg-primary text-primary-foreground")}
+                onClick={() => updPeca({ automacao_id: null, automacao_valor: null, motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null })}
+              >
+                Sem automação
+              </Button>
+              {AUTOMACOES_POLITICA.map((a) => {
+                const ativo = pecaSel.automacao_id === a.id;
+                return (
+                  <Button
+                    key={a.id}
+                    type="button" size="sm"
+                    variant={ativo ? "default" : "outline"}
+                    className={cn("h-auto min-h-10 whitespace-normal text-left", ativo && "bg-primary text-primary-foreground")}
+                    onClick={() => updPeca({ automacao_id: a.id, automacao_valor: null })}
+                  >
+                    {a.nome} · {formatarBRL(a.valor)}
+                  </Button>
+                );
+              })}
+            </div>
+
+            {pecaSel.automacao_id && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <Label>Valor da instalação da automação (R$)</Label>
+                  <Input
+                    className="mt-2"
+                    mask="moeda"
+                    placeholder={formatarBRL(automacaoPolitica(pecaSel.automacao_id)?.valor ?? 0)}
+                    value={pecaSel.automacao_valor == null ? "" : String(pecaSel.automacao_valor).replace(".", ",")}
+                    onChange={(e) => updPeca({ automacao_valor: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
+                  />
+                </div>
+                <div>
+                  <Label>Motor (cadastro de materiais)</Label>
+                  <Input
+                    className="mt-2"
+                    placeholder="Buscar motor ou kit"
+                    value={buscaMotor}
+                    onChange={(e) => setBuscaMotor(e.target.value)}
+                  />
+                  <Select
+                    value={pecaSel.motor_material_id ?? ""}
+                    onValueChange={(id) => {
+                      const m = motores.find((x) => x.id === id);
+                      updPeca({
+                        motor_material_id: id,
+                        motor_nome: m?.nome ?? "",
+                        motor_custo: m?.custo ?? null,
+                        motor_valor: null,
+                      });
+                    }}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder={motores.length ? "Escolha o motor" : "Carregando motores…"} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-72">
+                      {motoresFiltrados.map((m) => (
+                        <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {pecaSel.motor_material_id && (
+                  <>
+                    <div>
+                      <Label>Valor do motor para o cliente (R$)</Label>
+                      <Input
+                        className="mt-2"
+                        mask="moeda"
+                        placeholder={formatarBRL(precoMotorSugerido(pecaSel.motor_custo, margemMotor))}
+                        value={pecaSel.motor_valor == null ? "" : String(pecaSel.motor_valor).replace(".", ",")}
+                        onChange={(e) => updPeca({ motor_valor: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
+                      />
+                      {pecaSel.motor_valor != null && (
+                        <Button type="button" size="sm" variant="outline" className="mt-1 h-7 text-[11px]" onClick={() => updPeca({ motor_valor: null })}>
+                          Voltar ao valor sugerido
+                        </Button>
+                      )}
+                    </div>
+                    <div className="flex flex-col justify-end gap-1 text-sm">
+                      <span className="truncate">{pecaSel.motor_nome}</span>
+                      {podeVerCustos && (
+                        <span className="text-xs text-muted-foreground">
+                          Custo {formatarBRL(pecaSel.motor_custo ?? 0)} · margem {margemMotor}%
+                        </span>
+                      )}
+                      <Button
+                        type="button" size="sm" variant="dangerOutline" className="h-8 w-fit"
+                        onClick={() => updPeca({ motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null })}
+                      >
+                        Remover motor
+                      </Button>
+                    </div>
+                  </>
                 )}
               </div>
-              <div>
-                <Label>Valor desta peça (R$)</Label>
-                <Input
-                  className="mt-2"
-                  mask="moeda"
-                  placeholder={formatarBRL(precoSel.sugerido)}
-                  value={pecaSel.preco_manual == null ? "" : String(pecaSel.preco_manual).replace(".", ",")}
-                  onChange={(e) => updPeca({ preco_manual: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
-                />
-              </div>
-              {precoSel.manual && (
-                <div className="flex items-end">
-                  <Button type="button" variant="outline" onClick={() => updPeca({ preco_manual: null })}>
-                    Voltar ao valor da tabela
-                  </Button>
-                </div>
-              )}
-            </div>
+            )}
           </section>
 
           <p className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
-            <strong>{tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
+            <strong>{pecaSel.nome || tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
             {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome} ·{" "}
-            {fixacaoTipo(pecaSel.fixacao).nome} · <strong>{formatarBRL(precoSel.valor)}</strong>
+            {fixacaoTipo(pecaSel.fixacao).nome}
+            {pecaSel.automacao_id && <> · {automacaoPolitica(pecaSel.automacao_id)?.nome}</>}
+            {pecaSel.motor_material_id && <> · motor</>}
+            {" · "}
+            <strong>{formatarBRL(totalPecaSel)}</strong>
+            {(automacaoSel > 0 || motorSel > 0) && (
+              <span className="ml-1 text-xs text-muted-foreground">
+                (peça {formatarBRL(precoSel.valor)}
+                {automacaoSel > 0 && ` + automação ${formatarBRL(automacaoSel)}`}
+                {motorSel > 0 && ` + motor ${formatarBRL(motorSel)}`})
+              </span>
+            )}
           </p>
+
         </div>
       </div>
 
