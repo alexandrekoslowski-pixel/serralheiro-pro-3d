@@ -17,6 +17,9 @@ import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import { resumoFixacao, fixacaoTipo } from "@/lib/fixacao";
 import { listarFotos, FotoOrdem } from "@/lib/fotos";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
+
+/** Desenho 3D temporariamente desativado. */
+const MOSTRAR_3D = false;
 import { DiagramaBarras } from "@/components/DiagramaBarras";
 import { cm } from "@/lib/medidas";
 import { linhasChecklistProjeto } from "@/lib/checklistPedido";
@@ -346,6 +349,7 @@ export default function ModoOficina() {
           </div>
         </div>
 
+        {MOSTRAR_3D && (
         <div>
           <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">
             Como fica
@@ -366,6 +370,7 @@ export default function ModoOficina() {
             />
           </div>
         </div>
+        )}
       </section>
 
       {/* MONTAR & SOLDAR — listas curtas */}

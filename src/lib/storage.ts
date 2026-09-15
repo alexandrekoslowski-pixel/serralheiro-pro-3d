@@ -7,6 +7,7 @@ import { CHECKLIST_VERSAO, normalizarRespostasChecklist, type RespostasChecklist
 
 export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
 export type EtapaOficina =
+  | "medicao"
   | "fila"
   | "producao"
   | "acabamento"

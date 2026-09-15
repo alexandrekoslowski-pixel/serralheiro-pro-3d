@@ -1,0 +1,1 @@
+ALTER TYPE public.etapa_oficina ADD VALUE IF NOT EXISTS 'medicao' BEFORE 'fila';

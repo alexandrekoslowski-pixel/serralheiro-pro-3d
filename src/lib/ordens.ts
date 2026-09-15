@@ -2,6 +2,7 @@
 import { OrdemStatus, ProjetoLocal, DadosEmpresa, EtapaOficina } from "./storage";
 
 export const ETAPAS_OFICINA: EtapaOficina[] = [
+  "medicao",
   "fila",
   "producao",
   "acabamento",
@@ -12,6 +13,7 @@ export const ETAPAS_OFICINA: EtapaOficina[] = [
 ];
 
 export const ETAPA_LABEL: Record<EtapaOficina, string> = {
+  medicao: "Medição",
   fila: "Fila",
   producao: "Produção / montagem",
   acabamento: "Acabamento",
