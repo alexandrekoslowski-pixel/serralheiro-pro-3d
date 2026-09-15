@@ -15,6 +15,7 @@ import { calcularProjeto } from "@/lib/calculator";
 import { planejarCorte, planejarProducao, FOLGA_CORTE_MM } from "@/lib/producao";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
 import { resumoFixacao, fixacaoTipo } from "@/lib/fixacao";
+import { automacaoPolitica } from "@/lib/politicaPrecos";
 import { listarFotos, FotoOrdem } from "@/lib/fotos";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
 
