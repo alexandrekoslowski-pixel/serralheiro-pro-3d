@@ -1523,38 +1523,6 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
   );
 }
 
-function SliderPct({ label, value, onChange, max = 100 }: { label: string; value: number; onChange: (v: number) => void; max?: number }) {
-  const [texto, setTexto] = useState<string | null>(null);
-  const exibido = texto ?? String(value);
-
-  const confirmar = () => {
-    const n = Number(String(exibido).replace(",", "."));
-    if (Number.isFinite(n) && exibido.trim() !== "") {
-      onChange(Math.min(max, Math.max(0, n)));
-    }
-    setTexto(null);
-  };
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <Label>{label}</Label>
-        <Input
-          type="text"
-          inputMode="decimal"
-          className="h-7 w-16 text-right text-xs"
-          value={exibido}
-          mask="decimal"
-          onChange={(e) => setTexto(e.target.value)}
-          onFocus={(e) => e.currentTarget.select()}
-          onBlur={confirmar}
-          onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
-        />
-      </div>
-      <Slider min={0} max={max} step={1} value={[value]} onValueChange={([v]) => { setTexto(null); onChange(v); }} />
-    </div>
-  );
-}
 
 function BadgeSolda({ tipo }: { tipo: string }) {
   const cores: Record<string, string> = {
