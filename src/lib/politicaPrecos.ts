@@ -170,6 +170,28 @@ export const POLITICA_POR_TIPOLOGIA: Record<string, string> = {
   grade_fixa_trabalhada: "grade-fixa-trabalhado",
 };
 
+/** Tipologia técnica correspondente a cada item da tabela (deriva do mapa acima). */
+export const TIPOLOGIA_POR_POLITICA: Record<string, string> = Object.fromEntries(
+  Object.entries(POLITICA_POR_TIPOLOGIA).map(([tip, id]) => [id, tip]),
+);
+
+/** Tipologia técnica de um item da tabela, caindo no produto quando não houver mapa direto. */
+export function tipologiaDoItem(politicaId?: string | null, lista: ItemPolitica[] = POLITICA_PADRAO): string | undefined {
+  if (!politicaId) return undefined;
+  if (TIPOLOGIA_POR_POLITICA[politicaId]) return TIPOLOGIA_POR_POLITICA[politicaId];
+  const produto = itemPolitica(politicaId, lista)?.produto;
+  if (!produto) return undefined;
+  const irmao = lista.find((i) => i.produto === produto && TIPOLOGIA_POR_POLITICA[i.id]);
+  return irmao ? TIPOLOGIA_POR_POLITICA[irmao.id] : undefined;
+}
+
+/** Nome curto sugerido para a peça a partir do item da tabela. */
+export function nomeSugeridoPeca(politicaId?: string | null, lista: ItemPolitica[] = POLITICA_PADRAO): string {
+  const item = itemPolitica(politicaId, lista);
+  return item ? item.produto : "";
+}
+
+
 /** Quantidade cobrada conforme a unidade, com mínimo de 1. */
 export function quantidadeCobrada(unidade: UnidadePolitica, largura_mm: number, altura_mm: number): number {
   if (unidade === "m2") return Math.max(1, Number(((largura_mm / 1000) * (altura_mm / 1000)).toFixed(3)));
