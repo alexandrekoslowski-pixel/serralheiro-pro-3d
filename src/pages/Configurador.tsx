@@ -61,6 +61,9 @@ import { buscarCep } from "@/lib/cep";
 import { gerarContratoPDF } from "@/lib/pdfContrato";
 import { useSessao } from "@/lib/sessao";
 
+/** Desenho 3D temporariamente desativado — mude para true para religar. */
+const MOSTRAR_3D = false;
+
 const PALETA_BARRAS = [
   "hsl(18 78% 52%)", "hsl(210 60% 55%)", "hsl(140 50% 50%)",
   "hsl(320 55% 60%)", "hsl(45 90% 55%)", "hsl(260 50% 60%)",
@@ -103,7 +106,8 @@ export default function Configurador() {
   const [enviandoContrato, setEnviandoContrato] = useState(false);
   const [financeiroAberto, setFinanceiroAberto] = useState(false);
   const [pendenciasFila, setPendenciasFila] = useState<string[] | null>(null);
-  const { session } = useSessao();
+  const { session, papel } = useSessao();
+  const podeVerCustos = papel === "gestor";
   const digitosDocumento = (projeto?.cliente_documento ?? "").replace(/\D/g, "").length;
   const documentoIncompleto = digitosDocumento > 0 && digitosDocumento !== 11 && digitosDocumento !== 14;
   const digitosTelefone = (projeto?.cliente_telefone ?? "").replace(/\D/g, "").length;
@@ -902,7 +906,8 @@ export default function Configurador() {
 
       {/* Desenho e detalhamento */}
       <div className="space-y-4 min-w-0">
-          {/* Card 3D */}
+          {/* Card 3D (desativado por enquanto) */}
+          {MOSTRAR_3D && (
           <div className="surface-card rounded-lg border border-border overflow-hidden">
             <div className="flex flex-col gap-2 border-b border-border px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="font-display text-sm flex items-center gap-2">
@@ -959,25 +964,30 @@ export default function Configurador() {
               />
             </div>
           </div>
+          )}
 
           {/* Resumo */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             <CardResumo label="Total geral" valor={formatarBRL(totalAnimado)} highlight />
-            <CardResumo label="Materiais" valor={formatarBRL(resultado.totalMateriais)} />
-            <CardResumo label="Metragem perfil" valor={`${resultado.resumo.metragemPerfil.toFixed(2)} m`} />
-            <CardResumo label="Peso estimado" valor={`${resultado.resumo.pesoEstimado.toFixed(1)} kg`} />
+            {podeVerCustos && <CardResumo label="Materiais" valor={formatarBRL(resultado.totalMateriais)} />}
+            {podeVerCustos && <CardResumo label="Metragem perfil" valor={`${resultado.resumo.metragemPerfil.toFixed(2)} m`} />}
+            {podeVerCustos && <CardResumo label="Peso estimado" valor={`${resultado.resumo.pesoEstimado.toFixed(1)} kg`} />}
           </div>
 
           {/* Percentuais */}
           <div className="surface-card rounded-lg border border-border p-4">
-            <div className="mb-3 flex items-center gap-2 font-display text-sm">
-              <DollarSign className="h-4 w-4 text-primary" /> Composição do preço
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <SliderPct label="Mão de obra" value={projeto.maoObraPct} onChange={(v) => upd("maoObraPct", v)} />
-              <SliderPct label="Margem" value={projeto.margemPct} onChange={(v) => upd("margemPct", v)} />
-              <SliderPct label="Desconto geral" value={projeto.descontoGeralPct} onChange={(v) => upd("descontoGeralPct", v)} max={50} />
-            </div>
+            {podeVerCustos && (
+              <>
+                <div className="mb-3 flex items-center gap-2 font-display text-sm">
+                  <DollarSign className="h-4 w-4 text-primary" /> Composição do preço
+                </div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <SliderPct label="Mão de obra" value={projeto.maoObraPct} onChange={(v) => upd("maoObraPct", v)} />
+                  <SliderPct label="Margem" value={projeto.margemPct} onChange={(v) => upd("margemPct", v)} />
+                  <SliderPct label="Desconto geral" value={projeto.descontoGeralPct} onChange={(v) => upd("descontoGeralPct", v)} max={50} />
+                </div>
+              </>
+            )}
             <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
               <div>
                 <Label className="text-xs">Serviços (R$)</Label>
@@ -1015,11 +1025,11 @@ export default function Configurador() {
 
 
           {/* Tabs */}
-          <Tabs defaultValue="materiais">
+          <Tabs defaultValue={podeVerCustos ? "materiais" : "orcamento"}>
             <TabsList className="overflow-x-auto w-max min-w-full justify-start">
-              <TabsTrigger value="materiais">Materiais</TabsTrigger>
-              <TabsTrigger value="corte">Plano de corte</TabsTrigger>
-              <TabsTrigger value="producao">Produção</TabsTrigger>
+              {podeVerCustos && <TabsTrigger value="materiais">Materiais</TabsTrigger>}
+              {podeVerCustos && <TabsTrigger value="corte">Plano de corte</TabsTrigger>}
+              {podeVerCustos && <TabsTrigger value="producao">Produção</TabsTrigger>}
               <TabsTrigger value="orcamento">Orçamento</TabsTrigger>
             </TabsList>
 
