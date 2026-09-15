@@ -851,6 +851,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
         msgVisitaTecnica: empresa.msgVisitaTecnica,
         clausulasContrato: empresa.clausulasContrato,
         politicaValores: empresa.politicaValores ?? {},
+        margemMotorPct: empresa.margemMotorPct ?? 30,
         metaSemanal: empresa.metaSemanal,
       },
       prazo_padrao_dias: empresa.prazoPadraoDias,
