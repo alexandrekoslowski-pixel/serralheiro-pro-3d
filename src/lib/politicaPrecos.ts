@@ -218,6 +218,32 @@ export function precoPeca(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO): 
   return { item, quantidade, sugerido, valor: manual ? Number(peca.preco_manual) : sugerido, manual };
 }
 
-/** Soma das peças pela política. */
-export const totalPecasPolitica = (pecas: Peca[], lista: ItemPolitica[] = POLITICA_PADRAO): number =>
-  Number(pecas.reduce((s, p) => s + precoPeca(p, lista).valor, 0).toFixed(2));
+/** Valor da automação escolhida na peça (editável). */
+export function precoAutomacaoPeca(peca: Peca): number {
+  if (!peca.automacao_id) return 0;
+  if (peca.automacao_valor != null) return Number(peca.automacao_valor);
+  return automacaoPolitica(peca.automacao_id)?.valor ?? 0;
+}
+
+/** Preço de venda sugerido do motor: custo do material + margem da empresa. */
+export function precoMotorSugerido(custo?: number | null, margemPct = MARGEM_MOTOR_PADRAO): number {
+  if (!custo) return 0;
+  return Number((Number(custo) * (1 + Number(margemPct || 0) / 100)).toFixed(2));
+}
+
+/** Valor do motor da peça (digitado ou sugerido pelo custo + margem). */
+export function precoMotorPeca(peca: Peca, margemPct = MARGEM_MOTOR_PADRAO): number {
+  if (!peca.motor_material_id) return 0;
+  if (peca.motor_valor != null) return Number(peca.motor_valor);
+  return precoMotorSugerido(peca.motor_custo, margemPct);
+}
+
+/** Total cobrado por uma peça: tabela + automação + motor. */
+export function totalPeca(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO, margemPct = MARGEM_MOTOR_PADRAO): number {
+  return Number((precoPeca(peca, lista).valor + precoAutomacaoPeca(peca) + precoMotorPeca(peca, margemPct)).toFixed(2));
+}
+
+/** Soma das peças pela política, já com automação e motor. */
+export const totalPecasPolitica = (pecas: Peca[], lista: ItemPolitica[] = POLITICA_PADRAO, margemPct = MARGEM_MOTOR_PADRAO): number =>
+  Number(pecas.reduce((s, p) => s + totalPeca(p, lista, margemPct), 0).toFixed(2));
+
