@@ -27,7 +27,15 @@ export default function ProjetosLista() {
   const navigate = useNavigate();
   const { session } = useSessao();
   useDados();
-  const projetos = listarProjetos();
+  const meuNome = useMeuNome();
+  const soMinhas = papel === "vendedora";
+  const todosProjetos = listarProjetos();
+  const projetos = useMemo(
+    () => (soMinhas && meuNome
+      ? todosProjetos.filter((p) => (p.vendedora ?? "").trim().toLowerCase() === meuNome.toLowerCase())
+      : todosProjetos),
+    [todosProjetos, soMinhas, meuNome],
+  );
   const [busca, setBusca] = useState("");
   const [pend, setPend] = useState<TipoPendencia | null>(null);
   const [ordem, setOrdem] = useState<"recentes" | "parados">("recentes");
@@ -91,7 +99,7 @@ export default function ProjetosLista() {
       status: "aprovado",
       aprovado_em: p.aprovado_em ?? agora,
       aguardando_oficina: false,
-      etapa: "fila",
+      etapa: "medicao",
       etapa_em: agora,
       prazo_entrega: p.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
     });
@@ -105,7 +113,7 @@ export default function ProjetosLista() {
       status: "aprovado",
       aprovado_em: p.aprovado_em ?? agora,
       aguardando_oficina: true,
-      etapa: "fila",
+      etapa: "medicao",
       etapa_em: agora,
       prazo_entrega: p.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
     });
