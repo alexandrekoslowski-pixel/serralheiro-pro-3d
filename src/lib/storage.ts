@@ -33,7 +33,16 @@ export interface Peca {
   politica_id?: string;
   /** Valor digitado à mão (sobrepõe a tabela). */
   preco_manual?: number | null;
+  /** Automação escolhida para esta peça. */
+  automacao_id?: string | null;
+  automacao_valor?: number | null;
+  /** Motor vindo do cadastro de materiais. */
+  motor_material_id?: string | null;
+  motor_nome?: string;
+  motor_custo?: number | null;
+  motor_valor?: number | null;
   checklist_respostas: RespostasChecklist;
+
 }
 
 /** Medição fina feita no local (em cima das fotos anotadas). */
