@@ -22,10 +22,11 @@ import { cm } from "@/lib/medidas";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 import { useSessao } from "@/lib/sessao";
+import { useMeuNome } from "@/hooks/useMeuNome";
 
 export default function ProjetosLista() {
   const navigate = useNavigate();
-  const { session } = useSessao();
+  const { session, papel } = useSessao();
   useDados();
   const meuNome = useMeuNome();
   const soMinhas = papel === "vendedora";
