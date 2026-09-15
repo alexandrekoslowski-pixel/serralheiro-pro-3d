@@ -8,6 +8,9 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Visualizador3DClient from "@/components/Visualizador3DClient";
+
+/** Desenho 3D temporariamente desativado. */
+const MOSTRAR_3D = false;
 import { TecladoNumerico } from "@/components/TecladoNumerico";
 import { AssinaturaCanvas } from "@/components/AssinaturaCanvas";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
