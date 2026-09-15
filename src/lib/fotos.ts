@@ -14,6 +14,7 @@ export const ETAPAS_FOTO: { id: EtapaFoto; nome: string }[] = [
 
 /** Etapa do kanban → etapa da foto. */
 export const etapaFotoDaOficina = (e: EtapaOficina): EtapaFoto => {
+  if (e === "medicao") return "medicao";
   if (e === "pintura") return "pintura";
   if (e === "acabamento") return "acabamento";
   if (e === "entrega" || e === "pos_venda" || e === "pronto") return "entrega";
