@@ -112,19 +112,29 @@ export const POLITICA_PADRAO: ItemPolitica[] = [
   { id: "trilho", produto: "Trilho", modelo: "", unidade: "sob_orcamento", valor: 0 },
 ];
 
-/** Serviços de instalação e automação da política (valores de referência). */
+/** Serviços de instalação da política (valores de referência, escolhidos no orçamento todo). */
 export const SERVICOS_POLITICA: { id: string; nome: string; valor: number }[] = [
   { id: "instalacao-simples", nome: "Instalação simples", valor: 260 },
   { id: "instalacao-complexa", nome: "Instalação complexa", valor: 500 },
-  { id: "automacao-deslizante", nome: "Automação · motor deslizante", valor: 380 },
-  { id: "automacao-pivotante", nome: "Automação · motor pivotante", valor: 750 },
-  { id: "automacao-basculante", nome: "Automação · motor basculante", valor: 450 },
-  { id: "automacao-fechadura-eletrica", nome: "Automação · fechadura elétrica", valor: 350 },
-  { id: "automacao-eletroima", nome: "Automação · eletroímã", valor: 400 },
 ];
+
+/** Automações escolhidas peça a peça. */
+export const AUTOMACOES_POLITICA: { id: string; nome: string; valor: number }[] = [
+  { id: "automacao-deslizante", nome: "Motor deslizante", valor: 380 },
+  { id: "automacao-pivotante", nome: "Motor pivotante", valor: 750 },
+  { id: "automacao-basculante", nome: "Motor basculante", valor: 450 },
+  { id: "automacao-fechadura-eletrica", nome: "Fechadura elétrica", valor: 350 },
+  { id: "automacao-eletroima", nome: "Eletroímã", valor: 400 },
+];
+
+export const automacaoPolitica = (id?: string | null) => AUTOMACOES_POLITICA.find((a) => a.id === id);
+
+/** Margem padrão aplicada sobre o custo do motor vindo dos materiais. */
+export const MARGEM_MOTOR_PADRAO = 30;
 
 /** Deslocamento mínimo cobrado. */
 export const FRETE_MINIMO = 180;
+
 
 /** Aplica os valores editados pela empresa por cima da tabela padrão. */
 export function politicaComValores(overrides?: Record<string, number>): ItemPolitica[] {
