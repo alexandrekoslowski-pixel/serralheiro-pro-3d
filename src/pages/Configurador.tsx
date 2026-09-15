@@ -55,7 +55,7 @@ import { gerarOrcamentoPDF } from "@/lib/pdf";
 import {
   FRETE_MINIMO, SERVICOS_POLITICA, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
   precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
-  precoAutomacaoPeca, precoMotorPeca, precoMotorSugerido, tipologiaDoItem,
+  precoAutomacaoPeca, precoMotorPeca, precoMotorSugerido, tipologiaDoItem, automacaoPolitica,
 } from "@/lib/politicaPrecos";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
