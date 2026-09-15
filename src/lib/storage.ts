@@ -4,6 +4,7 @@ import { TipologiaId, AcabamentoId, tipologiaPorId } from "./tipologias";
 import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
 import { CHECKLIST_VERSAO, normalizarRespostasChecklist, type RespostasChecklist } from "./checklistPedido";
+import { POLITICA_POR_TIPOLOGIA } from "./politicaPrecos";
 
 export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
 export type EtapaOficina =
@@ -28,6 +29,10 @@ export interface Peca {
   cor: AcabamentoId;
   fixacao: FixacaoTipo;
   fixacaoLados: FixacaoLados;
+  /** Item da política de preços que define o valor desta peça. */
+  politica_id?: string;
+  /** Valor digitado à mão (sobrepõe a tabela). */
+  preco_manual?: number | null;
   checklist_respostas: RespostasChecklist;
 }
 
@@ -67,6 +72,8 @@ export interface ProjetoLocal {
   prazo_dias_uteis: number | null;
   servicos_valor: number | null;
   frete_valor: number | null;
+  /** Serviços da política escolhidos (instalação, automação…). */
+  servicos_politica?: { id: string; nome: string; valor: number }[];
   observacoes_proposta: string;
   checklist_versao: number;
   checklist_respostas: RespostasChecklist;
@@ -154,6 +161,8 @@ export interface DadosEmpresa {
   msgFollowUp: string;
   msgVisitaTecnica: string;
   clausulasContrato: string;
+  /** Valores editados da política de preços (id do item → valor). */
+  politicaValores: Record<string, number>;
 }
 
 export const TEXTO_PAGAMENTO_PADRAO = [
@@ -225,6 +234,7 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   msgFollowUp: MSG_FOLLOWUP_PADRAO,
   msgVisitaTecnica: MSG_VISITA_PADRAO,
   clausulasContrato: "A contratada executará os serviços conforme as especificações aprovadas. O contratante deverá garantir acesso ao local, condições adequadas para instalação e os pagamentos acordados. Alterações solicitadas após a aprovação poderão mudar valor e prazo. A garantia não cobre mau uso, intervenção de terceiros ou alterações no local.",
+  politicaValores: {},
 };
 
 // ---------- estado em memória ----------
@@ -322,12 +332,15 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
     }
     return { ...peca, checklist_respostas: respostas };
   });
-  // Peças antigas sem sistema de fixação recebem o padrão.
+  // Peças antigas sem sistema de fixação / produto da política recebem o padrão.
   base.pecas = base.pecas.map((pc) => ({
     ...pc,
     fixacao: pc.fixacao ?? FIXACAO_PADRAO,
     fixacaoLados: pc.fixacaoLados ?? FIXACAO_LADOS_PADRAO,
+    politica_id: pc.politica_id ?? POLITICA_POR_TIPOLOGIA[pc.tipologia] ?? "",
+    preco_manual: pc.preco_manual ?? null,
   }));
+  base.servicos_politica = Array.isArray(base.servicos_politica) ? base.servicos_politica : [];
   // Campos antigos continuam refletindo a primeira peça (compatibilidade).
   const p0 = base.pecas[0];
   base.tipologia = p0.tipologia;
@@ -421,6 +434,7 @@ const projetoParaLinha = (p: ProjetoLocal) => ({
     prazo_dias_uteis: p.prazo_dias_uteis,
     servicos_valor: p.servicos_valor,
     frete_valor: p.frete_valor,
+    servicos_politica: p.servicos_politica ?? [],
     observacoes_proposta: p.observacoes_proposta,
     checklist_versao: p.checklist_versao,
     checklist_respostas: p.checklist_respostas,
@@ -614,6 +628,8 @@ export function criarOrcamentoRapido(vendedora = ""): ProjetoLocal {
       cor: "branco",
       fixacao: FIXACAO_PADRAO,
       fixacaoLados: FIXACAO_LADOS_PADRAO,
+      politica_id: POLITICA_POR_TIPOLOGIA[tipologia] ?? "",
+      preco_manual: null,
       checklist_respostas: {},
     }],
     overrides: {},
@@ -815,6 +831,7 @@ export function salvarEmpresa(e: DadosEmpresa): void {
         msgFollowUp: empresa.msgFollowUp,
         msgVisitaTecnica: empresa.msgVisitaTecnica,
         clausulasContrato: empresa.clausulasContrato,
+        politicaValores: empresa.politicaValores ?? {},
         metaSemanal: empresa.metaSemanal,
       },
       prazo_padrao_dias: empresa.prazoPadraoDias,

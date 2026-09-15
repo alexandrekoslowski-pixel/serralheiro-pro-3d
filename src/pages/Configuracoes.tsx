@@ -8,11 +8,14 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { obterEmpresa, salvarEmpresa, DadosEmpresa } from "@/lib/storage";
 import { numeroMascarado } from "@/lib/mascaras";
+import { UNIDADE_LABEL, politicaComValores } from "@/lib/politicaPrecos";
 import { documentoOpcionalSchema, emailOpcionalSchema, primeiraMensagem, telefoneOpcionalSchema } from "@/lib/validacao";
 
 export default function Configuracoes() {
   const navigate = useNavigate();
   const [empresa, setEmpresa] = useState<DadosEmpresa>(obterEmpresa());
+  const [buscaPreco, setBuscaPreco] = useState("");
+  const politicaAtual = politicaComValores(empresa.politicaValores);
 
   useEffect(() => {
     setEmpresa(obterEmpresa());
@@ -237,6 +240,55 @@ export default function Configuracoes() {
           Para o orçamento usar o preço real, edite o material lá e escolha o <strong>código de cálculo</strong> correspondente.
         </p>
         <Button className="mt-3" onClick={() => navigate("/app/materiais")}>Abrir materiais</Button>
+      </div>
+
+      {/* Tabela de preços */}
+      <div className="surface-card rounded-lg border border-border p-5">
+        <h2 className="font-display text-lg flex items-center gap-2"><Package className="h-5 w-5 text-primary" /> Tabela de preços</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          É esta tabela que define o preço de cada peça no orçamento. Altere o valor e clique em salvar.
+        </p>
+        <Input
+          className="mt-3 max-w-sm"
+          placeholder="Buscar produto ou modelo"
+          value={buscaPreco}
+          onChange={(e) => setBuscaPreco(e.target.value)}
+        />
+        <div className="mt-3 max-h-[420px] overflow-y-auto rounded-lg border border-border">
+          <table className="w-full min-w-[520px] text-sm">
+            <thead className="sticky top-0 bg-card">
+              <tr className="border-b border-border text-xs uppercase text-muted-foreground">
+                <th className="py-2 pl-3 text-left">Produto</th>
+                <th className="py-2 text-left">Modelo</th>
+                <th className="py-2 text-left">Unidade</th>
+                <th className="py-2 pr-3 text-right w-32">Valor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {politicaAtual
+                .filter((i) => `${i.produto} ${i.modelo}`.toLowerCase().includes(buscaPreco.trim().toLowerCase()))
+                .map((i) => (
+                  <tr key={i.id} className="border-b border-border/40">
+                    <td className="py-1.5 pl-3">{i.produto}</td>
+                    <td className="py-1.5 text-muted-foreground">{i.modelo || "—"}</td>
+                    <td className="py-1.5 text-muted-foreground">{UNIDADE_LABEL[i.unidade]}</td>
+                    <td className="py-1.5 pr-3">
+                      <Input
+                        className="h-8 text-right"
+                        mask="moeda"
+                        disabled={i.unidade === "sob_orcamento"}
+                        value={String(i.valor).replace(".", ",")}
+                        onChange={(e) => setEmpresa({
+                          ...empresa,
+                          politicaValores: { ...(empresa.politicaValores ?? {}), [i.id]: numeroMascarado(e.target.value) },
+                        })}
+                      />
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   );

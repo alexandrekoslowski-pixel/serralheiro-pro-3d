@@ -52,6 +52,10 @@ import {
 import { calcularProjeto, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
+import {
+  FRETE_MINIMO, SERVICOS_POLITICA, UNIDADE_LABEL, politicaComValores,
+  precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica,
+} from "@/lib/politicaPrecos";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
@@ -155,19 +159,29 @@ export default function Configurador() {
     });
   }, [projeto, catalogo]);
 
+  // ---- preço pela política da Kochinski ----
+  const politica = useMemo(() => politicaComValores(empresa.politicaValores), [empresa.politicaValores]);
+  const totalPecas = useMemo(
+    () => (projeto ? totalPecasPolitica(projeto.pecas, politica) : 0),
+    [projeto, politica],
+  );
+  const servicosEscolhidos = projeto?.servicos_politica ?? [];
+  const servicosTotal = servicosEscolhidos.reduce((s, x) => s + Number(x.valor || 0), 0);
+  const totalProposta = Number((totalPecas + servicosTotal + (projeto?.frete_valor ?? 0)).toFixed(2));
+
   // Auto-save 800ms
   useEffect(() => {
     if (!projeto || !resultado) return;
     setSalvo(false);
     setSalvando(true);
     const t = setTimeout(() => {
-      salvarProjeto({ ...projeto, total: resultado.totalGeral });
+      salvarProjeto({ ...projeto, total: totalPecas, servicos_valor: servicosTotal || null });
       setSalvando(false);
       setSalvo(true);
     }, 800);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projeto, resultado?.totalGeral]);
+  }, [projeto, totalPecas, servicosTotal]);
 
   // Sugestões de clientes já cadastrados enquanto digita o nome
   const sugestoesCliente = useMemo(() => {
@@ -219,7 +233,7 @@ export default function Configurador() {
     if (projeto.nome !== sugerido) setProjeto({ ...projeto, nome: sugerido });
   }, [projeto]);
 
-  const totalAnimado = useAnimatedNumber(resultado?.totalGeral ?? 0);
+  const totalAnimado = useAnimatedNumber(totalProposta);
 
   // Plano de corte / produção (hooks must be called before any early return)
   const [barraMm, setBarraMm] = useState<number>(6000);
@@ -234,9 +248,13 @@ export default function Configurador() {
 
   if (!projeto || !resultado || !planoCorte || !planoProducao) return null;
 
+  // Para o cliente, o total vem da política de preços (não do custo de materiais).
+  const resultadoCliente = { ...resultado, totalGeral: totalPecas };
+
   // ---- peças do orçamento ----
   const pecaSel: Peca = projeto.pecas.find((x) => x.id === pecaSelId) ?? projeto.pecas[0];
   const tip = tipologiaPorId(pecaSel.tipologia);
+  const precoSel = precoPeca(pecaSel, politica);
 
   const updPeca = (patch: Partial<Peca>) =>
     setProjeto({
@@ -307,7 +325,7 @@ export default function Configurador() {
     setProjeto({ ...projeto, extras: projeto.extras.filter((e) => e.id !== id) });
 
   const aplicar = (patch: Partial<ProjetoLocal>) => {
-    const atualizado: ProjetoLocal = { ...projeto, total: resultado.totalGeral, ...patch };
+    const atualizado: ProjetoLocal = { ...projeto, total: totalPecas, servicos_valor: servicosTotal || null, ...patch };
     setProjeto(atualizado);
     salvarProjeto(atualizado);
     return atualizado;
@@ -360,7 +378,7 @@ export default function Configurador() {
 
   const exportarOrcamento = () => {
     const atualizado = aplicar({ orcamento_pdf_em: new Date().toISOString() });
-    gerarOrcamentoPDF(atualizado, resultado, empresa);
+    gerarOrcamentoPDF(atualizado, resultadoCliente, empresa);
     toast.success("Orçamento gerado");
   };
 
@@ -410,15 +428,15 @@ export default function Configurador() {
     setEnviandoWhats(true);
     let link: string | undefined;
     try {
-      link = await publicarOrcamentoPDF(projeto, resultado, empresa);
+      link = await publicarOrcamentoPDF(projeto, resultadoCliente, empresa);
     } catch {
       toast.warning("Não consegui subir o PDF — anexe o arquivo na conversa");
     } finally {
       setEnviandoWhats(false);
     }
-    const url = linkWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa, link));
+    const url = linkWhatsApp(numero, textoOrcamento(projeto, totalProposta, empresa, link));
     if (aba) aba.location.href = url;
-    else abrirWhatsApp(numero, textoOrcamento(projeto, resultado.totalGeral, empresa, link));
+    else abrirWhatsApp(numero, textoOrcamento(projeto, totalProposta, empresa, link));
     const agora = new Date().toISOString();
     const nome = (session?.user.user_metadata?.nome as string) || session?.user.email || projeto.vendedora || "";
     aplicar({
@@ -487,7 +505,7 @@ export default function Configurador() {
               else mandarParaOficina();
             }}
           />
-          <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: resultado.totalGeral }); toast.success("Salvo"); }}>
+          <Button variant="outline" size="sm" className="shrink-0" onClick={() => { salvarProjeto({ ...projeto, total: totalPecas, servicos_valor: servicosTotal || null }); toast.success("Salvo"); }}>
             <Save className="mr-1 h-4 w-4" /> Salvar
           </Button>
         </div>
@@ -687,6 +705,51 @@ export default function Configurador() {
                 setProjeto({ ...projeto, checklist_respostas });
                 setMostrarPendencias(false);
               }}
+              extraPeca={(
+                <div className="grid gap-4 rounded-lg border border-border p-3 lg:grid-cols-2">
+                  <div className="lg:col-span-2 min-w-0">
+                    <Label className="text-sm">Cor / acabamento</Label>
+                    <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
+                      {ACABAMENTOS.map((a) => (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => updPeca({ cor: a.id as AcabamentoId })}
+                          className={cn(
+                            "h-8 w-8 shrink-0 rounded-full border-2 transition",
+                            pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
+                          )}
+                          style={{ backgroundColor: a.hex }}
+                          title={a.nome}
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm">Sistema de fixação</Label>
+                    <Select value={pecaSel.fixacao ?? FIXACAO_PADRAO} onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}>
+                      <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {FIXACAO_TIPOS.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label className="text-sm">Lados da fixação</Label>
+                    <Select value={pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO} onValueChange={(v) => updPeca({ fixacaoLados: v as FixacaoLados })}>
+                      <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {FIXACAO_LADOS.map((f) => <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="lg:col-span-2 text-xs text-muted-foreground">
+                    {fixacaoTipo(pecaSel.fixacao).instrucao} ·{" "}
+                    {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos de fixação.
+                  </p>
+                </div>
+              )}
             />
           </TabsContent>
 
@@ -709,7 +772,7 @@ export default function Configurador() {
                   <Input className="h-9" autoFocus mask="moeda" value={String(projeto.valor_faturado || 0).replace(".", ",")} onChange={(e) => upd("valor_faturado", numeroMascarado(e.target.value))} />
                 ) : (
                   <div className="flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
-                    {formatarBRL(valorACobrar(projeto) || resultado.totalGeral)}
+                    {formatarBRL(valorACobrar(projeto) || totalProposta)}
                   </div>
                 )}
                 <Button type="button" size="sm" variant="outline" className="mt-1 h-7 w-full text-[11px]" onClick={() => setAjustandoValor((v) => !v)}>
@@ -719,7 +782,7 @@ export default function Configurador() {
 
               <div>
                 <Label className="text-xs">Total orçado</Label>
-                <Input className="h-9" readOnly value={formatarBRL(resultado.totalGeral)} />
+                <Input className="h-9" readOnly value={formatarBRL(totalProposta)} />
               </div>
             </div>
 
@@ -837,69 +900,77 @@ export default function Configurador() {
           </section>
 
           <section className="rounded-lg border border-border p-3">
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Acabamento e fixação</h4>
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Preço pela tabela</h4>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="sm:col-span-2 min-w-0">
-                <Label>Cor</Label>
-                <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
-                  {ACABAMENTOS.map((a) => (
-                    <button
-                      key={a.id}
-                      type="button"
-                      onClick={() => updPeca({ cor: a.id as AcabamentoId })}
-                      className={cn(
-                        "h-8 w-8 shrink-0 rounded-full border-2 transition",
-                        pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
-                      )}
-                      style={{ backgroundColor: a.hex }}
-                      title={a.nome}
-                    />
-                  ))}
+              <div>
+                <Label>Produto</Label>
+                <Select
+                  value={precoSel.item?.produto ?? ""}
+                  onValueChange={(produto) => {
+                    const primeiro = modelosPolitica(produto, politica)[0];
+                    updPeca({ politica_id: primeiro?.id ?? "", preco_manual: null });
+                  }}
+                >
+                  <SelectTrigger className="mt-2"><SelectValue placeholder="Escolha o produto" /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {produtosPolitica(politica).map((pr) => <SelectItem key={pr} value={pr}>{pr}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>Modelo</Label>
+                <Select
+                  value={pecaSel.politica_id || ""}
+                  onValueChange={(v) => updPeca({ politica_id: v, preco_manual: null })}
+                  disabled={!precoSel.item}
+                >
+                  <SelectTrigger className="mt-2"><SelectValue placeholder="Escolha o modelo" /></SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {modelosPolitica(precoSel.item?.produto ?? "", politica).map((m) => (
+                      <SelectItem key={m.id} value={m.id}>{m.modelo || "Padrão"}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="sm:col-span-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                {precoSel.item ? (
+                  precoSel.item.unidade === "sob_orcamento" ? (
+                    <>Item sob orçamento — digite o valor desta peça.</>
+                  ) : (
+                    <>
+                      {formatarBRL(precoSel.item.valor)} {UNIDADE_LABEL[precoSel.item.unidade]} ×{" "}
+                      {precoSel.quantidade.toLocaleString("pt-BR")} = <strong>{formatarBRL(precoSel.sugerido)}</strong>
+                      {precoSel.manual && <span className="ml-1 text-warning">(valor ajustado à mão)</span>}
+                    </>
+                  )
+                ) : (
+                  <>Escolha o produto da tabela para calcular o preço.</>
+                )}
+              </div>
+              <div>
+                <Label>Valor desta peça (R$)</Label>
+                <Input
+                  className="mt-2"
+                  mask="moeda"
+                  placeholder={formatarBRL(precoSel.sugerido)}
+                  value={pecaSel.preco_manual == null ? "" : String(pecaSel.preco_manual).replace(".", ",")}
+                  onChange={(e) => updPeca({ preco_manual: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
+                />
+              </div>
+              {precoSel.manual && (
+                <div className="flex items-end">
+                  <Button type="button" variant="outline" onClick={() => updPeca({ preco_manual: null })}>
+                    Voltar ao valor da tabela
+                  </Button>
                 </div>
-              </div>
-
-              <div>
-                <Label>Sistema de fixação</Label>
-                <Select
-                  value={pecaSel.fixacao ?? FIXACAO_PADRAO}
-                  onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}
-                >
-                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FIXACAO_TIPOS.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <Label>Lados da fixação</Label>
-                <Select
-                  value={pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO}
-                  onValueChange={(v) => updPeca({ fixacaoLados: v as FixacaoLados })}
-                >
-                  <SelectTrigger className="mt-2"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {FIXACAO_LADOS.map((f) => (
-                      <SelectItem key={f.id} value={f.id}>{f.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <p className="sm:col-span-2 text-xs text-muted-foreground">
-                {fixacaoTipo(pecaSel.fixacao).instrucao} ·{" "}
-                {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos de fixação.
-              </p>
+              )}
             </div>
           </section>
 
           <p className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
             <strong>{tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
             {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome} ·{" "}
-            {fixacaoTipo(pecaSel.fixacao).nome} ·{" "}
-            {pontosFixacao(pecaSel.largura_mm, pecaSel.altura_mm, pecaSel.fixacaoLados)} pontos
+            {fixacaoTipo(pecaSel.fixacao).nome} · <strong>{formatarBRL(precoSel.valor)}</strong>
           </p>
         </div>
       </div>
@@ -974,40 +1045,75 @@ export default function Configurador() {
             {podeVerCustos && <CardResumo label="Peso estimado" valor={`${resultado.resumo.pesoEstimado.toFixed(1)} kg`} />}
           </div>
 
-          {/* Percentuais */}
+          {/* Serviços e deslocamento da política */}
           <div className="surface-card rounded-lg border border-border p-4">
-            {podeVerCustos && (
-              <>
-                <div className="mb-3 flex items-center gap-2 font-display text-sm">
-                  <DollarSign className="h-4 w-4 text-primary" /> Composição do preço
-                </div>
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <SliderPct label="Mão de obra" value={projeto.maoObraPct} onChange={(v) => upd("maoObraPct", v)} />
-                  <SliderPct label="Margem" value={projeto.margemPct} onChange={(v) => upd("margemPct", v)} />
-                  <SliderPct label="Desconto geral" value={projeto.descontoGeralPct} onChange={(v) => upd("descontoGeralPct", v)} max={50} />
-                </div>
-              </>
+            <div className="mb-3 flex items-center gap-2 font-display text-sm">
+              <DollarSign className="h-4 w-4 text-primary" /> Serviços e deslocamento
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {SERVICOS_POLITICA.map((s) => {
+                const ativo = servicosEscolhidos.some((x) => x.id === s.id);
+                return (
+                  <Button
+                    key={s.id}
+                    type="button"
+                    size="sm"
+                    variant={ativo ? "default" : "outline"}
+                    className={cn("h-auto min-h-10 whitespace-normal text-left", ativo && "bg-primary text-primary-foreground")}
+                    onClick={() => upd(
+                      "servicos_politica",
+                      ativo
+                        ? servicosEscolhidos.filter((x) => x.id !== s.id)
+                        : [...servicosEscolhidos, { id: s.id, nome: s.nome, valor: s.valor }],
+                    )}
+                  >
+                    {s.nome} · {formatarBRL(s.valor)}
+                  </Button>
+                );
+              })}
+            </div>
+
+            {servicosEscolhidos.length > 0 && (
+              <div className="mt-3 space-y-2">
+                {servicosEscolhidos.map((s) => (
+                  <div key={s.id} className="grid grid-cols-12 items-center gap-2">
+                    <span className="col-span-7 truncate text-sm sm:col-span-9">{s.nome}</span>
+                    <Input
+                      className="col-span-4 h-9 text-right sm:col-span-2"
+                      mask="moeda"
+                      value={String(s.valor).replace(".", ",")}
+                      onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: numeroMascarado(e.target.value) } : x))}
+                    />
+                    <Button
+                      size="icon" variant="dangerOutline" className="col-span-1" title="Remover serviço"
+                      onClick={() => upd("servicos_politica", servicosEscolhidos.filter((x) => x.id !== s.id))}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
             )}
+
             <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
               <div>
-                <Label className="text-xs">Serviços (R$)</Label>
+                <Label className="text-xs">Deslocamento / frete (R$)</Label>
                 <Input
                   className="h-9"
                   mask="moeda"
-                  placeholder="não incluso"
-                  value={projeto.servicos_valor == null ? "" : String(projeto.servicos_valor).replace(".", ",")}
-                  onChange={(e) => upd("servicos_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
-                />
-              </div>
-              <div>
-                <Label className="text-xs">Frete (R$)</Label>
-                <Input
-                  className="h-9"
-                  mask="moeda"
-                  placeholder="não incluso"
+                  placeholder={`mínimo ${formatarBRL(FRETE_MINIMO)}`}
                   value={projeto.frete_valor == null ? "" : String(projeto.frete_valor).replace(".", ",")}
                   onChange={(e) => upd("frete_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
                 />
+                <Button type="button" size="sm" variant="outline" className="mt-1 h-7 text-[11px]" onClick={() => upd("frete_valor", FRETE_MINIMO)}>
+                  Usar mínimo {formatarBRL(FRETE_MINIMO)}
+                </Button>
+              </div>
+              <div className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
+                <div className="flex justify-between"><span>Peças</span><strong>{formatarBRL(totalPecas)}</strong></div>
+                <div className="flex justify-between"><span>Serviços</span><strong>{formatarBRL(servicosTotal)}</strong></div>
+                <div className="flex justify-between"><span>Deslocamento</span><strong>{formatarBRL(projeto.frete_valor ?? 0)}</strong></div>
+                <div className="mt-1 flex justify-between border-t border-border pt-1"><span>Total</span><strong className="text-gradient-orange">{formatarBRL(totalProposta)}</strong></div>
               </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Observações da proposta</Label>
@@ -1263,24 +1369,52 @@ export default function Configurador() {
                 <table className="w-full min-w-[560px] text-sm">
                   <thead>
                     <tr className="border-b border-border text-xs uppercase text-muted-foreground">
-                      <th className="text-left py-2 pr-2">Categoria</th>
-                      <th className="text-left py-2 pr-2">Descrição</th>
+                      <th className="text-left py-2 pr-2">Item</th>
+                      <th className="text-left py-2 pr-2">Tabela</th>
                       <th className="text-right py-2 pr-2">Qtd</th>
                       <th className="text-right py-2 pr-2">Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {resultado.custos.filter((i) => !i.oculto).map((it) => (
-                      <tr key={it.key} className="border-b border-border/40">
-                        <td className="py-1.5 pr-2 text-xs uppercase text-muted-foreground">{it.categoria.replace("_", " ")}</td>
-                        <td className="py-1.5 pr-2">{it.descricao}</td>
-                        <td className="py-1.5 pr-2 text-right">{it.qtd} {it.unidade}</td>
-                        <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(it.total)}</td>
+                    {projeto.pecas.map((pc) => {
+                      const pr = precoPeca(pc, politica);
+                      return (
+                        <tr key={pc.id} className="border-b border-border/40">
+                          <td className="py-1.5 pr-2">
+                            <div className="font-medium">{pc.nome}</div>
+                            <div className="text-[10px] text-muted-foreground">{cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm</div>
+                          </td>
+                          <td className="py-1.5 pr-2">
+                            {pr.item ? `${pr.item.produto}${pr.item.modelo ? ` · ${pr.item.modelo}` : ""}` : "—"}
+                          </td>
+                          <td className="py-1.5 pr-2 text-right">
+                            {pr.item && pr.item.unidade !== "sob_orcamento"
+                              ? `${pr.quantidade.toLocaleString("pt-BR")} ${UNIDADE_LABEL[pr.item.unidade].replace("por ", "")}`
+                              : "—"}
+                          </td>
+                          <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(pr.valor)}</td>
+                        </tr>
+                      );
+                    })}
+                    {servicosEscolhidos.map((s) => (
+                      <tr key={s.id} className="border-b border-border/40">
+                        <td className="py-1.5 pr-2">{s.nome}</td>
+                        <td className="py-1.5 pr-2 text-muted-foreground">Serviço</td>
+                        <td className="py-1.5 pr-2 text-right">1</td>
+                        <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(s.valor)}</td>
                       </tr>
                     ))}
+                    {(projeto.frete_valor ?? 0) > 0 && (
+                      <tr className="border-b border-border/40">
+                        <td className="py-1.5 pr-2">Deslocamento</td>
+                        <td className="py-1.5 pr-2 text-muted-foreground">Frete</td>
+                        <td className="py-1.5 pr-2 text-right">1</td>
+                        <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(projeto.frete_valor ?? 0)}</td>
+                      </tr>
+                    )}
                     <tr className="bg-card">
                       <td colSpan={3} className="py-3 pr-2 text-right font-display text-sm uppercase">Total geral</td>
-                      <td className="py-3 pr-2 text-right font-display text-xl text-gradient-orange">{formatarBRL(resultado.totalGeral)}</td>
+                      <td className="py-3 pr-2 text-right font-display text-xl text-gradient-orange">{formatarBRL(totalProposta)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1389,38 +1523,6 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
   );
 }
 
-function SliderPct({ label, value, onChange, max = 100 }: { label: string; value: number; onChange: (v: number) => void; max?: number }) {
-  const [texto, setTexto] = useState<string | null>(null);
-  const exibido = texto ?? String(value);
-
-  const confirmar = () => {
-    const n = Number(String(exibido).replace(",", "."));
-    if (Number.isFinite(n) && exibido.trim() !== "") {
-      onChange(Math.min(max, Math.max(0, n)));
-    }
-    setTexto(null);
-  };
-
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <Label>{label}</Label>
-        <Input
-          type="text"
-          inputMode="decimal"
-          className="h-7 w-16 text-right text-xs"
-          value={exibido}
-          mask="decimal"
-          onChange={(e) => setTexto(e.target.value)}
-          onFocus={(e) => e.currentTarget.select()}
-          onBlur={confirmar}
-          onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
-        />
-      </div>
-      <Slider min={0} max={max} step={1} value={[value]} onValueChange={([v]) => { setTexto(null); onChange(v); }} />
-    </div>
-  );
-}
 
 function BadgeSolda({ tipo }: { tipo: string }) {
   const cores: Record<string, string> = {
