@@ -172,6 +172,8 @@ export interface DadosEmpresa {
   clausulasContrato: string;
   /** Valores editados da política de preços (id do item → valor). */
   politicaValores: Record<string, number>;
+  /** Margem (%) aplicada sobre o custo do motor vindo dos materiais. */
+  margemMotorPct: number;
 }
 
 export const TEXTO_PAGAMENTO_PADRAO = [
