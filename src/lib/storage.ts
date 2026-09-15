@@ -348,7 +348,14 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
     fixacaoLados: pc.fixacaoLados ?? FIXACAO_LADOS_PADRAO,
     politica_id: pc.politica_id ?? POLITICA_POR_TIPOLOGIA[pc.tipologia] ?? "",
     preco_manual: pc.preco_manual ?? null,
+    automacao_id: pc.automacao_id ?? null,
+    automacao_valor: pc.automacao_valor ?? null,
+    motor_material_id: pc.motor_material_id ?? null,
+    motor_nome: pc.motor_nome ?? "",
+    motor_custo: pc.motor_custo ?? null,
+    motor_valor: pc.motor_valor ?? null,
   }));
+
   base.servicos_politica = Array.isArray(base.servicos_politica) ? base.servicos_politica : [];
   // Campos antigos continuam refletindo a primeira peça (compatibilidade).
   const p0 = base.pecas[0];
