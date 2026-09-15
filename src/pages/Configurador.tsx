@@ -328,7 +328,7 @@ export default function Configurador() {
       status: "aprovado",
       aprovado_em: projeto.aprovado_em ?? agora,
       aguardando_oficina: true,
-      etapa: "fila",
+      etapa: "medicao",
       etapa_em: agora,
       prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
     });
@@ -341,7 +341,7 @@ export default function Configurador() {
       status: projeto.status === "orcamento" ? "aprovado" : projeto.status,
       aprovado_em: projeto.aprovado_em ?? agora,
       aguardando_oficina: false,
-      etapa: "fila",
+      etapa: "medicao",
       etapa_em: agora,
       prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
     });

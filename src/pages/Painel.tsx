@@ -182,7 +182,7 @@ export default function Painel() {
     const patch: Partial<ProjetoLocal> = { status: prox };
     if (prox === "aprovado") {
       patch.aprovado_em = agora;
-      patch.etapa = "fila";
+      patch.etapa = "medicao";
       patch.etapa_em = agora;
       if (!p.prazo_entrega) patch.prazo_entrega = somarDias(empresa.prazoPadraoDias);
     }
