@@ -272,12 +272,38 @@ export default function Configurador() {
   const pecaSel: Peca = projeto.pecas.find((x) => x.id === pecaSelId) ?? projeto.pecas[0];
   const tip = tipologiaPorId(pecaSel.tipologia);
   const precoSel = precoPeca(pecaSel, politica);
+  const automacaoSel = precoAutomacaoPeca(pecaSel);
+  const motorSel = precoMotorPeca(pecaSel, margemMotor);
+  const totalPecaSel = totalPeca(pecaSel, politica, margemMotor);
+  const motoresFiltrados = buscaMotor.trim()
+    ? motores.filter((m) => m.nome.toLowerCase().includes(buscaMotor.trim().toLowerCase())).slice(0, 60)
+    : motores.slice(0, 60);
 
   const updPeca = (patch: Partial<Peca>) =>
     setProjeto({
       ...projeto,
       pecas: projeto.pecas.map((x) => (x.id === pecaSel.id ? { ...x, ...patch } : x)),
     });
+
+  /** Troca o item da tabela: ajusta tipologia técnica, nome automático e limpa o valor manual. */
+  const escolherPolitica = (id: string) => {
+    const tipoNovo = tipologiaDoItem(id, politica) as TipologiaId | undefined;
+    const nomeAutomatico = !pecaSel.nome
+      || pecaSel.nome === tipologiaPorId(pecaSel.tipologia).nome
+      || pecaSel.nome === precoSel.item?.produto
+      || /^Peça \d+$/i.test(pecaSel.nome);
+    const item = politica.find((i) => i.id === id);
+    const patch: Partial<Peca> = { politica_id: id, preco_manual: null };
+    if (nomeAutomatico && item) patch.nome = item.produto;
+    if (tipoNovo && tipoNovo !== pecaSel.tipologia) {
+      const novo = tipologiaPorId(tipoNovo);
+      patch.tipologia = tipoNovo;
+      patch.largura_mm = Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax);
+      patch.altura_mm = Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax);
+    }
+    updPeca(patch);
+  };
+
 
   const addPeca = () => {
     const t = tipologiaPorId(pecaSel.tipologia);
