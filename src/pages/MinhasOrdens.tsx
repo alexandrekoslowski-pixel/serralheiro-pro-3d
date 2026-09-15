@@ -20,6 +20,7 @@ import { PainelFotos, FotosOrdemDialog } from "@/components/FotosOrdem";
 import { MedicaoDialog } from "@/components/MedicaoDialog";
 import { PosVendaDialog, posVendaLiberada } from "@/components/PosVendaDialog";
 import { temOcorrenciaAberta } from "@/lib/ocorrencias";
+import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 import { obterProjeto } from "@/lib/storage";
 import { toast } from "sonner";
 import { tipologiaPorId, acabamentoPorId } from "@/lib/tipologias";
@@ -93,6 +94,19 @@ export default function MinhasOrdens() {
   const confirmarMover = async () => {
     if (!mover) return;
     const { ordem, etapa } = mover;
+    if (ordem.etapa === "medicao") {
+      const p = obterProjeto(ordem.id);
+      const faltas = p
+        ? [
+            ...pendentesComunsChecklist(p.checklist_respostas ?? {}),
+            ...p.pecas.flatMap((peca) => pendentesPecaChecklist(peca.tipologia, peca.checklist_respostas ?? {})),
+          ]
+        : [];
+      if (faltas.length > 0) {
+        toast.error(`Complete o checklist da medição (${faltas.length} pendente${faltas.length === 1 ? "" : "s"})`);
+        return;
+      }
+    }
     if (etapa === "pronto") {
       if (!posVendaLiberada(obterProjeto(ordem.id))) {
         toast.error("Complete o checklist de pós-venda antes de concluir a ordem");
@@ -118,6 +132,7 @@ export default function MinhasOrdens() {
     void carregar();
   };
 
+  const aguardandoMedicao = ordens.filter((o) => o.etapa === "medicao").length;
   const sugestoes = mover?.etapa === "pintura" ? (empresa.empresasPintura ?? []) : equipe.map((m) => m.nome).filter(Boolean);
   const pedirFoto = mover?.etapa === "entrega";
   const pedirRetorno = mover?.etapa === "pos_venda";
@@ -128,7 +143,7 @@ export default function MinhasOrdens() {
     <div className="container mx-auto space-y-4 px-4 py-6">
       <header className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl">{papel === "serralheiro" ? "Minhas ordens" : "Oficina"}</h1>
+          <h1 className="font-display text-2xl">{papel === "serralheiro" ? "Minhas ordens" : "Kanban"}</h1>
           <p className="text-sm text-muted-foreground">O que está na oficina agora.</p>
         </div>
         <Button variant="outline" onClick={() => void carregar()}>
@@ -136,12 +151,21 @@ export default function MinhasOrdens() {
         </Button>
       </header>
 
+      {aguardandoMedicao > 0 && (
+        <div className="flex items-center gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-sm">
+          <MapPin className="h-4 w-4 shrink-0 text-amber-500" />
+          <span>
+            <strong>{aguardandoMedicao}</strong> ordem{aguardandoMedicao === 1 ? "" : "s"} aguardando medição no cliente.
+          </span>
+        </div>
+      )}
+
       {!ordens.length ? (
         <p className="rounded border border-border p-8 text-center text-muted-foreground">
           Nenhuma ordem na oficina no momento.
         </p>
       ) : (
-        <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 xl:mx-0 xl:grid xl:grid-cols-7 xl:overflow-visible xl:px-0">
+        <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 xl:mx-0 xl:grid xl:grid-cols-8 xl:overflow-visible xl:px-0">
           {ETAPAS_OFICINA.map((etapa) => {
             const doGrupo = ordens.filter((o) => o.etapa === etapa);
             return (
@@ -193,7 +217,7 @@ export default function MinhasOrdens() {
                               {o.responsavel || "sem responsável"}
                             </span>
                           </p>
-                          {["entrega", "pos_venda", "pronto"].includes(o.etapa) && o.endereco ? (
+                          {["medicao", "entrega", "pos_venda", "pronto"].includes(o.etapa) && o.endereco ? (
                             <p className="flex items-start gap-1 text-[11px] text-muted-foreground">
                               <MapPin className="mt-0.5 h-3 w-3 shrink-0" /> {o.endereco}
                             </p>
@@ -261,7 +285,7 @@ export default function MinhasOrdens() {
               ) : null}
             </div>
 
-            {mover?.ordem.endereco && ["entrega", "pos_venda", "pronto"].includes(mover.etapa) ? (
+            {mover?.ordem.endereco && ["medicao", "fila", "entrega", "pos_venda", "pronto"].includes(mover.etapa) ? (
               <p className="flex items-start gap-1 rounded border border-border bg-muted/30 p-2 text-sm">
                 <MapPin className="mt-0.5 h-4 w-4 shrink-0" /> {mover.ordem.endereco}
               </p>
