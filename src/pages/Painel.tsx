@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Target, Send } from "lucide-react";
 import { useSessao } from "@/lib/sessao";
+import { useMeuNome } from "@/hooks/useMeuNome";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -35,6 +36,9 @@ export default function Painel() {
   const [busca, setBusca] = useState("");
   const [filtro, setFiltro] = useState<"todos" | OrdemStatus | "abertos">("abertos");
   const [vendedora, setVendedora] = useState("todas");
+  const meuNome = useMeuNome();
+  const soMinhas = papel === "vendedora";
+  const filtroVendedor = soMinhas ? (meuNome || "__sem__") : vendedora;
   const [filtroPrazo, setFiltroPrazo] = useState<"todos" | "atrasadas" | "urgentes">("todos");
   const [detalhe, setDetalhe] = useState<ProjetoLocal | null>(null);
 
@@ -56,10 +60,10 @@ export default function Painel() {
 
   // Tudo do topo (resumos, contadores e alertas) respeita o filtro de vendedor(a).
   const base = useMemo(() => projetos.filter((p) =>
-    vendedora === "todas" ? true :
-    vendedora === "__sem__" ? !(p.vendedora ?? "").trim() :
-    (p.vendedora ?? "").trim().toLowerCase() === vendedora.trim().toLowerCase()
-  ), [projetos, vendedora]);
+    filtroVendedor === "todas" ? true :
+    filtroVendedor === "__sem__" ? !(p.vendedora ?? "").trim() :
+    (p.vendedora ?? "").trim().toLowerCase() === filtroVendedor.trim().toLowerCase()
+  ), [projetos, filtroVendedor]);
   const idsBase = useMemo(() => new Set(base.map((p) => p.id)), [base]);
   const pagamentosBase = useMemo(
     () => pagamentos.filter((x) => idsBase.has(x.projeto_id)),
@@ -373,6 +377,7 @@ export default function Painel() {
             {STATUS_ORDEM.map((s) => <SelectItem key={s} value={s}>{STATUS_LABEL[s]}</SelectItem>)}
           </SelectContent>
         </Select>
+        {!soMinhas && (
         <Select value={vendedora} onValueChange={setVendedora}>
           <SelectTrigger className="sm:w-56"><SelectValue placeholder="Vendedor(a)" /></SelectTrigger>
           <SelectContent>
@@ -381,6 +386,7 @@ export default function Painel() {
             {nomesVendedores.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
           </SelectContent>
         </Select>
+        )}
       </div>
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

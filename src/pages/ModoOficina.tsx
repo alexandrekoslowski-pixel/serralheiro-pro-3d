@@ -349,6 +349,7 @@ export default function ModoOficina() {
           </div>
         </div>
 
+        {MOSTRAR_3D && (
         <div>
           <h2 className="text-zinc-400 print:text-black text-xs font-bold uppercase tracking-widest mb-2">
             Como fica
@@ -369,6 +370,7 @@ export default function ModoOficina() {
             />
           </div>
         </div>
+        )}
       </section>
 
       {/* MONTAR & SOLDAR — listas curtas */}

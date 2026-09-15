@@ -144,7 +144,8 @@ export default function ModoAtendimento() {
         </div>
       </header>
 
-      {/* 3D fixo no topo */}
+      {/* 3D fixo no topo (desativado por enquanto) */}
+      {MOSTRAR_3D && (
       <div className="h-[34vh] sm:h-[40vh] border-b border-border bg-black touch-none">
         <Visualizador3DClient
           pecas={projeto.pecas}
@@ -161,6 +162,7 @@ export default function ModoAtendimento() {
           onCanvasReady={(c) => { canvasRef.current = c; }}
         />
       </div>
+      )}
 
       {/* Conteúdo do passo */}
       <main className="flex-1 overflow-y-auto p-4 pb-32">
