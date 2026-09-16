@@ -329,7 +329,9 @@ export default function Configurador() {
 
   const delPeca = (id: string) => {
     if (projeto.pecas.length <= 1) { toast.error("O orçamento precisa de ao menos uma peça"); return; }
-    const restantes = projeto.pecas.filter((x) => x.id !== id);
+    const restantes = projeto.pecas
+      .filter((x) => x.id !== id)
+      .map((x, index) => /^Peça\s+\d+$/i.test(x.nome.trim()) ? { ...x, nome: `Peça ${index + 1}` } : x);
     setProjeto({
       ...projeto,
       pecas: restantes,

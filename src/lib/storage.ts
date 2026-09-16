@@ -342,7 +342,8 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
         if (chave.startsWith(prefixo)) respostas[chave.slice(prefixo.length)] = valor;
       });
     }
-    const nome = /\s*\((?:c[oó]pia)\)\s*$/i.test(peca.nome ?? "")
+    const nome = /^Peça\s+\d+$/i.test((peca.nome ?? "").trim())
+      || /\s*\((?:c[oó]pia)\)\s*$/i.test(peca.nome ?? "")
       ? `Peça ${index + 1}`
       : peca.nome;
     return { ...peca, nome, checklist_respostas: respostas };
