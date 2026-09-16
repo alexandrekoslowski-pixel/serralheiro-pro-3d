@@ -1,0 +1,1 @@
+ALTER TABLE public.materiais ADD COLUMN IF NOT EXISTS porte_motor text NOT NULL DEFAULT '';

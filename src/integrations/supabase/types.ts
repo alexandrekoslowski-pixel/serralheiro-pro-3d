@@ -217,6 +217,7 @@ export type Database = {
           largura_mm: number | null
           nome: string
           observacoes: string
+          porte_motor: string
           subtipo: string
           unidade: string
           unidade_compra: string
@@ -240,6 +241,7 @@ export type Database = {
           largura_mm?: number | null
           nome?: string
           observacoes?: string
+          porte_motor?: string
           subtipo?: string
           unidade?: string
           unidade_compra?: string
@@ -263,6 +265,7 @@ export type Database = {
           largura_mm?: number | null
           nome?: string
           observacoes?: string
+          porte_motor?: string
           subtipo?: string
           unidade?: string
           unidade_compra?: string

@@ -192,11 +192,38 @@ export function nomeSugeridoPeca(politicaId?: string | null, lista: ItemPolitica
 }
 
 
-/** Quantidade cobrada conforme a unidade, com mínimo de 1. */
+/**
+ * Quantidade cobrada conforme a unidade de medida, sempre com o mínimo de uma
+ * unidade cheia (regra geral do orçamento, válida para qualquer produto da tabela).
+ */
 export function quantidadeCobrada(unidade: UnidadePolitica, largura_mm: number, altura_mm: number): number {
   if (unidade === "m2") return Math.max(1, Number(((largura_mm / 1000) * (altura_mm / 1000)).toFixed(3)));
   if (unidade === "linear") return Math.max(1, Number((largura_mm / 1000).toFixed(3)));
+  // unidade, hora e sob orçamento: sempre ao menos uma unidade cheia.
   return 1;
+}
+
+// ---- Regra do motor do portão basculante ----
+
+export type PorteMotor = "1/4" | "1/2";
+
+/** Limite do motor 1/4: até 3,00 m de largura e 2,50 m de altura. */
+export const LIMITE_MOTOR_QUARTO = { largura_mm: 3000, altura_mm: 2500 };
+
+/** Porte de motor recomendado para o vão do portão. */
+export function porteMotorRecomendado(largura_mm: number, altura_mm: number): PorteMotor {
+  return largura_mm <= LIMITE_MOTOR_QUARTO.largura_mm && altura_mm <= LIMITE_MOTOR_QUARTO.altura_mm ? "1/4" : "1/2";
+}
+
+/** Porte anotado no material (vazio quando o motor não foi classificado). */
+export const porteDoMotor = (porte?: string | null): PorteMotor | null =>
+  porte === "1/4" || porte === "1/2" ? porte : null;
+
+/** True quando o motor escolhido é menor do que o recomendado para o vão. */
+export function motorSubdimensionado(largura_mm: number, altura_mm: number, porte?: string | null): boolean {
+  const escolhido = porteDoMotor(porte);
+  if (!escolhido) return false;
+  return porteMotorRecomendado(largura_mm, altura_mm) === "1/2" && escolhido === "1/4";
 }
 
 export interface PrecoPeca {

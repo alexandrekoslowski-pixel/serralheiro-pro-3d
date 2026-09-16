@@ -58,6 +58,7 @@ import {
   FRETE_MINIMO, SERVICOS_POLITICA, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
   precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
   precoAutomacaoPeca, precoMotorPeca, precoMotorSugerido, tipologiaDoItem, automacaoPolitica,
+  porteMotorRecomendado, porteDoMotor, motorSubdimensionado,
 } from "@/lib/politicaPrecos";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
@@ -174,6 +175,7 @@ export default function Configurador() {
   // Motores e kits cadastrados em Materiais, para escolher na peça
   const [motores, setMotores] = useState<Material[]>([]);
   const [buscaMotor, setBuscaMotor] = useState("");
+  const [motorAberto, setMotorAberto] = useState<Record<string, boolean>>({});
   useEffect(() => {
     let vivo = true;
     void listarMateriais()
@@ -278,9 +280,24 @@ export default function Configurador() {
   const automacaoSel = precoAutomacaoPeca(pecaSel);
   const motorSel = precoMotorPeca(pecaSel, margemMotor);
   const totalPecaSel = totalPeca(pecaSel, politica, margemMotor);
-  const motoresFiltrados = buscaMotor.trim()
-    ? motores.filter((m) => m.nome.toLowerCase().includes(buscaMotor.trim().toLowerCase())).slice(0, 60)
-    : motores.slice(0, 60);
+  // Motor do basculante: porte recomendado pelo vão e lista com os compatíveis primeiro.
+  const porteRecomendado = porteMotorRecomendado(pecaSel.largura_mm, pecaSel.altura_mm);
+  const motorEscolhido = motores.find((m) => m.id === pecaSel.motor_material_id);
+  const motorAbaixoDoVao = motorSubdimensionado(
+    pecaSel.largura_mm, pecaSel.altura_mm, motorEscolhido?.porte_motor ?? pecaSel.motor_porte,
+  );
+  const mostrarMotor = !!pecaSel.motor_material_id || !!motorAberto[pecaSel.id];
+  const compativel = (m: Material) => {
+    const porte = porteDoMotor(m.porte_motor);
+    if (!porte) return false;
+    return porteRecomendado === "1/4" ? true : porte === "1/2";
+  };
+  const motoresFiltrados = (buscaMotor.trim()
+    ? motores.filter((m) => m.nome.toLowerCase().includes(buscaMotor.trim().toLowerCase()))
+    : motores)
+    .slice()
+    .sort((a, b) => Number(compativel(b)) - Number(compativel(a)))
+    .slice(0, 60);
 
   const updPeca = (patch: Partial<Peca>) =>
     setProjeto({
@@ -996,7 +1013,7 @@ export default function Configurador() {
                 type="button" size="sm"
                 variant={pecaSel.automacao_id ? "outline" : "default"}
                 className={cn("h-auto min-h-10", !pecaSel.automacao_id && "bg-primary text-primary-foreground")}
-                onClick={() => updPeca({ automacao_id: null, automacao_valor: null, motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null })}
+                onClick={() => updPeca({ automacao_id: null, automacao_valor: null })}
               >
                 Sem automação
               </Button>
@@ -1017,82 +1034,113 @@ export default function Configurador() {
             </div>
 
             {pecaSel.automacao_id && (
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div>
-                  <Label>Valor da instalação da automação (R$)</Label>
-                  <Input
-                    className="mt-2"
-                    mask="moeda"
-                    placeholder={formatarBRL(automacaoPolitica(pecaSel.automacao_id)?.valor ?? 0)}
-                    value={pecaSel.automacao_valor == null ? "" : String(pecaSel.automacao_valor).replace(".", ",")}
-                    onChange={(e) => updPeca({ automacao_valor: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
-                  />
-                </div>
-                <div>
-                  <Label>Motor (cadastro de materiais)</Label>
-                  <Input
-                    className="mt-2"
-                    placeholder="Buscar motor ou kit"
-                    value={buscaMotor}
-                    onChange={(e) => setBuscaMotor(e.target.value)}
-                  />
-                  <Select
-                    value={pecaSel.motor_material_id ?? ""}
-                    onValueChange={(id) => {
-                      const m = motores.find((x) => x.id === id);
-                      updPeca({
-                        motor_material_id: id,
-                        motor_nome: m?.nome ?? "",
-                        motor_custo: m?.custo ?? null,
-                        motor_valor: null,
-                      });
-                    }}
-                  >
-                    <SelectTrigger className="mt-2">
-                      <SelectValue placeholder={motores.length ? "Escolha o motor" : "Carregando motores…"} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-72">
-                      {motoresFiltrados.map((m) => (
-                        <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {pecaSel.motor_material_id && (
-                  <>
-                    <div>
-                      <Label>Valor do motor para o cliente (R$)</Label>
-                      <Input
-                        className="mt-2"
-                        mask="moeda"
-                        placeholder={formatarBRL(precoMotorSugerido(pecaSel.motor_custo, margemMotor))}
-                        value={pecaSel.motor_valor == null ? "" : String(pecaSel.motor_valor).replace(".", ",")}
-                        onChange={(e) => updPeca({ motor_valor: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
-                      />
-                      {pecaSel.motor_valor != null && (
-                        <Button type="button" size="sm" variant="outline" className="mt-1 h-7 text-[11px]" onClick={() => updPeca({ motor_valor: null })}>
-                          Voltar ao valor sugerido
-                        </Button>
-                      )}
-                    </div>
-                    <div className="flex flex-col justify-end gap-1 text-sm">
-                      <span className="truncate">{pecaSel.motor_nome}</span>
-                      {podeVerCustos && (
-                        <span className="text-xs text-muted-foreground">
-                          Custo {formatarBRL(pecaSel.motor_custo ?? 0)} · margem {margemMotor}%
-                        </span>
-                      )}
-                      <Button
-                        type="button" size="sm" variant="dangerOutline" className="h-8 w-fit"
-                        onClick={() => updPeca({ motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null })}
-                      >
-                        Remover motor
-                      </Button>
-                    </div>
-                  </>
-                )}
+              <div className="mt-3">
+                <Label>Valor da instalação da automação (R$)</Label>
+                <Input
+                  className="mt-2 sm:max-w-xs"
+                  mask="moeda"
+                  placeholder={formatarBRL(automacaoPolitica(pecaSel.automacao_id)?.valor ?? 0)}
+                  value={pecaSel.automacao_valor == null ? "" : String(pecaSel.automacao_valor).replace(".", ",")}
+                  onChange={(e) => updPeca({ automacao_valor: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
+                />
               </div>
             )}
+
+            {/* Motor: opcional, com porte recomendado pelo tamanho do portão */}
+            <div className="mt-4 rounded-lg border border-border/70 bg-muted/20 p-3">
+              <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-primary"
+                  checked={mostrarMotor}
+                  onChange={(e) => {
+                    setMotorAberto((a) => ({ ...a, [pecaSel.id]: e.target.checked }));
+                    if (!e.target.checked) updPeca({ motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null, motor_porte: null });
+                  }}
+                />
+                Deseja incluir motor?
+              </label>
+
+              {mostrarMotor && (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="sm:col-span-2 text-xs text-muted-foreground">
+                    Vão de {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm · recomendado <strong>PPA {porteRecomendado}</strong>
+                  </div>
+                  <div>
+                    <Label>Motor (cadastro de materiais)</Label>
+                    <Input
+                      className="mt-2"
+                      placeholder="Buscar motor ou kit"
+                      value={buscaMotor}
+                      onChange={(e) => setBuscaMotor(e.target.value)}
+                    />
+                    <Select
+                      value={pecaSel.motor_material_id ?? ""}
+                      onValueChange={(id) => {
+                        const m = motores.find((x) => x.id === id);
+                        updPeca({
+                          motor_material_id: id,
+                          motor_nome: m?.nome ?? "",
+                          motor_custo: m?.custo ?? null,
+                          motor_valor: null,
+                          motor_porte: m?.porte_motor ?? null,
+                        });
+                      }}
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder={motores.length ? "Escolha o motor" : "Carregando motores…"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-72">
+                        {motoresFiltrados.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {porteDoMotor(m.porte_motor) ? `[${m.porte_motor}] ` : ""}{m.nome}
+                            {compativel(m) ? " · indicado" : ""}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {pecaSel.motor_material_id && (
+                    <>
+                      <div>
+                        <Label>Valor do motor para o cliente (R$)</Label>
+                        <Input
+                          className="mt-2"
+                          mask="moeda"
+                          placeholder={formatarBRL(precoMotorSugerido(pecaSel.motor_custo, margemMotor))}
+                          value={pecaSel.motor_valor == null ? "" : String(pecaSel.motor_valor).replace(".", ",")}
+                          onChange={(e) => updPeca({ motor_valor: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
+                        />
+                        {pecaSel.motor_valor != null && (
+                          <Button type="button" size="sm" variant="outline" className="mt-1 h-7 text-[11px]" onClick={() => updPeca({ motor_valor: null })}>
+                            Voltar ao valor sugerido
+                          </Button>
+                        )}
+                      </div>
+                      <div className="flex flex-col justify-end gap-1 text-sm">
+                        <span className="truncate">{pecaSel.motor_nome}</span>
+                        {podeVerCustos && (
+                          <span className="text-xs text-muted-foreground">
+                            Custo {formatarBRL(pecaSel.motor_custo ?? 0)} · margem {margemMotor}%
+                          </span>
+                        )}
+                        <Button
+                          type="button" size="sm" variant="dangerOutline" className="h-8 w-fit"
+                          onClick={() => updPeca({ motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null, motor_porte: null })}
+                        >
+                          Remover motor
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  {motorAbaixoDoVao && (
+                    <p className="sm:col-span-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                      Motor subdimensionado para {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm — recomendado PPA 1/2.
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
           </section>
 
           <p className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
