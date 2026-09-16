@@ -279,9 +279,21 @@ export default function Configurador() {
   const automacaoSel = precoAutomacaoPeca(pecaSel);
   const motorSel = precoMotorPeca(pecaSel, margemMotor);
   const totalPecaSel = totalPeca(pecaSel, politica, margemMotor);
-  const motoresFiltrados = buscaMotor.trim()
-    ? motores.filter((m) => m.nome.toLowerCase().includes(buscaMotor.trim().toLowerCase())).slice(0, 60)
-    : motores.slice(0, 60);
+  // Motor do basculante: porte recomendado pelo vão e lista com os compatíveis primeiro.
+  const porteRecomendado = porteMotorRecomendado(pecaSel.largura_mm, pecaSel.altura_mm);
+  const motorEscolhido = motores.find((m) => m.id === pecaSel.motor_material_id);
+  const motorAbaixoDoVao = motorSubdimensionado(pecaSel.largura_mm, pecaSel.altura_mm, motorEscolhido?.porte_motor);
+  const compativel = (m: Material) => {
+    const porte = porteDoMotor(m.porte_motor);
+    if (!porte) return false;
+    return porteRecomendado === "1/4" ? true : porte === "1/2";
+  };
+  const motoresFiltrados = (buscaMotor.trim()
+    ? motores.filter((m) => m.nome.toLowerCase().includes(buscaMotor.trim().toLowerCase()))
+    : motores)
+    .slice()
+    .sort((a, b) => Number(compativel(b)) - Number(compativel(a)))
+    .slice(0, 60);
 
   const updPeca = (patch: Partial<Peca>) =>
     setProjeto({
