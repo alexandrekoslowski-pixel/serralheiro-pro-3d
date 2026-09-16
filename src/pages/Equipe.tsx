@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MembroEquipe, PAPEIS, Papel, listarEquipe, definirPapel, atualizarMembro, removerMembro, ContaNaoEncontrada } from "@/lib/gestao";
+import { MembroEquipe, PAPEIS, Papel, listarEquipe, definirPapel, atualizarMembro, atualizarEmailMembro, removerMembro, ContaNaoEncontrada, EmailEmUso } from "@/lib/gestao";
 import { renomearVendedor } from "@/lib/storage";
 import { useSessao } from "@/lib/sessao";
 import { emailOpcionalSchema, primeiraMensagem } from "@/lib/validacao";
@@ -15,7 +15,7 @@ export default function Equipe() {
   const { session, papel } = useSessao();
   const [equipe, setEquipe] = useState<MembroEquipe[]>([]);
   const [novo, setNovo] = useState<{ email: string; nome: string; role: Papel } | null>(null);
-  const [edicao, setEdicao] = useState<{ id: string; nome: string; role: Papel } | null>(null);
+  const [edicao, setEdicao] = useState<{ id: string; nome: string; role: Papel; email: string; emailOriginal: string } | null>(null);
 
   const recarregar = () => listarEquipe().then(setEquipe).catch(() => toast.error("Não foi possível carregar a equipe"));
   useEffect(() => { void recarregar(); }, []);
@@ -40,12 +40,24 @@ export default function Equipe() {
   const salvarEdicao = async () => {
     if (!edicao) return;
     if (!edicao.nome.trim()) { toast.error("Informe o nome"); return; }
+    const novoEmail = edicao.email.trim().toLowerCase();
+    const trocouEmail = novoEmail !== edicao.emailOriginal.trim().toLowerCase();
+    if (trocouEmail) {
+      if (!novoEmail) { toast.error("Informe o e-mail"); return; }
+      const mensagem = primeiraMensagem(emailOpcionalSchema.safeParse(novoEmail));
+      if (mensagem) { toast.error(mensagem); return; }
+    }
     try {
-    const antigo = equipe.find(m => m.id === edicao.id)?.nome || '';
+      const antigo = equipe.find(m => m.id === edicao.id)?.nome || '';
       await atualizarMembro(edicao.id, { nome: edicao.nome.trim(), role: edicao.role });
       if (antigo && antigo !== edicao.nome.trim()) renomearVendedor(antigo, edicao.nome.trim());
-      setEdicao(null); await recarregar(); toast.success("Nome atualizado");
-    } catch { toast.error("Não foi possível salvar"); }
+      if (trocouEmail) await atualizarEmailMembro(edicao.id, novoEmail);
+      setEdicao(null); await recarregar();
+      toast.success(trocouEmail ? "Dados atualizados. Ela passa a entrar com o novo e-mail." : "Nome atualizado");
+    } catch (e) {
+      if (e instanceof EmailEmUso) toast.error("Esse e-mail já está em uso por outra conta");
+      else toast.error("Não foi possível salvar");
+    }
   };
 
   if (papel !== "gestor") {
@@ -85,7 +97,7 @@ export default function Equipe() {
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded bg-card px-2 py-1 text-xs">{PAPEIS.find((p) => p.id === m.role)?.nome}</span>
-              <Button size="sm" variant="soft" onClick={() => setEdicao({ id: m.id, nome: m.nome, role: m.role })}>
+              <Button size="sm" variant="soft" onClick={() => setEdicao({ id: m.id, nome: m.nome, role: m.role, email: m.email ?? "", emailOriginal: m.email ?? "" })}>
                 <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
               </Button>
               {m.user_id !== session?.user?.id && (
@@ -105,6 +117,12 @@ export default function Equipe() {
             <div>
               <Label>Nome da pessoa</Label>
               <Input className="mt-1.5" maxLength={100} value={edicao?.nome ?? ""} onChange={(e) => setEdicao((n) => n && { ...n, nome: e.target.value })} />
+            </div>
+            <div>
+              <Label>E-mail de acesso</Label>
+              <Input className="mt-1.5" type="email" placeholder="nome@email.com" value={edicao?.email ?? ""}
+                     onChange={(e) => setEdicao((n) => n && { ...n, email: e.target.value })} />
+              <p className="mt-1 text-xs text-muted-foreground">Ao trocar, a pessoa passa a entrar com o novo e-mail e a mesma senha.</p>
             </div>
             <div>
               <Label>Papel</Label>

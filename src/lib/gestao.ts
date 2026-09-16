@@ -344,6 +344,19 @@ export async function atualizarMembro(id: string, patch: { nome: string; role: P
   window.dispatchEvent(new Event(EQUIPE_ATUALIZADA_EVENTO));
 }
 
+export class EmailEmUso extends Error {}
+
+/** Troca o e-mail de acesso de alguém da equipe (somente gestor). */
+export async function atualizarEmailMembro(id: string, email: string): Promise<void> {
+  const { data, error } = await supabase.functions.invoke("atualizar-email-membro", {
+    body: { membro_id: id, email: email.trim().toLowerCase() },
+  });
+  const resposta = data as { ok?: boolean; erro?: string } | null;
+  if (resposta?.erro === "email_em_uso") throw new EmailEmUso();
+  if (error || !resposta?.ok) throw error ?? new Error(resposta?.erro ?? "falha");
+  window.dispatchEvent(new Event(EQUIPE_ATUALIZADA_EVENTO));
+}
+
 export async function removerMembro(id: string): Promise<void> {
   await supabase.from("user_roles").delete().eq("id", id);
 }
