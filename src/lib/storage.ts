@@ -68,6 +68,7 @@ export function renumerarNomesAutomaticosPecas(pecas: Peca[]): Peca[] {
     const nomeAtual = (peca.nome ?? "").trim();
     const automatico = !nomeAtual
       || NOME_PECA_AUTOMATICO.test(nomeAtual)
+      || nomeAtual.toLocaleLowerCase("pt-BR") === tipologiaPorId(peca.tipologia).nome.toLocaleLowerCase("pt-BR")
       || /\s*\((?:c[oó]pia)\)\s*$/i.test(nomeAtual);
     return automatico ? { ...peca, nome: `${categoria} ${numero}` } : peca;
   });
