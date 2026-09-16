@@ -65,6 +65,8 @@ export interface Material {
   unidade_compra: string;
   ativo: boolean;
   codigo_calculo: string;
+  /** Porte do motor para portão basculante: "1/4", "1/2" ou vazio. */
+  porte_motor?: string;
   preco_atual?: number;
   preco_referencia?: string;
   preco_unidade?: string;

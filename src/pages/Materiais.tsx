@@ -174,6 +174,17 @@ export default function Materiais() {
                 </Select>
                 <p className="mt-1 text-xs text-muted-foreground">Quando ligado, o orçamento usa o preço vigente deste material automaticamente.</p>
               </div>
+              <div>
+                <Label>Porte do motor (portão basculante)</Label>
+                <Select value={edit?.porte_motor || "nenhum"} onValueChange={(v) => setEdit((m) => ({ ...m, porte_motor: v === "nenhum" ? "" : v }))}>
+                  <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="nenhum">Não se aplica</SelectItem>
+                    <SelectItem value="1/4">1/4 — até 3,00 m x 2,50 m</SelectItem>
+                    <SelectItem value="1/2">1/2 — acima de 3,00 m x 2,50 m</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div><Label>Espessura (mm)</Label><Input className="mt-1.5" mask="decimal" value={edit?.espessura_mm == null ? "" : String(edit.espessura_mm).replace(".", ",")} onChange={(e) => setEdit((m) => ({ ...m, espessura_mm: e.target.value ? numeroMascarado(e.target.value) : null }))} /></div>
             <div className="sm:col-span-2">
               <Label>Fornecedor</Label>
