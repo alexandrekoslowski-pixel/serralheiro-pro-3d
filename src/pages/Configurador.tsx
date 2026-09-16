@@ -285,16 +285,10 @@ export default function Configurador() {
       pecas: projeto.pecas.map((x) => (x.id === pecaSel.id ? { ...x, ...patch } : x)),
     });
 
-  /** Troca o item da tabela: ajusta tipologia técnica, nome automático e limpa o valor manual. */
+  /** Troca o item da tabela: ajusta a tipologia técnica e limpa o valor manual. */
   const escolherPolitica = (id: string) => {
     const tipoNovo = tipologiaDoItem(id, politica) as TipologiaId | undefined;
-    const nomeAutomatico = !pecaSel.nome
-      || pecaSel.nome === tipologiaPorId(pecaSel.tipologia).nome
-      || pecaSel.nome === precoSel.item?.produto
-      || /^Peça \d+$/i.test(pecaSel.nome);
-    const item = politica.find((i) => i.id === id);
     const patch: Partial<Peca> = { politica_id: id, preco_manual: null };
-    if (nomeAutomatico && item) patch.nome = item.produto;
     if (tipoNovo && tipoNovo !== pecaSel.tipologia) {
       const novo = tipologiaPorId(tipoNovo);
       patch.tipologia = tipoNovo;
@@ -309,7 +303,7 @@ export default function Configurador() {
     const t = tipologiaPorId(pecaSel.tipologia);
     const nova: Peca = {
       id: gerarId(),
-      nome: t.nome,
+      nome: `Peça ${projeto.pecas.length + 1}`,
       tipologia: pecaSel.tipologia,
       largura_mm: t.larguraDefault,
       altura_mm: t.alturaDefault,
@@ -323,7 +317,12 @@ export default function Configurador() {
   };
 
   const duplicarPeca = () => {
-    const nova: Peca = { ...pecaSel, id: gerarId(), nome: `${pecaSel.nome} (cópia)`, checklist_respostas: { ...pecaSel.checklist_respostas } };
+    const nova: Peca = {
+      ...pecaSel,
+      id: gerarId(),
+      nome: `Peça ${projeto.pecas.length + 1}`,
+      checklist_respostas: { ...pecaSel.checklist_respostas },
+    };
     setProjeto({ ...projeto, pecas: [...projeto.pecas, nova] });
     setPecaSelId(nova.id);
   };
@@ -1170,14 +1169,6 @@ export default function Configurador() {
           </div>
           )}
 
-          {/* Resumo */}
-          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <CardResumo label="Total geral" valor={formatarBRL(totalAnimado)} highlight />
-            {podeVerCustos && <CardResumo label="Materiais" valor={formatarBRL(resultado.totalMateriais)} />}
-            {podeVerCustos && <CardResumo label="Metragem perfil" valor={`${resultado.resumo.metragemPerfil.toFixed(2)} m`} />}
-            {podeVerCustos && <CardResumo label="Peso estimado" valor={`${resultado.resumo.pesoEstimado.toFixed(1)} kg`} />}
-          </div>
-
           {/* Serviços e deslocamento da política */}
           <div className="surface-card rounded-lg border border-border p-4">
             <div className="mb-3 flex items-center gap-2 font-display text-sm">
@@ -1242,12 +1233,6 @@ export default function Configurador() {
                   Usar mínimo {formatarBRL(FRETE_MINIMO)}
                 </Button>
               </div>
-              <div className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
-                <div className="flex justify-between"><span>Peças</span><strong>{formatarBRL(totalPecas)}</strong></div>
-                <div className="flex justify-between"><span>Serviços</span><strong>{formatarBRL(servicosTotal)}</strong></div>
-                <div className="flex justify-between"><span>Deslocamento</span><strong>{formatarBRL(projeto.frete_valor ?? 0)}</strong></div>
-                <div className="mt-1 flex justify-between border-t border-border pt-1"><span>Total</span><strong className="text-gradient-orange">{formatarBRL(totalProposta)}</strong></div>
-              </div>
               <div className="sm:col-span-2">
                 <Label className="text-xs">Observações da proposta</Label>
                 <Textarea
@@ -1261,7 +1246,15 @@ export default function Configurador() {
             </div>
           </div>
 
-
+          {/* Fechamento do orçamento — imediatamente antes dos materiais */}
+          <div className="grid gap-3 sm:grid-cols-[1fr_260px] sm:items-stretch">
+            <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm">
+              <div className="flex justify-between gap-4"><span>Peças</span><strong>{formatarBRL(totalPecas)}</strong></div>
+              <div className="mt-1 flex justify-between gap-4"><span>Serviços</span><strong>{formatarBRL(servicosTotal)}</strong></div>
+              <div className="mt-1 flex justify-between gap-4"><span>Deslocamento</span><strong>{formatarBRL(projeto.frete_valor ?? 0)}</strong></div>
+            </div>
+            <CardResumo label="Total do orçamento" valor={formatarBRL(totalAnimado)} highlight />
+          </div>
 
           {/* Tabs */}
           <Tabs defaultValue={podeVerCustos ? "materiais" : "orcamento"}>
@@ -1274,6 +1267,11 @@ export default function Configurador() {
 
             {/* Materiais */}
             <TabsContent value="materiais" className="surface-card rounded-lg border border-border p-4 space-y-4">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <CardResumo label="Materiais" valor={formatarBRL(resultado.totalMateriais)} />
+                <CardResumo label="Metragem perfil" valor={`${resultado.resumo.metragemPerfil.toFixed(2)} m`} />
+                <CardResumo label="Peso estimado" valor={`${resultado.resumo.pesoEstimado.toFixed(1)} kg`} />
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px] text-sm">
                   <thead>
