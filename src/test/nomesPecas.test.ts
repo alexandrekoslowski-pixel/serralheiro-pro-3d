@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { renumerarNomesAutomaticosPecas, categoriaNomePeca } from "@/lib/storage";
 import type { Peca } from "@/lib/storage";
 
-const peca = (nome: string, tipologia: Peca["tipologia"]): Peca => ({
+const peca = (nome: string, tipologia: Peca["tipologia"]): Peca => (({
   id: Math.random().toString(36).slice(2),
   nome,
   tipologia,
