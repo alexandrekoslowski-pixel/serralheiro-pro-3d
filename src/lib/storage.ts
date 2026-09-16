@@ -1,6 +1,6 @@
 // Camada de dados: cache em memória (leitura síncrona) sincronizado com a nuvem.
 import { supabase } from "@/integrations/supabase/client";
-import { TipologiaId, AcabamentoId, tipologiaPorId } from "./tipologias";
+import { TipologiaId, AcabamentoId, TIPOLOGIAS, tipologiaPorId } from "./tipologias";
 import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
 import { CHECKLIST_VERSAO, normalizarRespostasChecklist, type RespostasChecklist } from "./checklistPedido";
@@ -45,32 +45,46 @@ export interface Peca {
 
 }
 
-/** Rótulo curto usado para identificar peças automáticas nos documentos. */
+/** Nome completo do produto, usado para identificar peças automáticas nos documentos. */
 export function categoriaNomePeca(tipologia: TipologiaId): string {
-  const nome = tipologiaPorId(tipologia).nome;
-  if (/^Portão\b/i.test(nome)) return "Portão";
-  if (/^Janela\b/i.test(nome)) return "Janela";
-  if (/^Grade\b/i.test(nome)) return "Grade";
-  if (/^Estrutura\b/i.test(nome)) return "Estrutura";
-  if (/^Veneziana\b/i.test(nome)) return "Veneziana";
-  return nome.split(/\s+/)[0] || "Item";
+  return tipologiaPorId(tipologia).nome;
 }
 
-const NOME_PECA_AUTOMATICO = /^(?:Peça|Portão|Janela|Grade|Estrutura|Veneziana|Item)\s+\d+$/i;
+const NOME_PECA_LEGADO = /^(?:Peça|Portão|Janela|Grade|Estrutura|Veneziana|Item)\s+\d+$/i;
 
-/** Numera nomes automáticos por categoria sem sobrescrever nomes personalizados. */
+const escaparRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Diz se o nome da peça ainda é automático (gerado pelo sistema, em qualquer formato antigo ou novo). */
+function nomePecaEhAutomatico(nome: string): boolean {
+  const n = nome.trim();
+  if (!n) return true;
+  if (/\s*\((?:c[oó]pia)\)\s*$/i.test(n)) return true;
+  if (NOME_PECA_LEGADO.test(n)) return true;
+  const alvo = n.toLocaleLowerCase("pt-BR");
+  return TIPOLOGIAS.some((t) => {
+    const base = t.nome.toLocaleLowerCase("pt-BR");
+    return alvo === base || new RegExp(`^${escaparRegex(base)}\\s+\\d+$`).test(alvo);
+  });
+}
+
+/**
+ * Numera nomes automáticos pelo nome completo do produto, sem sobrescrever nomes personalizados.
+ * Quando só existe uma peça daquele produto, o nome fica sem número.
+ */
 export function renumerarNomesAutomaticosPecas(pecas: Peca[]): Peca[] {
+  const totais = new Map<string, number>();
+  pecas.forEach((p) => {
+    const categoria = categoriaNomePeca(p.tipologia);
+    totais.set(categoria, (totais.get(categoria) ?? 0) + 1);
+  });
   const contadores = new Map<string, number>();
   return pecas.map((peca) => {
     const categoria = categoriaNomePeca(peca.tipologia);
     const numero = (contadores.get(categoria) ?? 0) + 1;
     contadores.set(categoria, numero);
-    const nomeAtual = (peca.nome ?? "").trim();
-    const automatico = !nomeAtual
-      || NOME_PECA_AUTOMATICO.test(nomeAtual)
-      || nomeAtual.toLocaleLowerCase("pt-BR") === tipologiaPorId(peca.tipologia).nome.toLocaleLowerCase("pt-BR")
-      || /\s*\((?:c[oó]pia)\)\s*$/i.test(nomeAtual);
-    return automatico ? { ...peca, nome: `${categoria} ${numero}` } : peca;
+    if (!nomePecaEhAutomatico(peca.nome ?? "")) return peca;
+    const nome = (totais.get(categoria) ?? 0) > 1 ? `${categoria} ${numero}` : categoria;
+    return { ...peca, nome };
   });
 }
 
