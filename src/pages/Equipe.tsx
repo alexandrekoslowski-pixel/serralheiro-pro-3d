@@ -15,7 +15,7 @@ export default function Equipe() {
   const { session, papel } = useSessao();
   const [equipe, setEquipe] = useState<MembroEquipe[]>([]);
   const [novo, setNovo] = useState<{ email: string; nome: string; role: Papel } | null>(null);
-  const [edicao, setEdicao] = useState<{ id: string; nome: string; role: Papel } | null>(null);
+  const [edicao, setEdicao] = useState<{ id: string; nome: string; role: Papel; email: string; emailOriginal: string } | null>(null);
 
   const recarregar = () => listarEquipe().then(setEquipe).catch(() => toast.error("Não foi possível carregar a equipe"));
   useEffect(() => { void recarregar(); }, []);
