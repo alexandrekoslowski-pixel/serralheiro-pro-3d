@@ -72,17 +72,19 @@ function nomePecaEhAutomatico(nome: string): boolean {
  * Quando só existe uma peça daquele produto, o nome fica sem número.
  */
 export function renumerarNomesAutomaticosPecas(pecas: Peca[]): Peca[] {
+  // Só as peças com nome automático participam da numeração; nomes personalizados não contam.
   const totais = new Map<string, number>();
   pecas.forEach((p) => {
+    if (!nomePecaEhAutomatico(p.nome ?? "")) return;
     const categoria = categoriaNomePeca(p.tipologia);
     totais.set(categoria, (totais.get(categoria) ?? 0) + 1);
   });
   const contadores = new Map<string, number>();
   return pecas.map((peca) => {
+    if (!nomePecaEhAutomatico(peca.nome ?? "")) return peca;
     const categoria = categoriaNomePeca(peca.tipologia);
     const numero = (contadores.get(categoria) ?? 0) + 1;
     contadores.set(categoria, numero);
-    if (!nomePecaEhAutomatico(peca.nome ?? "")) return peca;
     const nome = (totais.get(categoria) ?? 0) > 1 ? `${categoria} ${numero}` : categoria;
     return { ...peca, nome };
   });
