@@ -1083,6 +1083,7 @@ export default function Configurador() {
                           motor_nome: m?.nome ?? "",
                           motor_custo: m?.custo ?? null,
                           motor_valor: null,
+                          motor_porte: m?.porte_motor ?? null,
                         });
                       }}
                     >
