@@ -309,8 +309,7 @@ export default function Configurador() {
     const t = tipologiaPorId(pecaSel.tipologia);
     const nova: Peca = {
       id: gerarId(),
-      nome: `${categoriaNomePeca(pecaSel.tipologia)} 1`,
-      tipologia: pecaSel.tipologia,
+      nome: categoriaNomePeca(pecaSel.tipologia),
       largura_mm: t.larguraDefault,
       altura_mm: t.alturaDefault,
       cor: pecaSel.cor,
@@ -326,8 +325,7 @@ export default function Configurador() {
     const nova: Peca = {
       ...pecaSel,
       id: gerarId(),
-      nome: `${categoriaNomePeca(pecaSel.tipologia)} 1`,
-      checklist_respostas: { ...pecaSel.checklist_respostas },
+      nome: categoriaNomePeca(pecaSel.tipologia),
     };
     setProjeto({ ...projeto, pecas: renumerarNomesAutomaticosPecas([...projeto.pecas, nova]) });
     setPecaSelId(nova.id);

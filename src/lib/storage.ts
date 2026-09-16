@@ -367,7 +367,7 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   if (!Array.isArray(base.pecas) || base.pecas.length === 0) {
     base.pecas = [{
       id: gerarId(),
-      nome: `${categoriaNomePeca(base.tipologia)} 1`,
+      nome: categoriaNomePeca(base.tipologia),
       tipologia: base.tipologia,
       largura_mm: base.largura_mm,
       altura_mm: base.altura_mm,
@@ -684,7 +684,7 @@ export function criarOrcamentoRapido(vendedora = ""): ProjetoLocal {
     descontoGeralPct: 0,
     pecas: [{
       id: gerarId(),
-      nome: `${categoriaNomePeca(tipologia)} 1`,
+      nome: categoriaNomePeca(tipologia),
       tipologia,
       largura_mm: tip.larguraDefault,
       altura_mm: tip.alturaDefault,
