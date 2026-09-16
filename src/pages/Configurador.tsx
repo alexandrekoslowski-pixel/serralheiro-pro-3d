@@ -597,7 +597,7 @@ export default function Configurador() {
                   value={projeto.cliente}
                   autoComplete="off"
                   onChange={(e) => { upd("cliente", e.target.value); setSugestoesAbertas(true); }}
-                  onFocus={() => setSugestoesAbertas(true)}
+                  onFocus={(e) => setSugestoesAbertas(e.target.value.trim().length > 0)}
                   onBlur={(e) => {
                     const arrumado = nomeProprio(e.target.value);
                     if (arrumado !== e.target.value) upd("cliente", arrumado);
