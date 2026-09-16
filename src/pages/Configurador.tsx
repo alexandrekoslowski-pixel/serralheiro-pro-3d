@@ -283,7 +283,10 @@ export default function Configurador() {
   // Motor do basculante: porte recomendado pelo vão e lista com os compatíveis primeiro.
   const porteRecomendado = porteMotorRecomendado(pecaSel.largura_mm, pecaSel.altura_mm);
   const motorEscolhido = motores.find((m) => m.id === pecaSel.motor_material_id);
-  const motorAbaixoDoVao = motorSubdimensionado(pecaSel.largura_mm, pecaSel.altura_mm, motorEscolhido?.porte_motor);
+  const motorAbaixoDoVao = motorSubdimensionado(
+    pecaSel.largura_mm, pecaSel.altura_mm, motorEscolhido?.porte_motor ?? pecaSel.motor_porte,
+  );
+  const mostrarMotor = !!pecaSel.motor_material_id || !!motorAberto[pecaSel.id];
   const compativel = (m: Material) => {
     const porte = porteDoMotor(m.porte_motor);
     if (!porte) return false;

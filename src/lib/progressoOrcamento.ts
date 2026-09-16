@@ -1,6 +1,7 @@
 // Progresso do orçamento até virar ordem na oficina (para as vendedoras).
 import { ProjetoLocal, Pagamento } from "./storage";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "./checklistPedido";
+import { motorSubdimensionado } from "./politicaPrecos";
 
 export type EstadoMarco = "feito" | "pendente" | "atrasado" | "neutro";
 
@@ -160,5 +161,10 @@ export function pendenciasOrdem(p: ProjetoLocal, pagamentos: Pagamento[]): strin
   if (!(p.cliente_telefone ?? "").trim()) faltas.push("Telefone do cliente em branco");
   if (!(p.cliente_endereco ?? "").trim()) faltas.push("Endereço de instalação em branco");
   if (!p.orcamento_pdf_em) faltas.push("Orçamento em PDF ainda não foi gerado");
+  p.pecas.forEach((pc) => {
+    if (motorSubdimensionado(pc.largura_mm, pc.altura_mm, pc.motor_porte)) {
+      faltas.push(`${pc.nome || "Peça"}: motor subdimensionado para o vão — recomendado PPA 1/2`);
+    }
+  });
   return faltas;
 }
