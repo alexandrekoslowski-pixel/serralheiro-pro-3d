@@ -2,19 +2,24 @@
 import { useEffect, useState } from "react";
 import { useSessao } from "@/lib/sessao";
 import { meuPerfil } from "@/lib/gestao";
+import { assinarDados } from "@/lib/storage";
 
 export function useMeuNome(): string {
   const { session } = useSessao();
   const [nome, setNome] = useState("");
 
-  useEffect(() => {
+  const recarregar = () => {
     const uid = session?.user?.id;
     if (!uid) return;
-    let vivo = true;
     void meuPerfil(uid)
-      .then((p) => { if (vivo) setNome((p.nome ?? "").trim()); })
+      .then((p) => { setNome((p.nome ?? "").trim()); })
       .catch(() => undefined);
-    return () => { vivo = false; };
+  };
+
+  useEffect(() => {
+    recarregar();
+    // Re-carrega se houver mudanças nos dados (ex: renomeação na Equipe)
+    return assinarDados(recarregar);
   }, [session?.user?.id]);
 
   return nome;
