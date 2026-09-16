@@ -327,6 +327,7 @@ export default function Configurador() {
       ...pecaSel,
       id: gerarId(),
       nome: categoriaNomePeca(pecaSel.tipologia),
+      checklist_respostas: { ...pecaSel.checklist_respostas },
     };
     setProjeto({ ...projeto, pecas: renumerarNomesAutomaticosPecas([...projeto.pecas, nova]) });
     setPecaSelId(nova.id);
