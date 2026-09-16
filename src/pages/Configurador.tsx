@@ -1013,7 +1013,7 @@ export default function Configurador() {
                 type="button" size="sm"
                 variant={pecaSel.automacao_id ? "outline" : "default"}
                 className={cn("h-auto min-h-10", !pecaSel.automacao_id && "bg-primary text-primary-foreground")}
-                onClick={() => updPeca({ automacao_id: null, automacao_valor: null, motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null })}
+                onClick={() => updPeca({ automacao_id: null, automacao_valor: null, motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null, motor_porte: null })}
               >
                 Sem automação
               </Button>
@@ -1055,7 +1055,7 @@ export default function Configurador() {
                   checked={mostrarMotor}
                   onChange={(e) => {
                     setMotorAberto((a) => ({ ...a, [pecaSel.id]: e.target.checked }));
-                    if (!e.target.checked) updPeca({ motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null });
+                    if (!e.target.checked) updPeca({ motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null, motor_porte: null });
                   }}
                 />
                 Deseja incluir motor?
@@ -1126,7 +1126,7 @@ export default function Configurador() {
                         )}
                         <Button
                           type="button" size="sm" variant="dangerOutline" className="h-8 w-fit"
-                          onClick={() => updPeca({ motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null })}
+                          onClick={() => updPeca({ motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null, motor_porte: null })}
                         >
                           Remover motor
                         </Button>
