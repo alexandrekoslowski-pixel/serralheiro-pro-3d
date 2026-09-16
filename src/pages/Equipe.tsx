@@ -119,6 +119,12 @@ export default function Equipe() {
               <Input className="mt-1.5" maxLength={100} value={edicao?.nome ?? ""} onChange={(e) => setEdicao((n) => n && { ...n, nome: e.target.value })} />
             </div>
             <div>
+              <Label>E-mail de acesso</Label>
+              <Input className="mt-1.5" type="email" placeholder="nome@email.com" value={edicao?.email ?? ""}
+                     onChange={(e) => setEdicao((n) => n && { ...n, email: e.target.value })} />
+              <p className="mt-1 text-xs text-muted-foreground">Ao trocar, a pessoa passa a entrar com o novo e-mail e a mesma senha.</p>
+            </div>
+            <div>
               <Label>Papel</Label>
               <Select value={edicao?.role ?? "vendedora"} onValueChange={(v) => setEdicao((n) => n && { ...n, role: v as Papel })}>
                 <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
