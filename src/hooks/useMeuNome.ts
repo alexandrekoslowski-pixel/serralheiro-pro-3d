@@ -1,25 +1,27 @@
 // Nome do usuário logado (para filtrar o que é dele no sistema).
 import { useEffect, useState } from "react";
 import { useSessao } from "@/lib/sessao";
-import { meuPerfil } from "@/lib/gestao";
-import { assinarDados } from "@/lib/storage";
+import { EQUIPE_ATUALIZADA_EVENTO, meuPerfil } from "@/lib/gestao";
 
 export function useMeuNome(): string {
   const { session } = useSessao();
   const [nome, setNome] = useState("");
 
-  const recarregar = () => {
+  useEffect(() => {
     const uid = session?.user?.id;
     if (!uid) return;
-    void meuPerfil(uid)
-      .then((p) => { setNome((p.nome ?? "").trim()); })
+    let vivo = true;
+    const recarregar = () => void meuPerfil(uid)
+      .then((p) => { if (vivo) setNome((p.nome ?? "").trim()); })
       .catch(() => undefined);
-  };
-
-  useEffect(() => {
     recarregar();
-    // Re-carrega se houver mudanças nos dados (ex: renomeação na Equipe)
-    return assinarDados(recarregar);
+    window.addEventListener(EQUIPE_ATUALIZADA_EVENTO, recarregar);
+    const intervalo = window.setInterval(recarregar, 30_000);
+    return () => {
+      vivo = false;
+      window.clearInterval(intervalo);
+      window.removeEventListener(EQUIPE_ATUALIZADA_EVENTO, recarregar);
+    };
   }, [session?.user?.id]);
 
   return nome;

@@ -107,6 +107,8 @@ export const PAPEIS: { id: Papel; nome: string; descricao: string }[] = [
   { id: "serralheiro", nome: "Serralheiro", descricao: "Apenas as ordens dele, no celular" },
 ];
 
+export const EQUIPE_ATUALIZADA_EVENTO = "spro:equipe-atualizada";
+
 const dono = async (): Promise<string> => {
   const { data } = await supabase.auth.getUser();
   const uid = data.user?.id as string;
@@ -332,9 +334,14 @@ export async function definirPapel(m: { email: string; role: Papel; nome: string
   if (error) throw error;
 }
 
-export async function atualizarMembro(id: string, patch: { nome?: string; role?: Papel }): Promise<void> {
-  const { error } = await supabase.from("user_roles").update(patch as never).eq("id", id);
+export async function atualizarMembro(id: string, patch: { nome: string; role: Papel }): Promise<void> {
+  const { error } = await supabase.rpc("atualizar_membro_e_vendas", {
+    _membro_id: id,
+    _nome: patch.nome,
+    _role: patch.role,
+  });
   if (error) throw error;
+  window.dispatchEvent(new Event(EQUIPE_ATUALIZADA_EVENTO));
 }
 
 export async function removerMembro(id: string): Promise<void> {

@@ -718,7 +718,7 @@ export default function Configurador() {
                 ) : (
                   <Input
                     className="h-9"
-                    placeholder="Cadastre a equipe em Empresa & Catálogo"
+                    placeholder="Cadastre a pessoa no menu Equipe"
                     value={projeto.vendedora ?? ""}
                     onChange={(e) => upd("vendedora", e.target.value)}
                   />

@@ -1,14 +1,11 @@
-// Lista de vendedores disponíveis: equipe (gestores e vendedoras)
-// e nomes já usados em orçamentos.
-import { useEffect, useMemo, useState } from "react";
-import { listarEquipe } from "@/lib/gestao";
-import { listarProjetos, assinarDados } from "@/lib/storage";
+// Lista de vendedores disponíveis: gestores e vendedoras cadastrados na Equipe.
+import { useCallback, useEffect, useState } from "react";
+import { EQUIPE_ATUALIZADA_EVENTO, listarEquipe } from "@/lib/gestao";
 
 export function useVendedores(): string[] {
   const [equipe, setEquipe] = useState<string[]>([]);
-  const [projetos, setProjetos] = useState(listarProjetos());
 
-  const recarregarEquipe = () => {
+  const recarregarEquipe = useCallback(() => {
     void listarEquipe()
       .then((membros) => {
         setEquipe(
@@ -19,22 +16,13 @@ export function useVendedores(): string[] {
         );
       })
       .catch(() => undefined);
-  };
+  }, []);
 
   useEffect(() => {
     recarregarEquipe();
-    // Re-carrega a equipe e projetos quando houver mudanças no storage local
-    return assinarDados(() => {
-      setProjetos(listarProjetos());
-      recarregarEquipe();
-    });
-  }, []);
+    window.addEventListener(EQUIPE_ATUALIZADA_EVENTO, recarregarEquipe);
+    return () => window.removeEventListener(EQUIPE_ATUALIZADA_EVENTO, recarregarEquipe);
+  }, [recarregarEquipe]);
 
-  return useMemo(() => {
-    const set = new Set<string>(equipe);
-    projetos.forEach((p) => {
-      if (p.vendedora) set.add(p.vendedora.trim());
-    });
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [equipe, projetos]);
+  return [...new Set(equipe)].sort((a, b) => a.localeCompare(b));
 }
