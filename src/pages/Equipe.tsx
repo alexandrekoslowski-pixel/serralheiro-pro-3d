@@ -40,12 +40,24 @@ export default function Equipe() {
   const salvarEdicao = async () => {
     if (!edicao) return;
     if (!edicao.nome.trim()) { toast.error("Informe o nome"); return; }
+    const novoEmail = edicao.email.trim().toLowerCase();
+    const trocouEmail = novoEmail !== edicao.emailOriginal.trim().toLowerCase();
+    if (trocouEmail) {
+      if (!novoEmail) { toast.error("Informe o e-mail"); return; }
+      const mensagem = primeiraMensagem(emailOpcionalSchema.safeParse(novoEmail));
+      if (mensagem) { toast.error(mensagem); return; }
+    }
     try {
-    const antigo = equipe.find(m => m.id === edicao.id)?.nome || '';
+      const antigo = equipe.find(m => m.id === edicao.id)?.nome || '';
       await atualizarMembro(edicao.id, { nome: edicao.nome.trim(), role: edicao.role });
       if (antigo && antigo !== edicao.nome.trim()) renomearVendedor(antigo, edicao.nome.trim());
-      setEdicao(null); await recarregar(); toast.success("Nome atualizado");
-    } catch { toast.error("Não foi possível salvar"); }
+      if (trocouEmail) await atualizarEmailMembro(edicao.id, novoEmail);
+      setEdicao(null); await recarregar();
+      toast.success(trocouEmail ? "Dados atualizados. Ela passa a entrar com o novo e-mail." : "Nome atualizado");
+    } catch (e) {
+      if (e instanceof EmailEmUso) toast.error("Esse e-mail já está em uso por outra conta");
+      else toast.error("Não foi possível salvar");
+    }
   };
 
   if (papel !== "gestor") {
