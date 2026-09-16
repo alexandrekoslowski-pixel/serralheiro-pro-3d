@@ -175,6 +175,7 @@ export default function Configurador() {
   // Motores e kits cadastrados em Materiais, para escolher na peça
   const [motores, setMotores] = useState<Material[]>([]);
   const [buscaMotor, setBuscaMotor] = useState("");
+  const [motorAberto, setMotorAberto] = useState<Record<string, boolean>>({});
   useEffect(() => {
     let vivo = true;
     void listarMateriais()
