@@ -12,7 +12,7 @@ const peca = (nome: string, tipologia: Peca["tipologia"]): Peca => (({
   fixacao: "chumbado",
   fixacaoLados: "dentro",
   checklist_respostas: {},
-} as Peca);
+}) as unknown as Peca);
 
 describe("nomes automáticos das peças", () => {
   it("usa o nome completo do produto", () => {
