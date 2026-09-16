@@ -41,6 +41,8 @@ export interface Peca {
   motor_nome?: string;
   motor_custo?: number | null;
   motor_valor?: number | null;
+  /** Porte do motor escolhido ("1/4" ou "1/2"), para conferir se atende o vão. */
+  motor_porte?: string | null;
   checklist_respostas: RespostasChecklist;
 
 }
@@ -403,6 +405,7 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
     motor_nome: pc.motor_nome ?? "",
     motor_custo: pc.motor_custo ?? null,
     motor_valor: pc.motor_valor ?? null,
+    motor_porte: pc.motor_porte ?? null,
   }));
 
   base.servicos_politica = Array.isArray(base.servicos_politica) ? base.servicos_politica : [];
