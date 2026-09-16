@@ -1,0 +1,1 @@
+ALTER FUNCTION private.atualizar_membro_e_vendas_impl(uuid, uuid, text, public.app_role) SECURITY INVOKER;

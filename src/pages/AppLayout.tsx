@@ -6,23 +6,16 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSessao } from "@/lib/sessao";
 import { projetosLocaisPendentes, importarLocaisParaNuvem } from "@/lib/storage";
-import { meuPerfil, PAPEIS, type Papel } from "@/lib/gestao";
+import { PAPEIS, type Papel } from "@/lib/gestao";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeProjetos } from "@/hooks/useRealtimeProjetos";
+import { useMeuNome } from "@/hooks/useMeuNome";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const [pendentes, setPendentes] = useState(0);
-  const [nome, setNome] = useState("");
+  const nome = useMeuNome();
   const { sair, papel, session } = useSessao();
-
-  useEffect(() => {
-    const uid = session?.user?.id;
-    if (!uid) return;
-    let vivo = true;
-    void meuPerfil(uid).then((p) => { if (vivo) setNome(p.nome); }).catch(() => undefined);
-    return () => { vivo = false; };
-  }, [session?.user?.id]);
 
   useEffect(() => { setPendentes(projetosLocaisPendentes()); }, []);
 

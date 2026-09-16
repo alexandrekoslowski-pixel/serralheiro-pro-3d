@@ -28,6 +28,7 @@ import Visualizador3DClient from "@/components/Visualizador3DClient";
 import type { CameraPreset } from "@/components/Visualizador3D";
 import { useAnimatedNumber } from "@/hooks/useAnimatedNumber";
 import { useVendedores } from "@/hooks/useVendedores";
+import { useMeuNome } from "@/hooks/useMeuNome";
 import { type Cliente, type Material, listarClientes, listarMateriais, nomeClienteValido, sincronizarClienteDoOrcamento } from "@/lib/gestao";
 
 import {
@@ -147,6 +148,7 @@ export default function Configurador() {
   const empresa = useMemo(() => obterEmpresa(), []);
   const catalogo = useMemo(() => obterCatalogo(), []);
   const vendedores = useVendedores();
+  const meuNome = useMeuNome();
 
   const resultado = useMemo(() => {
     if (!projeto) return null;
@@ -486,7 +488,7 @@ export default function Configurador() {
     if (aba) aba.location.href = url;
     else abrirWhatsApp(numero, textoOrcamento(projeto, totalProposta, empresa, link));
     const agora = new Date().toISOString();
-    const nome = (session?.user.user_metadata?.nome as string) || session?.user.email || projeto.vendedora || "";
+    const nome = meuNome || projeto.vendedora || session?.user.email || "";
     aplicar({
       enviado_em: agora,
       enviado_por_nome: nome,
@@ -718,7 +720,7 @@ export default function Configurador() {
                 ) : (
                   <Input
                     className="h-9"
-                    placeholder="Cadastre a equipe em Empresa & Catálogo"
+                    placeholder="Cadastre a pessoa no menu Equipe"
                     value={projeto.vendedora ?? ""}
                     onChange={(e) => upd("vendedora", e.target.value)}
                   />

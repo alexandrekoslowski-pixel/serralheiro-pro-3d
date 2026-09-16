@@ -135,7 +135,7 @@ export default function ProjetosLista() {
   }, [projetos, busca, pend, ordem, progressos]);
 
   const criar = () => {
-    const vendedor = (session?.user.user_metadata?.nome as string | undefined) ?? session?.user.email ?? "";
+    const vendedor = meuNome || session?.user.email || "";
     const novo = criarOrcamentoRapido(vendedor);
     navigate(`/app/projeto/${novo.id}`, { state: { novoOrcamento: true } });
   };

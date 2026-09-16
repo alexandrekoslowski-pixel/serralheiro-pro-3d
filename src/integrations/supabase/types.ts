@@ -806,6 +806,17 @@ export type Database = {
       }
     }
     Functions: {
+      atualizar_membro_e_vendas: {
+        Args: {
+          _membro_id: string
+          _nome: string
+          _role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: {
+          nome_anterior: string
+          nome_atual: string
+        }[]
+      }
       dono_atual: { Args: { _user_id: string }; Returns: string }
       equipe_detalhada: {
         Args: never

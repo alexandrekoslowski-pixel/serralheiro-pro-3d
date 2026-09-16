@@ -1,19 +1,13 @@
-// Lista de vendedores disponíveis: equipe (gestores e vendedoras), nomes
-// cadastrados na empresa e nomes já usados em orçamentos.
-import { useEffect, useMemo, useState } from "react";
-import { listarEquipe } from "@/lib/gestao";
-import { listarProjetos, obterEmpresa } from "@/lib/storage";
+// Lista de vendedores disponíveis: gestores e vendedoras cadastrados na Equipe.
+import { useCallback, useEffect, useState } from "react";
+import { EQUIPE_ATUALIZADA_EVENTO, listarEquipe } from "@/lib/gestao";
 
 export function useVendedores(): string[] {
   const [equipe, setEquipe] = useState<string[]>([]);
-  const projetos = listarProjetos();
-  const empresa = obterEmpresa();
 
-  useEffect(() => {
-    let vivo = true;
+  const recarregarEquipe = useCallback(() => {
     void listarEquipe()
       .then((membros) => {
-        if (!vivo) return;
         setEquipe(
           membros
             .filter((m) => m.role === "gestor" || m.role === "vendedora")
@@ -22,13 +16,13 @@ export function useVendedores(): string[] {
         );
       })
       .catch(() => undefined);
-    return () => { vivo = false; };
   }, []);
 
-  return useMemo(() => {
-    const set = new Set<string>(equipe);
-    (empresa.vendedoras ?? []).filter(Boolean).forEach((v) => set.add(v.trim()));
-    projetos.forEach((p) => { if (p.vendedora) set.add(p.vendedora.trim()); });
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [equipe, empresa, projetos]);
+  useEffect(() => {
+    recarregarEquipe();
+    window.addEventListener(EQUIPE_ATUALIZADA_EVENTO, recarregarEquipe);
+    return () => window.removeEventListener(EQUIPE_ATUALIZADA_EVENTO, recarregarEquipe);
+  }, [recarregarEquipe]);
+
+  return [...new Set(equipe)].sort((a, b) => a.localeCompare(b));
 }
