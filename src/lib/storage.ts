@@ -45,6 +45,35 @@ export interface Peca {
 
 }
 
+/** Rótulo curto usado para identificar peças automáticas nos documentos. */
+export function categoriaNomePeca(tipologia: TipologiaId): string {
+  const nome = tipologiaPorId(tipologia).nome;
+  if (/^Portão\b/i.test(nome)) return "Portão";
+  if (/^Janela\b/i.test(nome)) return "Janela";
+  if (/^Grade\b/i.test(nome)) return "Grade";
+  if (/^Estrutura\b/i.test(nome)) return "Estrutura";
+  if (/^Veneziana\b/i.test(nome)) return "Veneziana";
+  return nome.split(/\s+/)[0] || "Item";
+}
+
+const NOME_PECA_AUTOMATICO = /^(?:Peça|Portão|Janela|Grade|Estrutura|Veneziana|Item)\s+\d+$/i;
+
+/** Numera nomes automáticos por categoria sem sobrescrever nomes personalizados. */
+export function renumerarNomesAutomaticosPecas(pecas: Peca[]): Peca[] {
+  const contadores = new Map<string, number>();
+  return pecas.map((peca) => {
+    const categoria = categoriaNomePeca(peca.tipologia);
+    const numero = (contadores.get(categoria) ?? 0) + 1;
+    contadores.set(categoria, numero);
+    const nomeAtual = (peca.nome ?? "").trim();
+    const automatico = !nomeAtual
+      || NOME_PECA_AUTOMATICO.test(nomeAtual)
+      || nomeAtual.toLocaleLowerCase("pt-BR") === tipologiaPorId(peca.tipologia).nome.toLocaleLowerCase("pt-BR")
+      || /\s*\((?:c[oó]pia)\)\s*$/i.test(nomeAtual);
+    return automatico ? { ...peca, nome: `${categoria} ${numero}` } : peca;
+  });
+}
+
 /** Medição fina feita no local (em cima das fotos anotadas). */
 export interface MedicaoOS {
   largura_mm: number | null;
@@ -324,7 +353,7 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
   if (!Array.isArray(base.pecas) || base.pecas.length === 0) {
     base.pecas = [{
       id: gerarId(),
-      nome: "Peça 1",
+      nome: `${categoriaNomePeca(base.tipologia)} 1`,
       tipologia: base.tipologia,
       largura_mm: base.largura_mm,
       altura_mm: base.altura_mm,
@@ -342,12 +371,9 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
         if (chave.startsWith(prefixo)) respostas[chave.slice(prefixo.length)] = valor;
       });
     }
-    const nome = /^Peça\s+\d+$/i.test((peca.nome ?? "").trim())
-      || /\s*\((?:c[oó]pia)\)\s*$/i.test(peca.nome ?? "")
-      ? `Peça ${index + 1}`
-      : peca.nome;
-    return { ...peca, nome, checklist_respostas: respostas };
+    return { ...peca, checklist_respostas: respostas };
   });
+  base.pecas = renumerarNomesAutomaticosPecas(base.pecas);
   // Peças antigas sem sistema de fixação / produto da política recebem o padrão.
   base.pecas = base.pecas.map((pc) => ({
     ...pc,
@@ -644,7 +670,7 @@ export function criarOrcamentoRapido(vendedora = ""): ProjetoLocal {
     descontoGeralPct: 0,
     pecas: [{
       id: gerarId(),
-      nome: "Peça 1",
+      nome: `${categoriaNomePeca(tipologia)} 1`,
       tipologia,
       largura_mm: tip.larguraDefault,
       altura_mm: tip.alturaDefault,

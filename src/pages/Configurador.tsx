@@ -36,6 +36,7 @@ import {
 import {
   ProjetoLocal, Peca, obterProjeto, salvarProjeto, nomeSugeridoOrcamento,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
+  categoriaNomePeca, renumerarNomesAutomaticosPecas,
 } from "@/lib/storage";
 import { progressoOrcamento, pendenciasOrdem } from "@/lib/progressoOrcamento";
 import { valorACobrar } from "@/lib/financeiro";
@@ -295,7 +296,12 @@ export default function Configurador() {
       patch.largura_mm = Math.min(Math.max(pecaSel.largura_mm, novo.larguraMin), novo.larguraMax);
       patch.altura_mm = Math.min(Math.max(pecaSel.altura_mm, novo.alturaMin), novo.alturaMax);
     }
-    updPeca(patch);
+    setProjeto({
+      ...projeto,
+      pecas: renumerarNomesAutomaticosPecas(
+        projeto.pecas.map((x) => x.id === pecaSel.id ? { ...x, ...patch } : x),
+      ),
+    });
   };
 
 
@@ -303,7 +309,7 @@ export default function Configurador() {
     const t = tipologiaPorId(pecaSel.tipologia);
     const nova: Peca = {
       id: gerarId(),
-      nome: `Peça ${projeto.pecas.length + 1}`,
+      nome: `${categoriaNomePeca(pecaSel.tipologia)} 1`,
       tipologia: pecaSel.tipologia,
       largura_mm: t.larguraDefault,
       altura_mm: t.alturaDefault,
@@ -312,7 +318,7 @@ export default function Configurador() {
       fixacaoLados: pecaSel.fixacaoLados ?? FIXACAO_LADOS_PADRAO,
       checklist_respostas: {},
     };
-    setProjeto({ ...projeto, pecas: [...projeto.pecas, nova] });
+    setProjeto({ ...projeto, pecas: renumerarNomesAutomaticosPecas([...projeto.pecas, nova]) });
     setPecaSelId(nova.id);
   };
 
@@ -320,18 +326,16 @@ export default function Configurador() {
     const nova: Peca = {
       ...pecaSel,
       id: gerarId(),
-      nome: `Peça ${projeto.pecas.length + 1}`,
+      nome: `${categoriaNomePeca(pecaSel.tipologia)} 1`,
       checklist_respostas: { ...pecaSel.checklist_respostas },
     };
-    setProjeto({ ...projeto, pecas: [...projeto.pecas, nova] });
+    setProjeto({ ...projeto, pecas: renumerarNomesAutomaticosPecas([...projeto.pecas, nova]) });
     setPecaSelId(nova.id);
   };
 
   const delPeca = (id: string) => {
     if (projeto.pecas.length <= 1) { toast.error("O orçamento precisa de ao menos uma peça"); return; }
-    const restantes = projeto.pecas
-      .filter((x) => x.id !== id)
-      .map((x, index) => /^Peça\s+\d+$/i.test(x.nome.trim()) ? { ...x, nome: `Peça ${index + 1}` } : x);
+    const restantes = renumerarNomesAutomaticosPecas(projeto.pecas.filter((x) => x.id !== id));
     setProjeto({
       ...projeto,
       pecas: restantes,
