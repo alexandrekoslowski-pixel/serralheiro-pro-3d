@@ -1013,7 +1013,7 @@ export default function Configurador() {
                 type="button" size="sm"
                 variant={pecaSel.automacao_id ? "outline" : "default"}
                 className={cn("h-auto min-h-10", !pecaSel.automacao_id && "bg-primary text-primary-foreground")}
-                onClick={() => updPeca({ automacao_id: null, automacao_valor: null, motor_material_id: null, motor_nome: "", motor_custo: null, motor_valor: null, motor_porte: null })}
+                onClick={() => updPeca({ automacao_id: null, automacao_valor: null })}
               >
                 Sem automação
               </Button>
