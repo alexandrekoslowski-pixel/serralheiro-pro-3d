@@ -757,6 +757,35 @@ export function salvarProjeto(p: ProjetoLocal): void {
   }
 }
 
+
+export function renomearVendedor(antigo: string, novo: string): void {
+  if (!antigo || !novo || antigo === novo) return;
+
+  // 1. Empresa
+  if (empresa.vendedoras?.includes(antigo)) {
+    empresa.vendedoras = empresa.vendedoras.map(v => v === antigo ? novo : v);
+    salvarEmpresa(empresa);
+  }
+
+  // 2. Projetos
+  let mudouQualquer = false;
+  projetos = projetos.map(p => {
+    if ((p.vendedora || '').trim() === antigo.trim()) {
+      mudouQualquer = true;
+      const atualizado = { ...p, vendedora: novo, updated_at: new Date().toISOString() };
+      // Sincroniza cada um na nuvem
+      if (userId) {
+        void supabase.from('projetos')
+          .upsert(projetoParaLinha(atualizado) as never)
+          .then(({ error }) => { if (error) console.error('Falha ao sincronizar renomeação', error); });
+      }
+      return atualizado;
+    }
+    return p;
+  });
+
+  if (mudouQualquer) notificar();
+}
 export function deletarProjeto(id: string): void {
   projetos = projetos.filter((p) => p.id !== id);
   pagamentos = pagamentos.filter((x) => x.projeto_id !== id);
