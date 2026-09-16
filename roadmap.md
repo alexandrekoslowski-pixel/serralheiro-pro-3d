@@ -29,3 +29,4 @@
 - [x] Trilha de progresso do orçamento (enviado, retorno, comprovante, oficina) e lista "o que falta fazer"
 - [x] Link curto do PDF do orçamento (/o/<código>) — cliente baixa sem ver a URL assinada enorme
 - [x] Remover lista de materiais do PDF do orçamento (cliente vê só peças, serviços, frete e total)
+- [x] Mover o menu principal para uma barra lateral compacta e liberar mais largura para as telas operacionais

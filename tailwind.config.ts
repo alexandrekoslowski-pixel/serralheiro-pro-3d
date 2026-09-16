@@ -73,8 +73,8 @@ export default {
         sm: "calc(var(--radius) - 4px)",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Archivo Black", "Inter", "system-ui", "sans-serif"],
+        sans: ["Hind", "system-ui", "sans-serif"],
+        display: ["Archivo Black", "Hind", "system-ui", "sans-serif"],
       },
       keyframes: {
         "accordion-down": {

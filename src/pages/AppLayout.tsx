@@ -60,112 +60,124 @@ export default function AppLayout() {
   const navItems = todos.filter((it) => it.papeis.includes(papel));
 
 
-  return (
-    <div className="flex min-h-screen flex-col">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur">
-        <div className="container flex min-h-14 items-center justify-between gap-3 py-2">
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              className="grid h-9 w-9 shrink-0 place-items-center rounded border border-border lg:hidden"
-              onClick={() => setOpen((v) => !v)}
-              aria-label="Abrir menu"
-            >
-              {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </button>
-            <Link to="/app" className="flex items-center gap-2">
-              <div className="grid h-8 w-8 place-items-center rounded bg-gradient-orange shadow-orange">
-                <Wrench className="h-4 w-4 text-primary-foreground" />
-              </div>
-              <span className="font-display text-sm sm:text-base">Serralheiro Pro 3D</span>
-            </Link>
-          </div>
+  const papelNome = PAPEIS.find((p) => p.id === papel)?.nome ?? papel;
 
-          <div className="flex shrink-0 items-center gap-2">
-            {nome && (
-              <span className="hidden items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground sm:flex">
-                <UserCircle className="h-4 w-4 text-muted-foreground" />
-                <span className="max-w-[12rem] truncate">{nome}</span>
-                <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-primary">
-                  {PAPEIS.find((p) => p.id === papel)?.nome ?? papel}
-                </span>
-              </span>
-            )}
-            {nome && (
-              <span className="flex items-center gap-1.5 sm:hidden" title={`${nome} · ${PAPEIS.find((p) => p.id === papel)?.nome ?? papel}`}>
-                <UserCircle className="h-5 w-5 text-muted-foreground" />
-              </span>
-            )}
-            <Button variant="outline" size="sm" className="shrink-0" onClick={sair}>
-              <LogOut className="mr-2 h-3.5 w-3.5" />
-              Sair
-            </Button>
-          </div>
-        </div>
+  const Navegacao = ({ mobile = false }: { mobile?: boolean }) => (
+    <>
+      <Link
+        to="/app"
+        onClick={() => mobile && setOpen(false)}
+        className={cn(
+          "flex items-center border-b border-sidebar-border",
+          mobile ? "min-h-20 gap-3 px-4" : "min-h-24 flex-col justify-center gap-2 px-2",
+        )}
+      >
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-gradient-orange shadow-orange">
+          <Wrench className="h-5 w-5 text-primary-foreground" />
+        </span>
+        <span className={cn("font-display text-sidebar-foreground", mobile ? "text-sm" : "text-[10px] text-center leading-tight")}>
+          {mobile ? "Serralheiro Pro 3D" : <>Serralheiro<br />Pro 3D</>}
+        </span>
+      </Link>
 
-        <nav className="container hidden items-center gap-1 overflow-x-auto border-t border-border py-2 lg:flex [&::-webkit-scrollbar]:hidden">
-          {navItems.map((it) => (
-            <NavLink
-              key={it.to}
-              to={it.to}
-              end={it.end}
-              className={({ isActive }) =>
-                cn(
-                  "flex min-h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-md border px-3 text-sm font-medium transition",
-                  isActive
-                    ? "border-primary bg-primary/10 text-foreground"
-                    : "border-transparent text-muted-foreground hover:border-border hover:bg-card hover:text-foreground",
-                )
-              }
-            >
-              <it.icon className="h-4 w-4" />
-              {it.label}
+      <nav className={cn("min-h-0 flex-1 overflow-y-auto py-3", mobile ? "space-y-1 px-3" : "space-y-1 px-2")} aria-label="Menu principal">
+        {navItems.map((it) => (
+          <NavLink
+            key={it.to}
+            to={it.to}
+            end={it.end}
+            onClick={() => mobile && setOpen(false)}
+            title={!mobile ? it.label : undefined}
+            className={({ isActive }) =>
+              cn(
+                "relative flex min-h-12 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring",
+                mobile ? "items-center gap-3 rounded-md px-3 text-sm font-semibold" : "flex-col items-center justify-center gap-1 rounded-md px-1 py-2 text-center text-[10px] font-semibold leading-none",
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-primary"
+                  : "text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                isActive && !mobile && "before:absolute before:left-[-0.5rem] before:top-2 before:h-8 before:w-1 before:rounded-r-full before:bg-sidebar-primary",
+              )
+            }
+          >
+            <span className="relative grid h-6 w-6 shrink-0 place-items-center">
+              <it.icon className="h-5 w-5" />
               {it.to === "/app/oficina" && medicoes > 0 && (
-                <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-background">{medicoes}</span>
+                <span className="absolute -right-2 -top-2 grid min-h-4 min-w-4 place-items-center rounded-full bg-warning px-1 text-[9px] font-bold text-warning-foreground">{medicoes}</span>
               )}
-            </NavLink>
-          ))}
-        </nav>
+            </span>
+            <span className={cn(!mobile && "w-full truncate")}>{it.label}</span>
+          </NavLink>
+        ))}
+      </nav>
 
-        {open && (
-          <div className="border-t border-border bg-background lg:hidden">
-            <nav className="container flex flex-col gap-1 py-2">
-              {navItems.map((it) => (
-                <NavLink
-                  key={it.to}
-                  to={it.to}
-                  end={it.end}
-                  onClick={() => setOpen(false)}
-                  className={({ isActive }) =>
-                    cn("flex items-center gap-2 rounded px-3 py-2 text-sm", isActive ? "bg-card" : "hover:bg-card")
-                  }
-                >
-                  <it.icon className="h-4 w-4" />
-                  {it.label}
-                  {it.to === "/app/oficina" && medicoes > 0 && (
-                    <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-background">{medicoes}</span>
-                  )}
-                </NavLink>
-              ))}
-            </nav>
+      <div className={cn("border-t border-sidebar-border", mobile ? "space-y-2 p-3" : "space-y-2 p-2")}>
+        {nome && (
+          <div className={cn("flex items-center rounded-md bg-sidebar-accent", mobile ? "gap-3 px-3 py-2" : "flex-col gap-1 px-1 py-2 text-center")} title={`${nome} · ${papelNome}`}>
+            <UserCircle className="h-5 w-5 shrink-0 text-sidebar-primary" />
+            <span className={cn("min-w-0", mobile ? "flex-1" : "w-full")}>
+              <span className="block truncate text-xs font-semibold text-sidebar-foreground">{nome}</span>
+              <span className="block truncate text-[9px] uppercase text-muted-foreground">{papelNome}</span>
+            </span>
           </div>
         )}
-      </header>
+        <Button variant="soft" size={mobile ? "sm" : "icon"} className={cn(mobile ? "w-full" : "w-full")} onClick={sair} title="Sair">
+          <LogOut className="h-4 w-4" />
+          {mobile && "Sair"}
+        </Button>
+      </div>
+    </>
+  );
 
-      {pendentes > 0 && (
-        <div className="border-b border-border bg-card">
-          <div className="container flex flex-wrap items-center justify-between gap-2 py-2 text-sm">
-            <span>{pendentes} orçamento(s) antigos estão salvos só neste aparelho.</span>
-            <div className="flex gap-2">
-              <Button size="sm" onClick={importar} className="bg-gradient-orange text-primary-foreground">Enviar para minha conta</Button>
-              <Button size="sm" variant="soft" onClick={() => setPendentes(0)}>Agora não</Button>
-            </div>
-          </div>
+  return (
+    <div className="flex min-h-screen w-full bg-background">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[5.5rem] flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+        <Navegacao />
+      </aside>
+
+      {open && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button type="button" className="absolute inset-0 bg-background/80 backdrop-blur-sm" onClick={() => setOpen(false)} aria-label="Fechar menu" />
+          <aside className="relative flex h-full w-72 max-w-[86vw] flex-col border-r border-sidebar-border bg-sidebar shadow-2xl">
+            <Button variant="soft" size="icon" className="absolute right-3 top-4 z-10" onClick={() => setOpen(false)} aria-label="Fechar menu">
+              <X className="h-5 w-5" />
+            </Button>
+            <Navegacao mobile />
+          </aside>
         </div>
       )}
 
-      <main className="flex-1">
-        <Outlet />
-      </main>
+      <div className="flex min-h-screen min-w-0 flex-1 flex-col lg:pl-[5.5rem]">
+        <header className="sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-border bg-background/95 px-4 backdrop-blur lg:hidden">
+          <Button variant="soft" size="icon" onClick={() => setOpen(true)} aria-label="Abrir menu">
+            <Menu className="h-5 w-5" />
+          </Button>
+          <Link to="/app" className="flex min-w-0 items-center gap-2">
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-gradient-orange">
+              <Wrench className="h-4 w-4 text-primary-foreground" />
+            </span>
+            <span className="truncate font-display text-xs sm:text-sm">Serralheiro Pro 3D</span>
+          </Link>
+          <Button variant="soft" size="icon" onClick={sair} aria-label="Sair">
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </header>
+
+        {pendentes > 0 && (
+          <div className="border-b border-border bg-card">
+            <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm lg:px-6">
+              <span>{pendentes} orçamento(s) antigos estão salvos só neste aparelho.</span>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={importar}>Enviar para minha conta</Button>
+                <Button size="sm" variant="soft" onClick={() => setPendentes(0)}>Agora não</Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <main className="min-w-0 flex-1">
+          <Outlet />
+        </main>
+      </div>
     </div>
   );
 }
