@@ -54,7 +54,7 @@ import { calcularProjeto, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
 import {
-  FRETE_MINIMO, SERVICOS_POLITICA, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
+  FRETE_MINIMO, SERVICOS_POLITICA, SERVICO_MINIMO, servicoTemMinimo, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
   precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
   precoAutomacaoPeca, precoMotorPeca, precoMotorSugerido, tipologiaDoItem, automacaoPolitica,
   porteMotorRecomendado, porteDoMotor, motorSubdimensionado,
