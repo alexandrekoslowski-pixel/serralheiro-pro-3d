@@ -310,7 +310,7 @@ export default function Configurador() {
     const nova: Peca = {
       id: gerarId(),
       nome: categoriaNomePeca(pecaSel.tipologia),
-      largura_mm: t.larguraDefault,
+      tipologia: pecaSel.tipologia,
       altura_mm: t.alturaDefault,
       cor: pecaSel.cor,
       fixacao: pecaSel.fixacao ?? FIXACAO_PADRAO,
