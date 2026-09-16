@@ -116,15 +116,25 @@ export const POLITICA_PADRAO: ItemPolitica[] = [
 export const SERVICOS_POLITICA: { id: string; nome: string; valor: number }[] = [
   { id: "instalacao-simples", nome: "Instalação simples", valor: 260 },
   { id: "instalacao-complexa", nome: "Instalação complexa", valor: 500 },
+  { id: "galvanizacao", nome: "Galvanização", valor: 250 },
+  { id: "jateamento", nome: "Jateamento", valor: 250 },
 ];
+
+/** Taxa mínima cobrada em serviços de tratamento de superfície. */
+export const SERVICO_MINIMO = 250;
+
+/** Serviços que nunca podem ficar abaixo da taxa mínima. */
+export const SERVICOS_COM_MINIMO = ["galvanizacao", "jateamento"];
+
+export const servicoTemMinimo = (id: string) => SERVICOS_COM_MINIMO.includes(id);
 
 /** Automações escolhidas peça a peça. */
 export const AUTOMACOES_POLITICA: { id: string; nome: string; valor: number }[] = [
-  { id: "automacao-deslizante", nome: "Motor deslizante", valor: 380 },
+  { id: "automacao-deslizante", nome: "Motor deslizante", valor: 350 },
   { id: "automacao-pivotante", nome: "Motor pivotante", valor: 750 },
   { id: "automacao-basculante", nome: "Motor basculante", valor: 450 },
-  { id: "automacao-fechadura-eletrica", nome: "Fechadura elétrica", valor: 350 },
-  { id: "automacao-eletroima", nome: "Eletroímã", valor: 400 },
+  { id: "automacao-fechadura-eletrica", nome: "Fechadura elétrica", valor: 250 },
+  { id: "automacao-eletroima", nome: "Eletroímã (par de travas)", valor: 420 },
 ];
 
 export const automacaoPolitica = (id?: string | null) => AUTOMACOES_POLITICA.find((a) => a.id === id);

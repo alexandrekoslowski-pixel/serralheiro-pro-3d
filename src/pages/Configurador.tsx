@@ -54,7 +54,7 @@ import { calcularProjeto, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
 import { gerarOrcamentoPDF } from "@/lib/pdf";
 import {
-  FRETE_MINIMO, SERVICOS_POLITICA, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
+  FRETE_MINIMO, SERVICOS_POLITICA, SERVICO_MINIMO, servicoTemMinimo, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
   precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
   precoAutomacaoPeca, precoMotorPeca, precoMotorSugerido, tipologiaDoItem, automacaoPolitica,
   porteMotorRecomendado, porteDoMotor, motorSubdimensionado,
@@ -1250,27 +1250,66 @@ export default function Configurador() {
                   </Button>
                 );
               })}
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="h-auto min-h-10"
+                onClick={() => upd("servicos_politica", [
+                  ...servicosEscolhidos,
+                  { id: `extra-${Date.now()}`, nome: "", valor: 0 },
+                ])}
+              >
+                <Plus className="mr-1 h-4 w-4" /> Outro serviço
+              </Button>
             </div>
 
             {servicosEscolhidos.length > 0 && (
               <div className="mt-3 space-y-2">
-                {servicosEscolhidos.map((s) => (
-                  <div key={s.id} className="grid grid-cols-12 items-center gap-2">
-                    <span className="col-span-7 truncate text-sm sm:col-span-9">{s.nome}</span>
-                    <Input
-                      className="col-span-4 h-9 text-right sm:col-span-2"
-                      mask="moeda"
-                      value={String(s.valor).replace(".", ",")}
-                      onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: numeroMascarado(e.target.value) } : x))}
-                    />
-                    <Button
-                      size="icon" variant="dangerOutline" className="col-span-1" title="Remover serviço"
-                      onClick={() => upd("servicos_politica", servicosEscolhidos.filter((x) => x.id !== s.id))}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                {servicosEscolhidos.map((s) => {
+                  const livre = s.id.startsWith("extra-");
+                  const comMinimo = servicoTemMinimo(s.id);
+                  return (
+                  <div key={s.id}>
+                    <div className="grid grid-cols-12 items-center gap-2">
+                      {livre ? (
+                        <Input
+                          className="col-span-7 h-9 sm:col-span-9"
+                          placeholder="Nome do serviço"
+                          maxLength={60}
+                          value={s.nome}
+                          onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, nome: e.target.value } : x))}
+                        />
+                      ) : (
+                        <span className="col-span-7 truncate text-sm sm:col-span-9">{s.nome}</span>
+                      )}
+                      <Input
+                        className="col-span-4 h-9 text-right sm:col-span-2"
+                        mask="moeda"
+                        value={String(s.valor).replace(".", ",")}
+                        onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: numeroMascarado(e.target.value) } : x))}
+                        onBlur={() => {
+                          if (comMinimo && Number(s.valor || 0) < SERVICO_MINIMO) {
+                            upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: SERVICO_MINIMO } : x));
+                            toast.info(`${s.nome}: taxa mínima de ${formatarBRL(SERVICO_MINIMO)}`);
+                          }
+                        }}
+                      />
+                      <Button
+                        size="icon" variant="dangerOutline" className="col-span-1" title="Remover serviço"
+                        onClick={() => upd("servicos_politica", servicosEscolhidos.filter((x) => x.id !== s.id))}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {comMinimo && (
+                      <div className="mt-0.5 text-[11px] text-muted-foreground">
+                        Taxa mínima de {formatarBRL(SERVICO_MINIMO)} — pode aumentar o valor.
+                      </div>
+                    )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
 
