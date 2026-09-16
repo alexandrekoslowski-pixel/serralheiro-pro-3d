@@ -342,7 +342,11 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
         if (chave.startsWith(prefixo)) respostas[chave.slice(prefixo.length)] = valor;
       });
     }
-    return { ...peca, checklist_respostas: respostas };
+    const nome = /^Peça\s+\d+$/i.test((peca.nome ?? "").trim())
+      || /\s*\((?:c[oó]pia)\)\s*$/i.test(peca.nome ?? "")
+      ? `Peça ${index + 1}`
+      : peca.nome;
+    return { ...peca, nome, checklist_respostas: respostas };
   });
   // Peças antigas sem sistema de fixação / produto da política recebem o padrão.
   base.pecas = base.pecas.map((pc) => ({
@@ -640,7 +644,7 @@ export function criarOrcamentoRapido(vendedora = ""): ProjetoLocal {
     descontoGeralPct: 0,
     pecas: [{
       id: gerarId(),
-      nome: tip.nome,
+      nome: "Peça 1",
       tipologia,
       largura_mm: tip.larguraDefault,
       altura_mm: tip.alturaDefault,
