@@ -97,7 +97,7 @@ export default function Equipe() {
             </div>
             <div className="flex items-center gap-2">
               <span className="rounded bg-card px-2 py-1 text-xs">{PAPEIS.find((p) => p.id === m.role)?.nome}</span>
-              <Button size="sm" variant="soft" onClick={() => setEdicao({ id: m.id, nome: m.nome, role: m.role })}>
+              <Button size="sm" variant="soft" onClick={() => setEdicao({ id: m.id, nome: m.nome, role: m.role, email: m.email ?? "", emailOriginal: m.email ?? "" })}>
                 <Pencil className="mr-1 h-3.5 w-3.5" /> Editar
               </Button>
               {m.user_id !== session?.user?.id && (
