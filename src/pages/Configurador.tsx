@@ -13,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
@@ -1669,6 +1668,7 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
   const [texto, setTexto] = useState<string | null>(null);
   const exibido = texto ?? String(mmParaCm(value));
   const maxCm = mmParaCm(max);
+  const minCm = mmParaCm(min);
 
   const confirmar = () => {
     const n = Number(String(exibido).replace(",", "."));
@@ -1680,18 +1680,31 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
     setTexto(null);
   };
 
-  const sliderMax = Math.max(max, value);
-  const sliderMin = Math.min(min, value);
+  const ajustar = (deltaCm: number) => {
+    setTexto(null);
+    const atual = mmParaCm(value);
+    onChange(cmParaMm(Math.max(1, atual + deltaCm)));
+  };
+
+  const foraDoLimite = value < min || value > max;
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-1">
-        <Label>{label}</Label>
-        <div className="flex items-center gap-1">
+      <Label className="mb-1 block">{label}</Label>
+      <div className="flex items-stretch gap-2">
+        <Button
+          type="button" variant="outline" size="icon"
+          className="h-14 w-12 shrink-0 text-lg font-bold"
+          aria-label={`Diminuir ${label} 10 cm`}
+          onClick={() => ajustar(-10)}
+        >
+          −
+        </Button>
+        <div className="relative flex-1">
           <Input
             type="text"
             inputMode="decimal"
-            className="h-7 w-24 text-right text-xs"
+            className="h-14 pr-12 text-center text-2xl font-semibold tabular-nums"
             value={exibido}
             mask="decimal"
             onChange={(e) => setTexto(e.target.value)}
@@ -1699,12 +1712,21 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
             onBlur={confirmar}
             onKeyDown={(e) => { if (e.key === "Enter") e.currentTarget.blur(); }}
           />
-          <span className="text-[10px] text-muted-foreground">cm</span>
+          <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">cm</span>
         </div>
+        <Button
+          type="button" variant="outline" size="icon"
+          className="h-14 w-12 shrink-0 text-lg font-bold"
+          aria-label={`Aumentar ${label} 10 cm`}
+          onClick={() => ajustar(10)}
+        >
+          +
+        </Button>
       </div>
-      <Slider min={sliderMin} max={sliderMax} step={10} value={[value]} onValueChange={([v]) => { setTexto(null); onChange(v); }} />
-      <div className="flex justify-between text-[10px] text-muted-foreground mt-1">
-        <span>{cm(sliderMin)} cm</span><span>{cm(sliderMax)} cm</span>
+      <div className={cn("mt-1 text-[11px]", foraDoLimite ? "text-warning" : "text-muted-foreground")}>
+        {foraDoLimite
+          ? `Fora do usual (${minCm} a ${maxCm} cm) — confirme a medida.`
+          : `Digite em centímetros. Usual: ${minCm} a ${maxCm} cm.`}
       </div>
     </div>
   );
