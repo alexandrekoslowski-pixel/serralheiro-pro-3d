@@ -311,6 +311,7 @@ export default function Configurador() {
       id: gerarId(),
       nome: categoriaNomePeca(pecaSel.tipologia),
       tipologia: pecaSel.tipologia,
+      largura_mm: t.larguraDefault,
       altura_mm: t.alturaDefault,
       cor: pecaSel.cor,
       fixacao: pecaSel.fixacao ?? FIXACAO_PADRAO,
