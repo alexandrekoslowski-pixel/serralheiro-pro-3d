@@ -951,8 +951,15 @@ export default function Configurador() {
               </div>
               <div className="form-field-long">
                 <Label>Nome da peça</Label>
-                <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
-                <p className="mt-1 text-[11px] text-muted-foreground">Aparece na oficina e nos documentos.</p>
+                <Input
+                  className="mt-2"
+                  value={pecaSel.nome}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    updPeca(v.trim() === "" ? { nome: categoriaNomePeca(pecaSel.tipologia), nome_manual: false } : { nome: v, nome_manual: true });
+                  }}
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">Aparece na oficina e nos documentos. Apague o texto para voltar ao nome automático.</p>
               </div>
               <div className="form-field-full grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
                 <SliderMm

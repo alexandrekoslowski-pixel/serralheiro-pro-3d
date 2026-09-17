@@ -23,6 +23,8 @@ import { FixacaoTipo, FixacaoLados, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO } from 
 export interface Peca {
   id: string;
   nome: string;
+  /** Verdadeiro quando a vendedora digitou o nome — nunca renumerar esse nome. */
+  nome_manual?: boolean;
   tipologia: TipologiaId;
   largura_mm: number;
   altura_mm: number;
@@ -77,13 +79,13 @@ export function renumerarNomesAutomaticosPecas(pecas: Peca[]): Peca[] {
   // Só as peças com nome automático participam da numeração; nomes personalizados não contam.
   const totais = new Map<string, number>();
   pecas.forEach((p) => {
-    if (!nomePecaEhAutomatico(p.nome ?? "")) return;
+    if (p.nome_manual || !nomePecaEhAutomatico(p.nome ?? "")) return;
     const categoria = categoriaNomePeca(p.tipologia);
     totais.set(categoria, (totais.get(categoria) ?? 0) + 1);
   });
   const contadores = new Map<string, number>();
   return pecas.map((peca) => {
-    if (!nomePecaEhAutomatico(peca.nome ?? "")) return peca;
+    if (peca.nome_manual || !nomePecaEhAutomatico(peca.nome ?? "")) return peca;
     const categoria = categoriaNomePeca(peca.tipologia);
     const numero = (contadores.get(categoria) ?? 0) + 1;
     contadores.set(categoria, numero);
