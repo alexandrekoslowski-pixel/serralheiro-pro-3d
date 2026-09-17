@@ -10,6 +10,7 @@ import { PAPEIS, type Papel } from "@/lib/gestao";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeProjetos } from "@/hooks/useRealtimeProjetos";
 import { useMeuNome } from "@/hooks/useMeuNome";
+import { AvisosMedicao } from "@/components/AvisosMedicao";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -151,9 +152,12 @@ export default function AppLayout() {
             </span>
             <span className="truncate font-display text-xs sm:text-sm">Serralheiro Pro 3D</span>
           </Link>
-          <Button variant="soft" size="icon" onClick={sair} aria-label="Sair">
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {papel !== "serralheiro" && <AvisosMedicao mobile />}
+            <Button variant="soft" size="icon" onClick={sair} aria-label="Sair">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </header>
 
         {pendentes > 0 && (
