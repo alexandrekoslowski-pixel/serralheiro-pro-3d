@@ -2,7 +2,7 @@
 // O cliente abre /o/<código>, que resolve o PDF e dispara o download — a URL assinada
 // enorme nunca aparece na mensagem do WhatsApp.
 import { supabase } from "@/integrations/supabase/client";
-import { gerarOrcamentoPDF } from "./pdf";
+import { gerarOrcamentoPDF, nomeArquivoPdf } from "./pdf";
 import { gerarContratoPDF } from "./pdfContrato";
 import type { ResultadoCalculo } from "./calculator";
 import type { DadosEmpresa, ProjetoLocal } from "./storage";

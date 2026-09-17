@@ -4,6 +4,7 @@ import { type DadosEmpresa, type ProjetoLocal, formatarBRL } from "./storage";
 import { cm } from "./medidas";
 import { tipologiaPorId } from "./tipologias";
 import { enderecoCompleto } from "@/lib/endereco";
+import { nomeArquivoPdf } from "./pdf";
 
 export function gerarContratoPDF(projeto: ProjetoLocal, empresa: DadosEmpresa, retornarBlob = false): Blob | void {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
