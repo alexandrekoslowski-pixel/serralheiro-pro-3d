@@ -1313,8 +1313,8 @@ export default function Configurador() {
               </div>
             )}
 
-            <div className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-2">
-              <div>
+            <div className="mt-4 form-grid border-t border-border pt-4">
+              <div className="form-field-medium">
                 <Label className="text-xs">Deslocamento / frete (R$)</Label>
                 <Input
                   className="h-9"
@@ -1327,7 +1327,7 @@ export default function Configurador() {
                   Usar mínimo {formatarBRL(FRETE_MINIMO)}
                 </Button>
               </div>
-              <div className="sm:col-span-2">
+              <div className="form-field-full">
                 <Label className="text-xs">Observações da proposta</Label>
                 <Textarea
                   rows={3}
