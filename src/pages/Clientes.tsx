@@ -162,23 +162,23 @@ export default function Clientes() {
       <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader><DialogTitle>{edit?.id ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="sm:col-span-2">{campo("nome", "Nome / razão social")}</div>
-            {campo("documento", "CPF / CNPJ", "text", "cpfCnpj")}
-            {campo("email", "E-mail", "email")}
-            {campo("telefone", "Telefone", "tel", "telefone")}
-            {campo("whatsapp", "WhatsApp", "tel", "telefone")}
-            <div>
+          <div className="form-grid">
+            <div className="form-field-long">{campo("nome", "Nome / razão social")}</div>
+            <div className="form-field-medium">{campo("documento", "CPF / CNPJ", "text", "cpfCnpj")}</div>
+            <div className="form-field-long">{campo("email", "E-mail", "email")}</div>
+            <div className="form-field-medium">{campo("telefone", "Telefone", "tel", "telefone")}</div>
+            <div className="form-field-medium">{campo("whatsapp", "WhatsApp", "tel", "telefone")}</div>
+            <div className="form-field-short">
               <Label>CEP</Label>
               <div className="relative mt-1.5">
                 <Input mask="cep" value={edit?.cep ?? ""} onChange={(e) => setEdit((v) => ({ ...v, cep: e.target.value }))} onBlur={(e) => void consultarCep(e.target.value)} />
                 {buscandoCep && <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />}
               </div>
             </div>
-            <div className="sm:col-span-2">{campo("endereco", "Rua, número e complemento")}</div>
-            {campo("bairro", "Bairro")}
-            {campo("cidade", "Cidade/UF")}
-            <div>
+            <div className="form-field-full">{campo("endereco", "Rua, número e complemento")}</div>
+            <div className="form-field-medium">{campo("bairro", "Bairro")}</div>
+            <div className="form-field-medium">{campo("cidade", "Cidade/UF")}</div>
+            <div className="form-field-medium">
               <Label>Origem</Label>
               <Select value={edit?.origem ?? "whatsapp"} onValueChange={(v) => setEdit((c) => ({ ...c, origem: v }))}>
                 <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
@@ -187,7 +187,7 @@ export default function Clientes() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="sm:col-span-2">
+            <div className="form-field-full">
               <Label>Observações</Label>
               <Textarea className="mt-1.5" rows={3} maxLength={1000} value={edit?.observacoes ?? ""}
                         onChange={(e) => setEdit((c) => ({ ...c, observacoes: e.target.value }))} />
@@ -195,7 +195,7 @@ export default function Clientes() {
             <button
               type="button"
               onClick={() => setEdit((c) => ({ ...c, estrategico: !c?.estrategico }))}
-              className={cn("flex items-center gap-2 rounded border border-border px-3 py-2 text-sm sm:col-span-2",
+              className={cn("form-field-full flex items-center gap-2 rounded border border-border px-3 py-2 text-sm",
                 edit?.estrategico ? "border-primary bg-primary/10" : "")}
             >
               <Star className={cn("h-4 w-4", edit?.estrategico && "fill-primary text-primary")} />

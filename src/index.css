@@ -141,6 +141,19 @@
 }
 
 @layer utilities {
+  .form-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+  }
+  @media (min-width: 640px) {
+    .form-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+    .form-field-short { grid-column: span 3 / span 3; }
+    .form-field-medium { grid-column: span 4 / span 4; }
+    .form-field-long { grid-column: span 6 / span 6; }
+    .form-field-wide { grid-column: span 8 / span 8; }
+    .form-field-full { grid-column: 1 / -1; }
+  }
   .bg-gradient-orange {
     background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
   }

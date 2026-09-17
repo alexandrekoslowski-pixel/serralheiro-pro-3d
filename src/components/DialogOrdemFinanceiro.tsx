@@ -77,8 +77,8 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
 
   const avancar = proximoStatus(atual.status);
   const blocoSituacao = (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <div>
+    <div className="form-grid">
+      <div className="form-field-medium">
         <Label>Situação</Label>
         <div className="flex h-10 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
           {STATUS_LABEL[atual.status]}
@@ -99,12 +99,12 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
           </Button>
         )}
       </div>
-      <div>
+      <div className="form-field-short">
         <Label>Prazo de entrega</Label>
         <Input type="date" value={atual.prazo_entrega ?? ""} onChange={(e) => salvarProjeto({ ...atual, prazo_entrega: e.target.value || null })} />
       </div>
-      <div><Label>Valor orçado</Label><Input value={formatarBRL(totalComServicos(atual))} readOnly /></div>
-      <div>
+      <div className="form-field-medium"><Label>Valor orçado</Label><Input value={formatarBRL(totalComServicos(atual))} readOnly /></div>
+      <div className="form-field-medium">
         <Label>Valor a cobrar</Label>
         {ajustando ? (
           <Input
@@ -140,10 +140,10 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
         <p className="font-display text-sm font-semibold">Registrar entrada e comprovante</p>
         <p className="text-xs text-muted-foreground">Informe o valor recebido, anexe a foto ou o PDF do comprovante e clique em Lançar.</p>
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        <div><Label className="text-xs">Data</Label><Input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
-        <div><Label className="text-xs">Valor recebido</Label><Input mask="moeda" placeholder="0,00" value={valor} onChange={(e) => setValor(e.target.value)} /></div>
-        <div>
+      <div className="form-grid">
+        <div className="form-field-short"><Label className="text-xs">Data</Label><Input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
+        <div className="form-field-medium"><Label className="text-xs">Valor recebido</Label><Input mask="moeda" placeholder="0,00" value={valor} onChange={(e) => setValor(e.target.value)} /></div>
+        <div className="form-field-medium">
           <Label className="text-xs">Forma</Label>
           <Select value={forma} onValueChange={setForma}>
             <SelectTrigger><SelectValue /></SelectTrigger>
