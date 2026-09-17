@@ -23,6 +23,8 @@ import { FixacaoTipo, FixacaoLados, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO } from 
 export interface Peca {
   id: string;
   nome: string;
+  /** Verdadeiro quando a vendedora digitou o nome — nunca renumerar esse nome. */
+  nome_manual?: boolean;
   tipologia: TipologiaId;
   largura_mm: number;
   altura_mm: number;
