@@ -80,8 +80,8 @@ export function AvisosMedicao({ mobile = false }: { mobile?: boolean }) {
       <PopoverTrigger asChild>
         <Button
           variant="soft"
-          size={mobile ? "icon" : "icon"}
-          className={cn("relative", !mobile && "w-full")}
+          size="icon"
+          className="relative"
           aria-label={`Avisos de medição${total ? ` (${total})` : ""}`}
           title="Avisos de medição"
         >
