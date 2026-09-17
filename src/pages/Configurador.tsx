@@ -918,8 +918,8 @@ export default function Configurador() {
         <div className="space-y-4 border-t border-border pt-4">
           <section className="rounded-lg border border-border p-3">
             <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que é e quanto custa</h4>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
+            <div className="form-grid">
+              <div className="form-field-long">
                 <Label>Produto</Label>
                 <Select
                   value={precoSel.item?.produto ?? ""}
@@ -934,7 +934,7 @@ export default function Configurador() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="form-field-long">
                 <Label>Modelo</Label>
                 <Select
                   value={pecaSel.politica_id || ""}
@@ -949,12 +949,12 @@ export default function Configurador() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="form-field-long">
                 <Label>Nome da peça</Label>
                 <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
                 <p className="mt-1 text-[11px] text-muted-foreground">Aparece na oficina e nos documentos.</p>
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label>Valor desta peça (R$)</Label>
                 <Input
                   className="mt-2"
@@ -969,7 +969,7 @@ export default function Configurador() {
                   </Button>
                 )}
               </div>
-              <div className="sm:col-span-2 rounded-lg bg-muted/40 px-3 py-2 text-sm">
+              <div className="form-field-full rounded-lg bg-muted/40 px-3 py-2 text-sm">
                 {precoSel.item ? (
                   precoSel.item.unidade === "sob_orcamento" ? (
                     <>Item sob orçamento — digite o valor desta peça.</>
@@ -1061,11 +1061,11 @@ export default function Configurador() {
               </label>
 
               {mostrarMotor && (
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <div className="sm:col-span-2 text-xs text-muted-foreground">
+                <div className="mt-3 form-grid">
+                  <div className="form-field-full text-xs text-muted-foreground">
                     Vão de {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm · recomendado <strong>PPA {porteRecomendado}</strong>
                   </div>
-                  <div>
+                  <div className="form-field-long">
                     <Label>Motor (cadastro de materiais)</Label>
                     <Input
                       className="mt-2"
@@ -1101,7 +1101,7 @@ export default function Configurador() {
                   </div>
                   {pecaSel.motor_material_id && (
                     <>
-                      <div>
+                      <div className="form-field-medium">
                         <Label>Valor do motor para o cliente (R$)</Label>
                         <Input
                           className="mt-2"
@@ -1116,7 +1116,7 @@ export default function Configurador() {
                           </Button>
                         )}
                       </div>
-                      <div className="flex flex-col justify-end gap-1 text-sm">
+                      <div className="form-field-medium flex flex-col justify-end gap-1 text-sm">
                         <span className="truncate">{pecaSel.motor_nome}</span>
                         {podeVerCustos && (
                           <span className="text-xs text-muted-foreground">
@@ -1133,7 +1133,7 @@ export default function Configurador() {
                     </>
                   )}
                   {motorAbaixoDoVao && (
-                    <p className="sm:col-span-2 rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
+                    <p className="form-field-full rounded-md border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs font-medium text-destructive">
                       Motor subdimensionado para {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm — recomendado PPA 1/2.
                     </p>
                   )}

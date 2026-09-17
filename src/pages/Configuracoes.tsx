@@ -160,7 +160,7 @@ export default function Configuracoes() {
 
         <h2 className="font-display text-lg mt-6 mb-2">Mensagens para o cliente</h2>
         <p className="text-sm text-muted-foreground mb-3">Modelos prontos para copiar e enviar no WhatsApp.</p>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           {([
             ["msgSolicitarDados", "Solicitar dados"],
             ["msgFollowUp", "Retomar contato"],

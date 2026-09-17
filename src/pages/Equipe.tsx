@@ -113,18 +113,18 @@ export default function Equipe() {
       <Dialog open={!!edicao} onOpenChange={(o) => !o && setEdicao(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Editar pessoa</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
+          <div className="form-grid">
+            <div className="form-field-long">
               <Label>Nome da pessoa</Label>
               <Input className="mt-1.5" maxLength={100} value={edicao?.nome ?? ""} onChange={(e) => setEdicao((n) => n && { ...n, nome: e.target.value })} />
             </div>
-            <div>
+            <div className="form-field-long">
               <Label>E-mail de acesso</Label>
               <Input className="mt-1.5" type="email" placeholder="nome@email.com" value={edicao?.email ?? ""}
                      onChange={(e) => setEdicao((n) => n && { ...n, email: e.target.value })} />
               <p className="mt-1 text-xs text-muted-foreground">Ao trocar, a pessoa passa a entrar com o novo e-mail e a mesma senha.</p>
             </div>
-            <div>
+            <div className="form-field-medium">
               <Label>Papel</Label>
               <Select value={edicao?.role ?? "vendedora"} onValueChange={(v) => setEdicao((n) => n && { ...n, role: v as Papel })}>
                 <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
@@ -144,18 +144,18 @@ export default function Equipe() {
       <Dialog open={!!novo} onOpenChange={(o) => !o && setNovo(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Liberar acesso</DialogTitle></DialogHeader>
-          <div className="space-y-3">
-            <div>
+          <div className="form-grid">
+            <div className="form-field-long">
               <Label>Nome da pessoa</Label>
               <Input className="mt-1.5" maxLength={100} value={novo?.nome ?? ""} onChange={(e) => setNovo((n) => n && { ...n, nome: e.target.value })} />
             </div>
-            <div>
+            <div className="form-field-long">
               <Label>E-mail da conta</Label>
               <Input className="mt-1.5" type="email" placeholder="nome@email.com" value={novo?.email ?? ""}
                      onChange={(e) => setNovo((n) => n && { ...n, email: e.target.value })} />
               <p className="mt-1 text-xs text-muted-foreground">Use o mesmo e-mail com que a pessoa entra no sistema.</p>
             </div>
-            <div>
+            <div className="form-field-medium">
               <Label>Papel</Label>
               <Select value={novo?.role ?? "vendedora"} onValueChange={(v) => setNovo((n) => n && { ...n, role: v as Papel })}>
                 <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
