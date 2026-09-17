@@ -19,24 +19,29 @@ export function MedicaoDialog({ projetoId }: { projetoId: string }) {
   const [editor, setEditor] = useState(false);
   const [recarregar, setRecarregar] = useState(0);
 
+  useDados(); // acompanha o carregamento das ordens vindas da nuvem
   const projeto = obterProjeto(projetoId);
   const [largura, setLargura] = useState("");
   const [altura, setAltura] = useState("");
   const [obs, setObs] = useState("");
   const [carregado, setCarregado] = useState(false);
 
-  const abrir = (o: boolean) => {
-    setAberto(o);
-    if (o && !carregado) {
-      setLargura(projeto?.medicao.largura_mm ? String(projeto.medicao.largura_mm / 10).replace(".", ",") : "");
-      setAltura(projeto?.medicao.altura_mm ? String(projeto.medicao.altura_mm / 10).replace(".", ",") : "");
-      setObs(projeto?.medicao.observacoes ?? "");
-      setCarregado(true);
-    }
-  };
+  // Só preenche quando a ordem já chegou, para não apagar a medição salva antes.
+  useEffect(() => {
+    if (!aberto || carregado || !projeto) return;
+    setLargura(projeto.medicao.largura_mm ? String(projeto.medicao.largura_mm / 10).replace(".", ",") : "");
+    setAltura(projeto.medicao.altura_mm ? String(projeto.medicao.altura_mm / 10).replace(".", ",") : "");
+    setObs(projeto.medicao.observacoes ?? "");
+    setCarregado(true);
+  }, [aberto, carregado, projeto]);
+
+  const abrir = (o: boolean) => setAberto(o);
 
   const salvar = () => {
-    if (!projeto) return;
+    if (!projeto) {
+      toast({ title: "Ordem ainda carregando", description: "Aguarde um instante e salve de novo." });
+      return;
+    }
     salvarProjeto({
       ...projeto,
       medicao: {
