@@ -353,4 +353,3 @@ export function nomeArquivoPdf(nomeOrcamento: string, prefixo: "orcamento" | "co
     .slice(0, 60);
   return base ? `${prefixo}-${base}` : prefixo;
 }
-}
