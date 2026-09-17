@@ -51,5 +51,5 @@ export function gerarContratoPDF(projeto: ProjetoLocal, empresa: DadosEmpresa, r
   doc.text(projeto.cliente || "CONTRATANTE", doc.internal.pageSize.getWidth() - margem - 37.5, y + 5, { align: "center" });
   doc.text(`Emitido em ${new Date().toLocaleDateString("pt-BR")}`, margem, 286);
   if (retornarBlob) return doc.output("blob");
-  doc.save(`contrato-${projeto.id}.pdf`);
+  doc.save(`${nomeArquivoPdf(projeto.nome, "contrato")}.pdf`);
 }
