@@ -105,7 +105,12 @@ export function gerarOrcamentoPDF(
     ["Contato", [projeto.cliente_telefone, projeto.cliente_email].filter(Boolean).join(" · ") || "—"],
   ];
   if (projeto.local_instalacao) camposCliente.push(["Instalação", projeto.local_instalacao]);
-  if (projeto.vendedora) camposCliente.push(["Consultora", projeto.vendedora]);
+  if (projeto.vendedora) {
+    const tituloResponsavel = projeto.vendedora.trim().toLocaleLowerCase("pt-BR").startsWith("eduardo")
+      ? "Consultor"
+      : "Consultora";
+    camposCliente.push([tituloResponsavel, projeto.vendedora]);
+  }
 
   const alturaBloco = camposCliente.length * 5 + 6;
   doc.setFillColor(248, 246, 244);
