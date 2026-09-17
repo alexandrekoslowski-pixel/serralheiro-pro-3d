@@ -150,6 +150,14 @@ export default function Configurador() {
   const vendedores = useVendedores();
   const meuNome = useMeuNome();
 
+  // Em um orçamento recém-criado pela vendedora, garante que a consultora seja
+  // a própria pessoa logada mesmo se o perfil terminou de carregar depois da tela.
+  useEffect(() => {
+    const novoOrcamento = Boolean((location.state as { novoOrcamento?: boolean } | null)?.novoOrcamento);
+    if (!projeto || !novoOrcamento || papel !== "vendedora" || !meuNome || projeto.vendedora === meuNome) return;
+    setProjeto({ ...projeto, vendedora: meuNome });
+  }, [location.state, meuNome, papel, projeto]);
+
   const resultado = useMemo(() => {
     if (!projeto) return null;
     return calcularProjeto({
