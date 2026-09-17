@@ -1275,6 +1275,11 @@ export default function Configurador() {
                           maxLength={60}
                           value={s.nome}
                           onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, nome: e.target.value } : x))}
+                          onBlur={() => {
+                            if (!s.nome.trim()) {
+                              upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, nome: "Serviço adicional" } : x));
+                            }
+                          }}
                         />
                       ) : (
                         <span className="col-span-7 truncate text-sm sm:col-span-9">{s.nome}</span>
