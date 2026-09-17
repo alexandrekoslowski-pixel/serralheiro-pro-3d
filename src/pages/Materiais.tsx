@@ -139,12 +139,12 @@ export default function Materiais() {
       <Dialog open={!!edit} onOpenChange={(o) => !o && setEdit(null)}>
          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader><DialogTitle>{edit?.id ? "Editar material" : "Novo material"}</DialogTitle></DialogHeader>
-          <div className="grid gap-3 sm:grid-cols-2">
-             <div>
+           <div className="form-grid">
+              <div className="form-field-medium">
                <Label>Código do fornecedor</Label>
                 <Input className="mt-1.5" mask="codigo" value={edit?.codigo_fornecedor ?? ""} onChange={(e) => setEdit((m) => ({ ...m, codigo_fornecedor: e.target.value }))} />
              </div>
-             <div>
+              <div className="form-field-medium">
                <Label>Categoria</Label>
                <Input className="mt-1.5" value={edit?.categoria ?? "outros"} onChange={(e) => setEdit((m) => ({ ...m, categoria: e.target.value }))} />
              </div>
@@ -152,18 +152,18 @@ export default function Materiais() {
               <Label>Nome</Label>
               <Input className="mt-1.5" value={edit?.nome ?? ""} onChange={(e) => setEdit((m) => ({ ...m, nome: e.target.value }))} />
             </div>
-            <div>
+             <div className="form-field-long">
                <Label>Tipo / subtipo</Label>
                <Input className="mt-1.5" value={edit?.subtipo ?? ""} onChange={(e) => setEdit((m) => ({ ...m, subtipo: e.target.value }))} />
             </div>
-            <div>
+             <div className="form-field-medium">
                <Label>Preço vigente (R$)</Label>
                 <Input className="mt-1.5" mask="moeda" value={String(edit?.preco_atual ?? edit?.custo ?? 0).replace(".", ",")}
                        onChange={(e) => setEdit((m) => ({ ...m, preco_atual: numeroMascarado(e.target.value) }))} />
             </div>
              <div><Label>Unidade de compra</Label><Input className="mt-1.5" value={edit?.unidade_compra ?? "un"} onChange={(e) => setEdit((m) => ({ ...m, unidade_compra: e.target.value, unidade: e.target.value }))} /></div>
               <div><Label>Comprimento comercial (mm)</Label><Input className="mt-1.5" mask="inteiro" value={edit?.comprimento_comercial_mm ?? ""} onChange={(e) => setEdit((m) => ({ ...m, comprimento_comercial_mm: e.target.value ? Number(e.target.value) : null }))} /></div>
-              <div className="sm:col-span-2">
+              <div className="form-field-full">
                 <Label>Código de cálculo (liga este material ao orçamento)</Label>
                 <Select value={edit?.codigo_calculo || "nenhum"} onValueChange={(v) => setEdit((m) => ({ ...m, codigo_calculo: v === "nenhum" ? "" : v }))}>
                   <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
