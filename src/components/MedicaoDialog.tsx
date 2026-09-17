@@ -60,11 +60,11 @@ export function MedicaoDialog({ projetoId }: { projetoId: string }) {
         </DialogHeader>
 
         <div className="form-grid">
-          <div className="form-field-medium">
+          <div className="form-field-measure">
             <Label>Largura medida (cm)</Label>
             <Input mask="decimal" placeholder="ex.: 260" value={largura} onChange={(e) => setLargura(e.target.value)} />
           </div>
-          <div className="form-field-medium">
+          <div className="form-field-measure">
             <Label>Altura medida (cm)</Label>
             <Input mask="decimal" placeholder="ex.: 220" value={altura} onChange={(e) => setAltura(e.target.value)} />
           </div>

@@ -164,11 +164,11 @@ export default function Clientes() {
           <DialogHeader><DialogTitle>{edit?.id ? "Editar cliente" : "Novo cliente"}</DialogTitle></DialogHeader>
           <div className="form-grid">
             <div className="form-field-long">{campo("nome", "Nome / razão social")}</div>
-            <div className="form-field-medium">{campo("documento", "CPF / CNPJ", "text", "cpfCnpj")}</div>
+            <div className="form-field-document">{campo("documento", "CPF / CNPJ", "text", "cpfCnpj")}</div>
             <div className="form-field-long">{campo("email", "E-mail", "email")}</div>
-            <div className="form-field-medium">{campo("telefone", "Telefone", "tel", "telefone")}</div>
-            <div className="form-field-medium">{campo("whatsapp", "WhatsApp", "tel", "telefone")}</div>
-            <div className="form-field-short">
+            <div className="form-field-phone">{campo("telefone", "Telefone", "tel", "telefone")}</div>
+            <div className="form-field-phone">{campo("whatsapp", "WhatsApp", "tel", "telefone")}</div>
+            <div className="form-field-cep">
               <Label>CEP</Label>
               <div className="relative mt-1.5">
                 <Input mask="cep" value={edit?.cep ?? ""} onChange={(e) => setEdit((v) => ({ ...v, cep: e.target.value }))} onBlur={(e) => void consultarCep(e.target.value)} />

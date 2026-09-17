@@ -645,12 +645,12 @@ export default function Configurador() {
                   Comece a digitar para reaproveitar um cliente. Cliente novo é cadastrado sozinho ao salvar.
                 </p>
               </div>
-              <div className="form-field-medium">
+              <div className="form-field-document">
                 <Label className="text-xs">CPF / CNPJ</Label>
                 <Input className="h-9" mask="cpfCnpj" inputMode="numeric" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} placeholder="000.000.000-00" />
                 {documentoIncompleto && <p className="mt-1 text-[11px] text-amber-500">Faltam números para o CPF (11) ou o CNPJ (14).</p>}
               </div>
-              <div className="form-field-medium">
+              <div className="form-field-phone">
                 <Label className="text-xs">Telefone / WhatsApp</Label>
                 <Input className="h-9" type="tel" mask="telefone" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
                 {telefoneIncompleto && <p className="mt-1 text-[11px] text-amber-500">Faltam números — inclua o DDD.</p>}
@@ -659,7 +659,7 @@ export default function Configurador() {
                 <Label className="text-xs">E-mail</Label>
                 <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} onBlur={arrumar("cliente_email", emailNormalizado)} />
               </div>
-              <div className="form-field-short">
+              <div className="form-field-cep">
                 <Label className="text-xs">CEP</Label>
                 <div className="relative">
                   <Input className="h-9" mask="cep" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} onBlur={(e) => void consultarCep(e.target.value)} placeholder="00000-000" />
@@ -670,7 +670,7 @@ export default function Configurador() {
                 <Label className="text-xs">Rua</Label>
                 <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} onBlur={arrumar("cliente_endereco", nomeProprio)} placeholder="Rua / avenida" />
               </div>
-              <div className="form-field-short">
+              <div className="form-field-number">
                 <Label className="text-xs">Número</Label>
                 <Input ref={campoNumero} className="h-9" inputMode="numeric" maxLength={10} value={projeto.cliente_numero ?? ""} onChange={(e) => upd("cliente_numero", e.target.value)} placeholder="123" />
               </div>
@@ -742,7 +742,7 @@ export default function Configurador() {
                   />
                 )}
               </div>
-              <div className="form-field-short">
+              <div className="form-field-number">
                 <Label className="text-xs">Prazo (dias úteis)</Label>
                 <Input
                   className="h-9"
@@ -828,11 +828,11 @@ export default function Configurador() {
                 </div>
                 <p className="mt-1 text-[11px] text-muted-foreground">Muda sozinha conforme os passos.</p>
               </div>
-              <div className="form-field-short">
+              <div className="form-field-date">
                 <Label className="text-xs">Prazo de entrega</Label>
                 <Input className="h-9" type="date" value={projeto.prazo_entrega ?? ""} onChange={(e) => upd("prazo_entrega", e.target.value || null)} />
               </div>
-              <div className="form-field-medium">
+              <div className="form-field-money">
                 <Label className="text-xs">Valor a cobrar (R$)</Label>
                 {ajustandoValor ? (
                   <Input className="h-9" autoFocus mask="moeda" value={String(projeto.valor_faturado || 0).replace(".", ",")} onChange={(e) => upd("valor_faturado", numeroMascarado(e.target.value))} />
@@ -846,7 +846,7 @@ export default function Configurador() {
                 </Button>
               </div>
 
-              <div className="form-field-medium">
+              <div className="form-field-money">
                 <Label className="text-xs">Total orçado</Label>
                 <Input className="h-9" readOnly value={formatarBRL(totalProposta)} />
               </div>
@@ -954,7 +954,7 @@ export default function Configurador() {
                 <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
                 <p className="mt-1 text-[11px] text-muted-foreground">Aparece na oficina e nos documentos.</p>
               </div>
-              <div className="form-field-medium">
+              <div className="form-field-money">
                 <Label>Valor desta peça (R$)</Label>
                 <Input
                   className="mt-2"
@@ -1314,7 +1314,7 @@ export default function Configurador() {
             )}
 
             <div className="mt-4 form-grid border-t border-border pt-4">
-              <div className="form-field-medium">
+              <div className="form-field-money">
                 <Label className="text-xs">Deslocamento / frete (R$)</Label>
                 <Input
                   className="h-9"

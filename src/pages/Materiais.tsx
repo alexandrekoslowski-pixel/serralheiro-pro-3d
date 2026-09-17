@@ -156,13 +156,13 @@ export default function Materiais() {
                <Label>Tipo / subtipo</Label>
                <Input className="mt-1.5" value={edit?.subtipo ?? ""} onChange={(e) => setEdit((m) => ({ ...m, subtipo: e.target.value }))} />
             </div>
-             <div className="form-field-medium">
+             <div className="form-field-money">
                <Label>Preço vigente (R$)</Label>
                 <Input className="mt-1.5" mask="moeda" value={String(edit?.preco_atual ?? edit?.custo ?? 0).replace(".", ",")}
                        onChange={(e) => setEdit((m) => ({ ...m, preco_atual: numeroMascarado(e.target.value) }))} />
             </div>
-              <div className="form-field-short"><Label>Unidade de compra</Label><Input className="mt-1.5" value={edit?.unidade_compra ?? "un"} onChange={(e) => setEdit((m) => ({ ...m, unidade_compra: e.target.value, unidade: e.target.value }))} /></div>
-               <div className="form-field-medium"><Label>Comprimento comercial (mm)</Label><Input className="mt-1.5" mask="inteiro" value={edit?.comprimento_comercial_mm ?? ""} onChange={(e) => setEdit((m) => ({ ...m, comprimento_comercial_mm: e.target.value ? Number(e.target.value) : null }))} /></div>
+              <div className="form-field-number"><Label>Unidade de compra</Label><Input className="mt-1.5" value={edit?.unidade_compra ?? "un"} onChange={(e) => setEdit((m) => ({ ...m, unidade_compra: e.target.value, unidade: e.target.value }))} /></div>
+               <div className="form-field-measure"><Label>Comprimento comercial (mm)</Label><Input className="mt-1.5" mask="inteiro" value={edit?.comprimento_comercial_mm ?? ""} onChange={(e) => setEdit((m) => ({ ...m, comprimento_comercial_mm: e.target.value ? Number(e.target.value) : null }))} /></div>
               <div className="form-field-full">
                 <Label>Código de cálculo (liga este material ao orçamento)</Label>
                 <Select value={edit?.codigo_calculo || "nenhum"} onValueChange={(v) => setEdit((m) => ({ ...m, codigo_calculo: v === "nenhum" ? "" : v }))}>
@@ -185,7 +185,7 @@ export default function Materiais() {
                   </SelectContent>
                 </Select>
               </div>
-               <div className="form-field-short"><Label>Espessura (mm)</Label><Input className="mt-1.5" mask="decimal" value={edit?.espessura_mm == null ? "" : String(edit.espessura_mm).replace(".", ",")} onChange={(e) => setEdit((m) => ({ ...m, espessura_mm: e.target.value ? numeroMascarado(e.target.value) : null }))} /></div>
+               <div className="form-field-measure"><Label>Espessura (mm)</Label><Input className="mt-1.5" mask="decimal" value={edit?.espessura_mm == null ? "" : String(edit.espessura_mm).replace(".", ",")} onChange={(e) => setEdit((m) => ({ ...m, espessura_mm: e.target.value ? numeroMascarado(e.target.value) : null }))} /></div>
              <div className="form-field-long">
               <Label>Fornecedor</Label>
               <Input className="mt-1.5" value={edit?.fornecedor ?? ""} onChange={(e) => setEdit((m) => ({ ...m, fornecedor: e.target.value }))} />
