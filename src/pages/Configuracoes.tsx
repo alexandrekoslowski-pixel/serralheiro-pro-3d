@@ -87,22 +87,22 @@ export default function Configuracoes() {
 
         <h2 className="font-display text-lg mt-6 mb-4">Prazos das ordens</h2>
         <div className="form-grid">
-          <div className="form-field-short">
+          <div className="form-field-number">
             <Label>Prazo padrão ao aprovar (dias)</Label>
             <Input mask="inteiro" value={empresa.prazoPadraoDias}
               onChange={(e) => setEmpresa({ ...empresa, prazoPadraoDias: Math.max(1, Number(e.target.value)) })} />
           </div>
-          <div className="form-field-short">
+          <div className="form-field-number">
             <Label>Vermelho quando faltar até (dias)</Label>
             <Input mask="inteiro" value={empresa.limiteVermelhoDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteVermelhoDias: Number(e.target.value) })} />
           </div>
-          <div className="form-field-short">
+          <div className="form-field-number">
             <Label>Amarelo quando faltar até (dias)</Label>
             <Input mask="inteiro" value={empresa.limiteAmareloDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteAmareloDias: Number(e.target.value) })} />
           </div>
-          <div className="form-field-medium">
+          <div className="form-field-money">
             <Label>Meta semanal de faturamento (R$)</Label>
             <Input mask="moeda" value={String(empresa.metaSemanal ?? 40000).replace(".", ",")}
               onChange={(e) => setEmpresa({ ...empresa, metaSemanal: numeroMascarado(e.target.value) })} />
@@ -111,22 +111,22 @@ export default function Configuracoes() {
 
         <h2 className="font-display text-lg mt-6 mb-4">Proposta comercial (PDF do orçamento)</h2>
         <div className="form-grid">
-          <div className="form-field-short">
+          <div className="form-field-number">
             <Label>Prazo padrão (dias úteis)</Label>
             <Input mask="inteiro" value={empresa.prazoDiasUteis}
               onChange={(e) => setEmpresa({ ...empresa, prazoDiasUteis: Math.max(1, Number(e.target.value)) })} />
           </div>
-          <div className="form-field-short">
+          <div className="form-field-number">
             <Label>Validade do orçamento (dias)</Label>
             <Input mask="inteiro" value={empresa.validadeDias}
               onChange={(e) => setEmpresa({ ...empresa, validadeDias: Math.max(1, Number(e.target.value)) })} />
           </div>
-          <div className="form-field-short">
+          <div className="form-field-number">
             <Label>Garantia (dias)</Label>
             <Input mask="inteiro" value={empresa.garantiaDias}
               onChange={(e) => setEmpresa({ ...empresa, garantiaDias: Number(e.target.value) })} />
           </div>
-          <div className="form-field-medium">
+          <div className="form-field-document">
             <Label>Chave PIX</Label>
             <Input value={empresa.pixChave} onChange={(e) => setEmpresa({ ...empresa, pixChave: e.target.value })} />
           </div>
@@ -134,7 +134,7 @@ export default function Configuracoes() {
             <Label>Favorecido do PIX</Label>
             <Input value={empresa.pixFavorecido} onChange={(e) => setEmpresa({ ...empresa, pixFavorecido: e.target.value })} />
           </div>
-          <div className="form-field-medium">
+          <div className="form-field-money">
             <Label>Visita técnica (R$)</Label>
             <Input mask="moeda" value={String(empresa.visitaTecnica).replace(".", ",")}
               onChange={(e) => setEmpresa({ ...empresa, visitaTecnica: numeroMascarado(e.target.value) })} />

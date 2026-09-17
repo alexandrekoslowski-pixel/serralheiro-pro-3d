@@ -103,7 +103,7 @@ export default function Catalogo() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="form-field-medium">
+              <div className="form-field-money">
                 <Label>Preço base (R$)</Label>
                 <Input className="mt-1.5" mask="moeda" value={String(edit?.preco_base ?? 0).replace(".", ",")}
                        onChange={(e) => setEdit((s) => ({ ...s, preco_base: numeroMascarado(e.target.value) }))} />

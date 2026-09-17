@@ -151,18 +151,19 @@
     width: 100%;
     min-width: 0;
   }
+  .form-field-cep { flex: 0 0 min(100%, 9rem); width: min(100%, 9rem); }
+  .form-field-number { flex: 0 0 min(100%, 8rem); width: min(100%, 8rem); }
+  .form-field-phone { flex: 0 0 min(100%, 13rem); width: min(100%, 13rem); }
+  .form-field-document { flex: 0 0 min(100%, 14rem); width: min(100%, 14rem); }
+  .form-field-date { flex: 0 0 min(100%, 11rem); width: min(100%, 11rem); }
+  .form-field-money { flex: 0 0 min(100%, 12rem); width: min(100%, 12rem); }
+  .form-field-measure { flex: 0 0 min(100%, 11rem); width: min(100%, 11rem); }
   @media (min-width: 640px) {
     .form-field-short { flex: 0 1 10rem; width: 10rem; }
     .form-field-medium { flex: 0 1 15rem; width: 15rem; }
     .form-field-long { flex: 1 1 22rem; width: 22rem; }
     .form-field-wide { flex: 1 1 32rem; width: 32rem; }
     .form-field-full { flex: 0 0 100%; width: 100%; }
-    .form-field-cep { flex: 0 0 9rem; width: 9rem; }
-    .form-field-number { flex: 0 0 8rem; width: 8rem; }
-    .form-field-phone { flex: 0 0 13rem; width: 13rem; }
-    .form-field-document { flex: 0 0 14rem; width: 14rem; }
-    .form-field-date { flex: 0 0 11rem; width: 11rem; }
-    .form-field-money { flex: 0 0 12rem; width: 12rem; }
   }
   .bg-gradient-orange {
     background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
