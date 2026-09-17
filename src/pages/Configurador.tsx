@@ -1322,7 +1322,7 @@ export default function Configurador() {
                   mask="moeda"
                   placeholder={`mínimo ${formatarBRL(FRETE_MINIMO)}`}
                   value={projeto.frete_valor == null ? "" : String(projeto.frete_valor).replace(".", ",")}
-                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
+                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : Math.max(0, numeroMascarado(e.target.value)))}
                 />
                 <Button type="button" size="sm" variant="outline" className="mt-1 h-7 text-[11px]" onClick={() => upd("frete_valor", FRETE_MINIMO)}>
                   Usar mínimo {formatarBRL(FRETE_MINIMO)}
