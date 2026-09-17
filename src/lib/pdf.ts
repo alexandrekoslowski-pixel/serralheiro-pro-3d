@@ -339,5 +339,18 @@ export function gerarOrcamentoPDF(
   if (retornarBlob) {
     return doc.output("blob");
   }
-  doc.save(`orcamento-${projeto.id}.pdf`);
+  doc.save(`${nomeArquivoPdf(projeto.nome, "orcamento")}.pdf`);
+}
+
+/** Nome de arquivo limpo a partir do nome do orçamento (sem id). */
+export function nomeArquivoPdf(nomeOrcamento: string, prefixo: "orcamento" | "contrato"): string {
+  const base = (nomeOrcamento || "")
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .toLowerCase()
+    .slice(0, 60);
+  return base ? `${prefixo}-${base}` : prefixo;
+}
 }
