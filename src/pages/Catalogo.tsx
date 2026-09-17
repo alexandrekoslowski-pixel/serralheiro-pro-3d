@@ -93,8 +93,8 @@ export default function Catalogo() {
               <Label>Nome</Label>
               <Input className="mt-1.5" value={edit?.nome ?? ""} onChange={(e) => setEdit((s) => ({ ...s, nome: e.target.value }))} />
             </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div>
+            <div className="form-grid">
+              <div className="form-field-long">
                 <Label>Categoria</Label>
                 <Select value={edit?.categoria ?? "portao"} onValueChange={(v) => setEdit((s) => ({ ...s, categoria: v }))}>
                   <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
@@ -103,7 +103,7 @@ export default function Catalogo() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label>Preço base (R$)</Label>
                 <Input className="mt-1.5" mask="moeda" value={String(edit?.preco_base ?? 0).replace(".", ",")}
                        onChange={(e) => setEdit((s) => ({ ...s, preco_base: numeroMascarado(e.target.value) }))} />

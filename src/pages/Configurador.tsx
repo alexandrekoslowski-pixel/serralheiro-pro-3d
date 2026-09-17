@@ -587,9 +587,9 @@ export default function Configurador() {
           </TabsList>
 
           <TabsContent value="cliente" className="mt-0 p-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="form-grid">
 
-              <div className="relative sm:col-span-2">
+              <div className="relative form-field-long">
                 <Label className="text-xs">Cliente (nome e sobrenome)</Label>
                 <Input
                   ref={clienteNomeRef}
@@ -645,57 +645,57 @@ export default function Configurador() {
                   Comece a digitar para reaproveitar um cliente. Cliente novo é cadastrado sozinho ao salvar.
                 </p>
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label className="text-xs">CPF / CNPJ</Label>
                 <Input className="h-9" mask="cpfCnpj" inputMode="numeric" value={projeto.cliente_documento ?? ""} onChange={(e) => upd("cliente_documento", e.target.value)} placeholder="000.000.000-00" />
                 {documentoIncompleto && <p className="mt-1 text-[11px] text-amber-500">Faltam números para o CPF (11) ou o CNPJ (14).</p>}
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label className="text-xs">Telefone / WhatsApp</Label>
                 <Input className="h-9" type="tel" mask="telefone" value={projeto.cliente_telefone ?? ""} onChange={(e) => upd("cliente_telefone", e.target.value)} placeholder="(00) 00000-0000" />
                 {telefoneIncompleto && <p className="mt-1 text-[11px] text-amber-500">Faltam números — inclua o DDD.</p>}
               </div>
-              <div className="sm:col-span-2">
+              <div className="form-field-long">
                 <Label className="text-xs">E-mail</Label>
                 <Input className="h-9" type="email" value={projeto.cliente_email ?? ""} onChange={(e) => upd("cliente_email", e.target.value)} onBlur={arrumar("cliente_email", emailNormalizado)} />
               </div>
-              <div>
+              <div className="form-field-short">
                 <Label className="text-xs">CEP</Label>
                 <div className="relative">
                   <Input className="h-9" mask="cep" value={projeto.cliente_cep ?? ""} onChange={(e) => upd("cliente_cep", e.target.value)} onBlur={(e) => void consultarCep(e.target.value)} placeholder="00000-000" />
                   {buscandoCep && <Loader2 className="absolute right-3 top-2.5 h-4 w-4 animate-spin text-muted-foreground" />}
                 </div>
               </div>
-              <div className="sm:col-span-2">
+              <div className="form-field-wide">
                 <Label className="text-xs">Rua</Label>
                 <Input className="h-9" value={projeto.cliente_endereco ?? ""} onChange={(e) => upd("cliente_endereco", e.target.value)} onBlur={arrumar("cliente_endereco", nomeProprio)} placeholder="Rua / avenida" />
               </div>
-              <div>
+              <div className="form-field-short">
                 <Label className="text-xs">Número</Label>
                 <Input ref={campoNumero} className="h-9" inputMode="numeric" maxLength={10} value={projeto.cliente_numero ?? ""} onChange={(e) => upd("cliente_numero", e.target.value)} placeholder="123" />
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label className="text-xs">Complemento</Label>
                 <Input className="h-9" maxLength={60} value={projeto.cliente_complemento ?? ""} onChange={(e) => upd("cliente_complemento", e.target.value)} onBlur={arrumar("cliente_complemento", frasePrimeiraMaiuscula)} placeholder="apto, bloco, fundos" />
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label className="text-xs">Bairro</Label>
                 <Input className="h-9" value={projeto.cliente_bairro ?? ""} onChange={(e) => upd("cliente_bairro", e.target.value)} onBlur={arrumar("cliente_bairro", nomeProprio)} />
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label className="text-xs">Cidade/UF</Label>
                 <Input className="h-9" value={projeto.cliente_cidade ?? ""} onChange={(e) => upd("cliente_cidade", e.target.value)} onBlur={arrumar("cliente_cidade", cidadeUf)} />
               </div>
-              <div>
+              <div className="form-field-full">
                 <Label className="text-xs">Local de instalação</Label>
                 <Input className="h-9" placeholder="se for outro endereço" value={projeto.local_instalacao ?? ""} onChange={(e) => upd("local_instalacao", e.target.value)} onBlur={arrumar("local_instalacao", nomeProprio)} />
                 <p className="mt-1 text-[11px] text-muted-foreground">Deixe vazio se for no endereço do cliente.</p>
               </div>
 
-              <div className="sm:col-span-2 lg:col-span-4 border-t border-border pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <div className="form-field-full border-t border-border pt-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                 Dados do orçamento
               </div>
-              <div className="sm:col-span-2">
+              <div className="form-field-long">
                 <Label className="text-xs">Nome do orçamento</Label>
                 <div className="flex gap-2">
                   <Input
@@ -720,7 +720,7 @@ export default function Configurador() {
                 </div>
                 <p className="mt-1 text-[11px] text-muted-foreground">Gerado automaticamente com cliente e peças.</p>
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label className="text-xs">Vendedor(a) responsável</Label>
                 {vendedores.length > 0 ? (
                   <Select
@@ -742,7 +742,7 @@ export default function Configurador() {
                   />
                 )}
               </div>
-              <div>
+              <div className="form-field-short">
                 <Label className="text-xs">Prazo (dias úteis)</Label>
                 <Input
                   className="h-9"
@@ -820,19 +820,19 @@ export default function Configurador() {
           </TabsContent>
 
           <TabsContent value="ordem" className="mt-0 p-4">
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              <div>
+            <div className="form-grid">
+              <div className="form-field-medium">
                 <Label className="text-xs">Situação</Label>
                 <div className="flex h-9 items-center rounded-md border border-border bg-muted/40 px-3 text-sm">
                   {STATUS_LABEL[projeto.status]}
                 </div>
                 <p className="mt-1 text-[11px] text-muted-foreground">Muda sozinha conforme os passos.</p>
               </div>
-              <div>
+              <div className="form-field-short">
                 <Label className="text-xs">Prazo de entrega</Label>
                 <Input className="h-9" type="date" value={projeto.prazo_entrega ?? ""} onChange={(e) => upd("prazo_entrega", e.target.value || null)} />
               </div>
-              <div>
+              <div className="form-field-medium">
                 <Label className="text-xs">Valor a cobrar (R$)</Label>
                 {ajustandoValor ? (
                   <Input className="h-9" autoFocus mask="moeda" value={String(projeto.valor_faturado || 0).replace(".", ",")} onChange={(e) => upd("valor_faturado", numeroMascarado(e.target.value))} />
@@ -846,7 +846,7 @@ export default function Configurador() {
                 </Button>
               </div>
 
-              <div>
+              <div className="form-field-medium">
                 <Label className="text-xs">Total orçado</Label>
                 <Input className="h-9" readOnly value={formatarBRL(totalProposta)} />
               </div>
