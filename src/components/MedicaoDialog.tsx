@@ -1,5 +1,5 @@
 // Medição da ordem: medidas finas + fotos anotadas desenhadas por cima.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Ruler, Save, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
