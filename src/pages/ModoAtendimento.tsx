@@ -22,7 +22,7 @@ import {
   ProjetoLocal, obterProjeto, salvarProjeto, obterEmpresa, obterCatalogo, formatarBRL,
 } from "@/lib/storage";
 import { calcularProjeto } from "@/lib/calculator";
-import { gerarOrcamentoPDF, AssinaturaInfo } from "@/lib/pdf";
+import { gerarOrcamentoPDF, AssinaturaInfo, nomeArquivoPdf } from "@/lib/pdf";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
 
 type Passo = 0 | 1 | 2;
