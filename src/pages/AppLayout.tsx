@@ -159,6 +159,12 @@ export default function AppLayout() {
           </div>
         </header>
 
+        {papel !== "serralheiro" && (
+          <div className="hidden justify-end border-b border-border bg-background/95 px-6 py-2 backdrop-blur lg:flex">
+            <AvisosMedicao />
+          </div>
+        )}
+
         {pendentes > 0 && (
           <div className="border-b border-border bg-card">
             <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 text-sm lg:px-6">
