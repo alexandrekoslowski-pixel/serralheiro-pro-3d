@@ -39,6 +39,8 @@ export function AvisosMedicao({ mobile = false }: { mobile?: boolean }) {
       .from("projetos")
       .select("id, nome, cliente, prazo_entrega, etapa_em, dados")
       .eq("etapa", "medicao")
+      // Só avisa o que a vendedora já liberou para a oficina.
+      .or("dados->>aguardando_oficina.is.null,dados->>aguardando_oficina.eq.false")
       .order("etapa_em", { ascending: true });
 
     const lista: AvisoMedicao[] = (data ?? []).map((row) => {

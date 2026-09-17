@@ -26,7 +26,9 @@ export default function AppLayout() {
     const { count } = await supabase
       .from("projetos")
       .select("id", { count: "exact", head: true })
-      .eq("etapa", "medicao");
+      .eq("etapa", "medicao")
+      // Só conta o que a vendedora já liberou para a oficina.
+      .or("dados->>aguardando_oficina.is.null,dados->>aguardando_oficina.eq.false");
     setMedicoes(count ?? 0);
   }, [papel]);
   useEffect(() => { void contarMedicoes(); }, [contarMedicoes]);
