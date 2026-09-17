@@ -32,3 +32,4 @@
 - [x] Remover lista de materiais do PDF do orçamento (cliente vê só peças, serviços, frete e total)
 - [x] Mover o menu principal para uma barra lateral compacta e liberar mais largura para as telas operacionais
 - [x] Unificar vendedores no menu Equipe e refletir alterações de nome nos orçamentos e filtros
+- [x] Reorganizar o orçamento e manter o total atualizado visível durante o preenchimento
