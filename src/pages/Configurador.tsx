@@ -1275,6 +1275,11 @@ export default function Configurador() {
                           maxLength={60}
                           value={s.nome}
                           onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, nome: e.target.value } : x))}
+                          onBlur={() => {
+                            if (!s.nome.trim()) {
+                              upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, nome: "Serviço adicional" } : x));
+                            }
+                          }}
                         />
                       ) : (
                         <span className="col-span-7 truncate text-sm sm:col-span-9">{s.nome}</span>
@@ -1283,7 +1288,7 @@ export default function Configurador() {
                         className="col-span-4 h-9 text-right sm:col-span-2"
                         mask="moeda"
                         value={String(s.valor).replace(".", ",")}
-                        onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: numeroMascarado(e.target.value) } : x))}
+                        onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: Math.max(0, numeroMascarado(e.target.value)) } : x))}
                         onBlur={() => {
                           if (comMinimo && Number(s.valor || 0) < SERVICO_MINIMO) {
                             upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: SERVICO_MINIMO } : x));
@@ -1317,7 +1322,7 @@ export default function Configurador() {
                   mask="moeda"
                   placeholder={`mínimo ${formatarBRL(FRETE_MINIMO)}`}
                   value={projeto.frete_valor == null ? "" : String(projeto.frete_valor).replace(".", ",")}
-                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : numeroMascarado(e.target.value))}
+                  onChange={(e) => upd("frete_valor", e.target.value === "" ? null : Math.max(0, numeroMascarado(e.target.value)))}
                 />
                 <Button type="button" size="sm" variant="outline" className="mt-1 h-7 text-[11px]" onClick={() => upd("frete_valor", FRETE_MINIMO)}>
                   Usar mínimo {formatarBRL(FRETE_MINIMO)}
