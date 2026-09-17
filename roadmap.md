@@ -33,3 +33,4 @@
 - [x] Mover o menu principal para uma barra lateral compacta e liberar mais largura para as telas operacionais
 - [x] Unificar vendedores no menu Equipe e refletir alterações de nome nos orçamentos e filtros
 - [x] Reorganizar o orçamento e congelar o total no rodapé do desktop, mantendo Materiais no local original
+- [x] Garantir que a consultora de um novo orçamento seja sempre a vendedora logada, sem reaproveitar o nome da sessão anterior

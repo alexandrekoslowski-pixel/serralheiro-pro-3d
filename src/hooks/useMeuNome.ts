@@ -5,14 +5,17 @@ import { EQUIPE_ATUALIZADA_EVENTO, meuPerfil } from "@/lib/gestao";
 
 export function useMeuNome(): string {
   const { session } = useSessao();
-  const [nome, setNome] = useState("");
+  const [perfil, setPerfil] = useState<{ uid: string; nome: string } | null>(null);
 
   useEffect(() => {
     const uid = session?.user?.id;
-    if (!uid) return;
+    if (!uid) {
+      setPerfil(null);
+      return;
+    }
     let vivo = true;
     const recarregar = () => void meuPerfil(uid)
-      .then((p) => { if (vivo) setNome((p.nome ?? "").trim()); })
+      .then((p) => { if (vivo) setPerfil({ uid, nome: (p.nome ?? "").trim() }); })
       .catch(() => undefined);
     recarregar();
     window.addEventListener(EQUIPE_ATUALIZADA_EVENTO, recarregar);
@@ -24,5 +27,6 @@ export function useMeuNome(): string {
     };
   }, [session?.user?.id]);
 
-  return nome;
+  // Nunca devolve por um instante o nome da conta que estava conectada antes.
+  return perfil?.uid === session?.user?.id ? perfil.nome : "";
 }
