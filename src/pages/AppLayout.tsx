@@ -10,6 +10,7 @@ import { PAPEIS, type Papel } from "@/lib/gestao";
 import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeProjetos } from "@/hooks/useRealtimeProjetos";
 import { useMeuNome } from "@/hooks/useMeuNome";
+import { AvisosMedicao } from "@/components/AvisosMedicao";
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -104,6 +105,7 @@ export default function AppLayout() {
       </nav>
 
       <div className={cn("border-t border-sidebar-border", mobile ? "space-y-2 p-3" : "space-y-2 p-2")}>
+        {papel !== "serralheiro" && <AvisosMedicao />}
         {nome && (
           <div className={cn("flex items-center rounded-md bg-sidebar-accent", mobile ? "gap-3 px-3 py-2" : "flex-col gap-1 px-1 py-2 text-center")} title={`${nome} · ${papelNome}`}>
             <UserCircle className="h-5 w-5 shrink-0 text-sidebar-primary" />
@@ -150,9 +152,12 @@ export default function AppLayout() {
             </span>
             <span className="truncate font-display text-xs sm:text-sm">Serralheiro Pro 3D</span>
           </Link>
-          <Button variant="soft" size="icon" onClick={sair} aria-label="Sair">
-            <LogOut className="h-4 w-4" />
-          </Button>
+          <div className="flex items-center gap-2">
+            {papel !== "serralheiro" && <AvisosMedicao mobile />}
+            <Button variant="soft" size="icon" onClick={sair} aria-label="Sair">
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
         </header>
 
         {pendentes > 0 && (
