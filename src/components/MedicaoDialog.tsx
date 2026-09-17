@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { obterProjeto, salvarProjeto } from "@/lib/storage";
+import { useDados } from "@/hooks/useDados";
 import { numeroMascarado } from "@/lib/mascaras";
 import { PainelFotos } from "@/components/FotosOrdem";
 import { EditorMedicao } from "@/components/EditorMedicao";
