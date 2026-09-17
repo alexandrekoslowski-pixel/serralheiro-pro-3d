@@ -535,7 +535,7 @@ export default function Configurador() {
   };
 
   return (
-    <div className="container py-4 md:py-6 space-y-4">
+    <div className="container space-y-4 py-4 md:pb-28 md:pt-6">
       {/* Top bar */}
       <div className="space-y-3">
         <div className="flex items-center gap-3 min-w-0">
@@ -863,16 +863,6 @@ export default function Configurador() {
         </Tabs>
       </div>
 
-      <div className="sticky top-16 z-20 -mx-1 flex items-center justify-between gap-3 rounded-md border border-primary/40 bg-card/95 px-3 py-2 shadow-md backdrop-blur lg:hidden">
-        <div className="min-w-0">
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground">Total atualizado</div>
-          <div className="truncate text-xs text-muted-foreground">{projeto.pecas.length} {projeto.pecas.length === 1 ? "peça" : "peças"}</div>
-        </div>
-        <strong className="shrink-0 font-display text-xl text-primary">{formatarBRL(totalAnimado)}</strong>
-      </div>
-
-      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-4">
-      <div className="min-w-0 space-y-4">
       {/* Peças e medidas */}
       <div className="surface-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1346,31 +1336,6 @@ export default function Configurador() {
             </div>
           </div>
 
-      </div>
-
-      <aside className="sticky top-4 hidden rounded-lg border border-primary/40 bg-card p-4 shadow-lg lg:block" aria-label="Resumo atualizado do orçamento">
-        <div className="flex items-center gap-2 border-b border-border pb-3">
-          <DollarSign className="h-4 w-4 text-primary" />
-          <div>
-            <h3 className="font-display text-sm">Valor do orçamento</h3>
-            <p className="text-[11px] text-muted-foreground">Atualiza enquanto você preenche</p>
-          </div>
-        </div>
-        <div className="space-y-2 py-4 text-sm">
-          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Peça atual</span><strong>{formatarBRL(totalPecaSel)}</strong></div>
-          {projeto.pecas.length > 1 && (
-            <div className="flex justify-between gap-3"><span className="text-muted-foreground">Outras peças</span><strong>{formatarBRL(Math.max(0, totalPecas - totalPecaSel))}</strong></div>
-          )}
-          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Serviços</span><strong>{formatarBRL(servicosTotal)}</strong></div>
-          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Deslocamento</span><strong>{formatarBRL(projeto.frete_valor ?? 0)}</strong></div>
-        </div>
-        <div className="border-t border-border pt-3">
-          <div className="text-[10px] font-semibold uppercase text-muted-foreground">Total atualizado</div>
-          <div className="mt-1 font-display text-2xl text-primary">{formatarBRL(totalAnimado)}</div>
-        </div>
-      </aside>
-      </div>
-
           {/* Tabs */}
           <Tabs defaultValue={podeVerCustos ? "materiais" : "orcamento"}>
             <TabsList className="overflow-x-auto w-max min-w-full justify-start">
@@ -1676,6 +1641,34 @@ export default function Configurador() {
             </TabsContent>
           </Tabs>
         </div>
+
+      <aside className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-primary/40 bg-card/95 shadow-[0_-8px_24px_hsl(var(--background)/0.45)] backdrop-blur md:block lg:left-[5.5rem]" aria-label="Total congelado do orçamento">
+        <div className="container flex min-h-20 items-center justify-between gap-6 py-3">
+          <div className="flex min-w-0 items-center gap-6 text-sm">
+            <div className="min-w-0">
+              <div className="text-[10px] font-semibold uppercase text-muted-foreground">Peça selecionada</div>
+              <div className="max-w-56 truncate font-semibold">{pecaSel.nome}</div>
+            </div>
+            <div className="hidden xl:block">
+              <div className="text-[10px] font-semibold uppercase text-muted-foreground">Valor da peça</div>
+              <strong>{formatarBRL(totalPecaSel)}</strong>
+            </div>
+            <div className="hidden xl:block">
+              <div className="text-[10px] font-semibold uppercase text-muted-foreground">Serviços + frete</div>
+              <strong>{formatarBRL(servicosTotal + (projeto.frete_valor ?? 0))}</strong>
+            </div>
+          </div>
+          <div className="flex shrink-0 items-center gap-4 border-l border-border pl-6">
+            <div className="text-right">
+              <div className="text-[10px] font-semibold uppercase text-muted-foreground">Total atualizado</div>
+              <div className="font-display text-2xl text-primary">{formatarBRL(totalAnimado)}</div>
+            </div>
+            <Button size="sm" onClick={() => { salvarProjeto({ ...projeto, total: totalPecas, servicos_valor: servicosTotal || null }); toast.success("Salvo"); }}>
+              <Save className="mr-1 h-4 w-4" /> Salvar
+            </Button>
+          </div>
+        </div>
+      </aside>
       {financeiroAberto && (
         <DialogOrdemFinanceiro projeto={projeto} foco="comprovante" onClose={() => setFinanceiroAberto(false)} onMandarOficina={mandarParaOficina} />
       )}
