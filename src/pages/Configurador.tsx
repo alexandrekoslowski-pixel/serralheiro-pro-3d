@@ -863,6 +863,16 @@ export default function Configurador() {
         </Tabs>
       </div>
 
+      <div className="sticky top-16 z-20 -mx-1 flex items-center justify-between gap-3 rounded-md border border-primary/40 bg-card/95 px-3 py-2 shadow-md backdrop-blur lg:hidden">
+        <div className="min-w-0">
+          <div className="text-[10px] font-semibold uppercase text-muted-foreground">Total atualizado</div>
+          <div className="truncate text-xs text-muted-foreground">{projeto.pecas.length} {projeto.pecas.length === 1 ? "peça" : "peças"}</div>
+        </div>
+        <strong className="shrink-0 font-display text-xl text-primary">{formatarBRL(totalAnimado)}</strong>
+      </div>
+
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_17rem] lg:items-start lg:gap-4">
+      <div className="min-w-0 space-y-4">
       {/* Peças e medidas */}
       <div className="surface-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -917,7 +927,7 @@ export default function Configurador() {
         {/* Campos da peça escolhida, em blocos */}
         <div className="space-y-4 border-t border-border pt-4">
           <section className="rounded-lg border border-border p-3">
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">O que é e quanto custa</h4>
+            <h4 className="mb-3 text-xs font-semibold uppercase text-muted-foreground">Produto, medidas e valor</h4>
             <div className="form-grid">
               <div className="form-field-long">
                 <Label>Produto</Label>
@@ -954,6 +964,20 @@ export default function Configurador() {
                 <Input className="mt-2" value={pecaSel.nome} onChange={(e) => updPeca({ nome: e.target.value })} />
                 <p className="mt-1 text-[11px] text-muted-foreground">Aparece na oficina e nos documentos.</p>
               </div>
+              <div className="form-field-full grid gap-3 border-t border-border pt-3 sm:grid-cols-2">
+                <SliderMm
+                  label="Largura"
+                  value={pecaSel.largura_mm}
+                  min={tip.larguraMin} max={tip.larguraMax}
+                  onChange={(v) => updPeca({ largura_mm: v })}
+                />
+                <SliderMm
+                  label="Altura"
+                  value={pecaSel.altura_mm}
+                  min={tip.alturaMin} max={tip.alturaMax}
+                  onChange={(v) => updPeca({ altura_mm: v })}
+                />
+              </div>
               <div className="form-field-money">
                 <Label>Valor desta peça (R$)</Label>
                 <Input
@@ -969,7 +993,7 @@ export default function Configurador() {
                   </Button>
                 )}
               </div>
-              <div className="form-field-full rounded-lg bg-muted/40 px-3 py-2 text-sm">
+              <div className="form-field-long self-end rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
                 {precoSel.item ? (
                   precoSel.item.unidade === "sob_orcamento" ? (
                     <>Item sob orçamento — digite o valor desta peça.</>
@@ -984,24 +1008,6 @@ export default function Configurador() {
                   <>Escolha o produto da tabela para calcular o preço.</>
                 )}
               </div>
-            </div>
-          </section>
-
-          <section className="rounded-lg border border-border p-3">
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Medidas</h4>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <SliderMm
-                label="Largura"
-                value={pecaSel.largura_mm}
-                min={tip.larguraMin} max={tip.larguraMax}
-                onChange={(v) => updPeca({ largura_mm: v })}
-              />
-              <SliderMm
-                label="Altura"
-                value={pecaSel.altura_mm}
-                min={tip.alturaMin} max={tip.alturaMax}
-                onChange={(v) => updPeca({ altura_mm: v })}
-              />
             </div>
           </section>
 
@@ -1340,15 +1346,30 @@ export default function Configurador() {
             </div>
           </div>
 
-          {/* Fechamento do orçamento — imediatamente antes dos materiais */}
-          <div className="grid gap-3 sm:grid-cols-[1fr_260px] sm:items-stretch">
-            <div className="rounded-lg border border-border bg-muted/40 p-4 text-sm">
-              <div className="flex justify-between gap-4"><span>Peças</span><strong>{formatarBRL(totalPecas)}</strong></div>
-              <div className="mt-1 flex justify-between gap-4"><span>Serviços</span><strong>{formatarBRL(servicosTotal)}</strong></div>
-              <div className="mt-1 flex justify-between gap-4"><span>Deslocamento</span><strong>{formatarBRL(projeto.frete_valor ?? 0)}</strong></div>
-            </div>
-            <CardResumo label="Total do orçamento" valor={formatarBRL(totalAnimado)} highlight />
+      </div>
+
+      <aside className="sticky top-4 hidden rounded-lg border border-primary/40 bg-card p-4 shadow-lg lg:block" aria-label="Resumo atualizado do orçamento">
+        <div className="flex items-center gap-2 border-b border-border pb-3">
+          <DollarSign className="h-4 w-4 text-primary" />
+          <div>
+            <h3 className="font-display text-sm">Valor do orçamento</h3>
+            <p className="text-[11px] text-muted-foreground">Atualiza enquanto você preenche</p>
           </div>
+        </div>
+        <div className="space-y-2 py-4 text-sm">
+          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Peça atual</span><strong>{formatarBRL(totalPecaSel)}</strong></div>
+          {projeto.pecas.length > 1 && (
+            <div className="flex justify-between gap-3"><span className="text-muted-foreground">Outras peças</span><strong>{formatarBRL(Math.max(0, totalPecas - totalPecaSel))}</strong></div>
+          )}
+          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Serviços</span><strong>{formatarBRL(servicosTotal)}</strong></div>
+          <div className="flex justify-between gap-3"><span className="text-muted-foreground">Deslocamento</span><strong>{formatarBRL(projeto.frete_valor ?? 0)}</strong></div>
+        </div>
+        <div className="border-t border-border pt-3">
+          <div className="text-[10px] font-semibold uppercase text-muted-foreground">Total atualizado</div>
+          <div className="mt-1 font-display text-2xl text-primary">{formatarBRL(totalAnimado)}</div>
+        </div>
+      </aside>
+      </div>
 
           {/* Tabs */}
           <Tabs defaultValue={podeVerCustos ? "materiais" : "orcamento"}>
