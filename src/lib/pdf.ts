@@ -106,10 +106,7 @@ export function gerarOrcamentoPDF(
   ];
   if (projeto.local_instalacao) camposCliente.push(["Instalação", projeto.local_instalacao]);
   if (projeto.vendedora) {
-    const tituloResponsavel = projeto.vendedora.trim().toLocaleLowerCase("pt-BR").startsWith("eduardo")
-      ? "Consultor"
-      : "Consultora";
-    camposCliente.push([tituloResponsavel, projeto.vendedora]);
+    camposCliente.push(["Consultora(a)", projeto.vendedora]);
   }
 
   const alturaBloco = camposCliente.length * 5 + 6;
