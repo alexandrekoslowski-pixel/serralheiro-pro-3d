@@ -52,7 +52,7 @@ import {
 } from "@/lib/fixacao";
 import { calcularProjeto, ItemExtra, ItemOverride } from "@/lib/calculator";
 import { planejarCorte, planejarProducao } from "@/lib/producao";
-import { gerarOrcamentoPDF } from "@/lib/pdf";
+import { gerarOrcamentoPDF, nomeArquivoPdf } from "@/lib/pdf";
 import {
   FRETE_MINIMO, SERVICOS_POLITICA, SERVICO_MINIMO, servicoTemMinimo, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
   precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
@@ -467,7 +467,7 @@ export default function Configurador() {
       const url = URL.createObjectURL(publicado.blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `contrato-${projeto.id}.pdf`;
+      a.download = `${nomeArquivoPdf(projeto.nome, "contrato")}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {

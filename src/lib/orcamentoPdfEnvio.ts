@@ -2,7 +2,7 @@
 // O cliente abre /o/<código>, que resolve o PDF e dispara o download — a URL assinada
 // enorme nunca aparece na mensagem do WhatsApp.
 import { supabase } from "@/integrations/supabase/client";
-import { gerarOrcamentoPDF } from "./pdf";
+import { gerarOrcamentoPDF, nomeArquivoPdf } from "./pdf";
 import { gerarContratoPDF } from "./pdfContrato";
 import type { ResultadoCalculo } from "./calculator";
 import type { DadosEmpresa, ProjetoLocal } from "./storage";
@@ -55,12 +55,12 @@ export async function publicarOrcamentoPDF(
   empresa: DadosEmpresa,
 ): Promise<string> {
   const blob = gerarOrcamentoPDF(projeto, resultado, empresa, undefined, true) as Blob;
-  return publicarPdf(projeto.id, blob, `orcamento-${projeto.id}`);
+  return publicarPdf(projeto.id, blob, nomeArquivoPdf(projeto.nome, "orcamento"));
 }
 
 /** Sobe o PDF do contrato e devolve o link curto. */
 export async function publicarContratoPDF(projeto: ProjetoLocal, empresa: DadosEmpresa): Promise<{ link: string; blob: Blob }> {
   const blob = gerarContratoPDF(projeto, empresa, true) as Blob;
-  const link = await publicarPdf(projeto.id, blob, `contrato-${projeto.id}`);
+  const link = await publicarPdf(projeto.id, blob, nomeArquivoPdf(projeto.nome, "contrato"));
   return { link, blob };
 }
