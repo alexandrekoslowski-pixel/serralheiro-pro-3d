@@ -9,6 +9,7 @@
 - Catálogo com 29 cores Kochinski integrado ao orçamento, PDF, ordem e visualização 3D
 
 ## Em aberto
+- [x] Compactar formulários por tamanho natural dos dados, mantendo endereço e textos longos amplos
 - Convite de equipe por e-mail (hoje o gestor cola o identificador do usuário)
 - Login para o serralheiro e reconciliação com a tela pública de oficina (TV)
 - Ocultar custos/margem para vendedora dentro do orçamento

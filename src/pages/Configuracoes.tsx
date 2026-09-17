@@ -48,12 +48,12 @@ export default function Configuracoes() {
       {/* Empresa */}
       <div className="surface-card rounded-lg border border-border p-5">
         <h2 className="font-display text-lg mb-4">Dados da empresa</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div><Label>Nome</Label><Input value={empresa.nome} onChange={(e) => setEmpresa({ ...empresa, nome: e.target.value })} /></div>
-          <div><Label>CNPJ</Label><Input mask="cpfCnpj" value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} /></div>
-          <div><Label>Telefone</Label><Input type="tel" mask="telefone" value={empresa.telefone} onChange={(e) => setEmpresa({ ...empresa, telefone: e.target.value })} /></div>
-          <div><Label>E-mail</Label><Input type="email" value={empresa.email} onChange={(e) => setEmpresa({ ...empresa, email: e.target.value })} /></div>
-          <div className="md:col-span-2"><Label>Endereço</Label><Input value={empresa.endereco} onChange={(e) => setEmpresa({ ...empresa, endereco: e.target.value })} /></div>
+        <div className="form-grid">
+          <div className="form-field-long"><Label>Nome</Label><Input value={empresa.nome} onChange={(e) => setEmpresa({ ...empresa, nome: e.target.value })} /></div>
+          <div className="form-field-medium"><Label>CNPJ</Label><Input mask="cpfCnpj" value={empresa.cnpj} onChange={(e) => setEmpresa({ ...empresa, cnpj: e.target.value })} /></div>
+          <div className="form-field-medium"><Label>Telefone</Label><Input type="tel" mask="telefone" value={empresa.telefone} onChange={(e) => setEmpresa({ ...empresa, telefone: e.target.value })} /></div>
+          <div className="form-field-long"><Label>E-mail</Label><Input type="email" value={empresa.email} onChange={(e) => setEmpresa({ ...empresa, email: e.target.value })} /></div>
+          <div className="form-field-full"><Label>Endereço</Label><Input value={empresa.endereco} onChange={(e) => setEmpresa({ ...empresa, endereco: e.target.value })} /></div>
         </div>
 
 
@@ -86,23 +86,23 @@ export default function Configuracoes() {
         </div>
 
         <h2 className="font-display text-lg mt-6 mb-4">Prazos das ordens</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div>
+        <div className="form-grid">
+          <div className="form-field-short">
             <Label>Prazo padrão ao aprovar (dias)</Label>
             <Input mask="inteiro" value={empresa.prazoPadraoDias}
               onChange={(e) => setEmpresa({ ...empresa, prazoPadraoDias: Math.max(1, Number(e.target.value)) })} />
           </div>
-          <div>
+          <div className="form-field-short">
             <Label>Vermelho quando faltar até (dias)</Label>
             <Input mask="inteiro" value={empresa.limiteVermelhoDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteVermelhoDias: Number(e.target.value) })} />
           </div>
-          <div>
+          <div className="form-field-short">
             <Label>Amarelo quando faltar até (dias)</Label>
             <Input mask="inteiro" value={empresa.limiteAmareloDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteAmareloDias: Number(e.target.value) })} />
           </div>
-          <div>
+          <div className="form-field-medium">
             <Label>Meta semanal de faturamento (R$)</Label>
             <Input mask="moeda" value={String(empresa.metaSemanal ?? 40000).replace(".", ",")}
               onChange={(e) => setEmpresa({ ...empresa, metaSemanal: numeroMascarado(e.target.value) })} />
@@ -110,31 +110,31 @@ export default function Configuracoes() {
         </div>
 
         <h2 className="font-display text-lg mt-6 mb-4">Proposta comercial (PDF do orçamento)</h2>
-        <div className="grid gap-4 md:grid-cols-3">
-          <div>
+        <div className="form-grid">
+          <div className="form-field-short">
             <Label>Prazo padrão (dias úteis)</Label>
             <Input mask="inteiro" value={empresa.prazoDiasUteis}
               onChange={(e) => setEmpresa({ ...empresa, prazoDiasUteis: Math.max(1, Number(e.target.value)) })} />
           </div>
-          <div>
+          <div className="form-field-short">
             <Label>Validade do orçamento (dias)</Label>
             <Input mask="inteiro" value={empresa.validadeDias}
               onChange={(e) => setEmpresa({ ...empresa, validadeDias: Math.max(1, Number(e.target.value)) })} />
           </div>
-          <div>
+          <div className="form-field-short">
             <Label>Garantia (dias)</Label>
             <Input mask="inteiro" value={empresa.garantiaDias}
               onChange={(e) => setEmpresa({ ...empresa, garantiaDias: Number(e.target.value) })} />
           </div>
-          <div>
+          <div className="form-field-medium">
             <Label>Chave PIX</Label>
             <Input value={empresa.pixChave} onChange={(e) => setEmpresa({ ...empresa, pixChave: e.target.value })} />
           </div>
-          <div>
+          <div className="form-field-long">
             <Label>Favorecido do PIX</Label>
             <Input value={empresa.pixFavorecido} onChange={(e) => setEmpresa({ ...empresa, pixFavorecido: e.target.value })} />
           </div>
-          <div>
+          <div className="form-field-medium">
             <Label>Visita técnica (R$)</Label>
             <Input mask="moeda" value={String(empresa.visitaTecnica).replace(".", ",")}
               onChange={(e) => setEmpresa({ ...empresa, visitaTecnica: numeroMascarado(e.target.value) })} />
@@ -160,7 +160,7 @@ export default function Configuracoes() {
 
         <h2 className="font-display text-lg mt-6 mb-2">Mensagens para o cliente</h2>
         <p className="text-sm text-muted-foreground mb-3">Modelos prontos para copiar e enviar no WhatsApp.</p>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           {([
             ["msgSolicitarDados", "Solicitar dados"],
             ["msgFollowUp", "Retomar contato"],
