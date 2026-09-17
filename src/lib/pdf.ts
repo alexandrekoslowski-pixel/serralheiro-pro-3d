@@ -165,7 +165,14 @@ export function gerarOrcamentoPDF(
     yTot += 5;
   };
   
-  escreverLinha("Serviços", projeto.servicos_valor != null ? projeto.servicos_valor : "não incluso");
+  // Serviços aparecem item a item (inclusive os digitados livremente pela vendedora),
+  // para o cliente entender cada taxa cobrada.
+  const servicos = projeto.servicos_politica ?? [];
+  if (servicos.length > 0) {
+    servicos.forEach((s) => escreverLinha(s.nome?.trim() || "Serviço adicional", Number(s.valor || 0)));
+  } else {
+    escreverLinha("Serviços", projeto.servicos_valor != null ? projeto.servicos_valor : "não incluso");
+  }
   escreverLinha("Frete", projeto.frete_valor != null ? projeto.frete_valor : "não incluso");
 
   const totalProposta =
