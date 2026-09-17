@@ -383,5 +383,5 @@ export function gerarOrdemProducaoPDF(
   }
   drawFooter();
 
-  doc.save(`OS-${projeto.id}.pdf`);
+  doc.save(`OS-${nomeArquivoPdf(projeto.nome, "orcamento").replace(/^orcamento-/, "")}.pdf`);
 }

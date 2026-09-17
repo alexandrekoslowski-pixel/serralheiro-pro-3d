@@ -98,7 +98,7 @@ export default function ModoAtendimento() {
   const compartilhar = async () => {
     const blob = gerarBlob();
     if (!blob) return;
-    const file = new File([blob], `orcamento-${projeto.id}.pdf`, { type: "application/pdf" });
+    const file = new File([blob], `${nomeArquivoPdf(projeto.nome, "orcamento")}.pdf`, { type: "application/pdf" });
     const texto = `Orçamento ${tip.nome} — ${empresa.nome || "Serralheria"}\nTotal: ${formatarBRL(resultado.totalGeral)}`;
     // navigator.canShare existe em Chrome/Safari modernos
     const navAny = navigator as any;

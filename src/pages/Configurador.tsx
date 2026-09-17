@@ -467,7 +467,7 @@ export default function Configurador() {
       const url = URL.createObjectURL(publicado.blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `contrato-${projeto.id}.pdf`;
+      a.download = `${nomeArquivoPdf(projeto.nome, "contrato")}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
     } catch {
