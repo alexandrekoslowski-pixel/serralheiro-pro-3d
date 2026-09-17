@@ -1288,7 +1288,7 @@ export default function Configurador() {
                         className="col-span-4 h-9 text-right sm:col-span-2"
                         mask="moeda"
                         value={String(s.valor).replace(".", ",")}
-                        onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: numeroMascarado(e.target.value) } : x))}
+                        onChange={(e) => upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: Math.max(0, numeroMascarado(e.target.value)) } : x))}
                         onBlur={() => {
                           if (comMinimo && Number(s.valor || 0) < SERVICO_MINIMO) {
                             upd("servicos_politica", servicosEscolhidos.map((x) => x.id === s.id ? { ...x, valor: SERVICO_MINIMO } : x));
