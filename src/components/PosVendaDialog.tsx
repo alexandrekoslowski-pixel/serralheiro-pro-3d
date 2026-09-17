@@ -201,7 +201,7 @@ export function PosVendaDialog({ projetoId }: { projetoId: string }) {
                   value={descricao} onChange={(e) => setDescricao(e.target.value)} />
                 <div className="form-grid">
                   <div className="form-field-long"><Input maxLength={100} placeholder="Responsável" value={responsavel} onChange={(e) => setResponsavel(e.target.value)} /></div>
-                  <div className="form-field-short"><Input type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} /></div>
+                  <div className="form-field-date"><Input type="date" value={prazo} onChange={(e) => setPrazo(e.target.value)} /></div>
                 </div>
                 <Button size="sm" onClick={() => void abrirOcorrencia()} disabled={salvando}>
                   {salvando ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Plus className="mr-1 h-4 w-4" />}

@@ -99,12 +99,12 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
           </Button>
         )}
       </div>
-      <div className="form-field-short">
+      <div className="form-field-date">
         <Label>Prazo de entrega</Label>
         <Input type="date" value={atual.prazo_entrega ?? ""} onChange={(e) => salvarProjeto({ ...atual, prazo_entrega: e.target.value || null })} />
       </div>
-      <div className="form-field-medium"><Label>Valor orçado</Label><Input value={formatarBRL(totalComServicos(atual))} readOnly /></div>
-      <div className="form-field-medium">
+      <div className="form-field-money"><Label>Valor orçado</Label><Input value={formatarBRL(totalComServicos(atual))} readOnly /></div>
+      <div className="form-field-money">
         <Label>Valor a cobrar</Label>
         {ajustando ? (
           <Input
@@ -141,8 +141,8 @@ export function DialogOrdemFinanceiro({ projeto, onClose, foco, onMandarOficina 
         <p className="text-xs text-muted-foreground">Informe o valor recebido, anexe a foto ou o PDF do comprovante e clique em Lançar.</p>
       </div>
       <div className="form-grid">
-        <div className="form-field-short"><Label className="text-xs">Data</Label><Input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
-        <div className="form-field-medium"><Label className="text-xs">Valor recebido</Label><Input mask="moeda" placeholder="0,00" value={valor} onChange={(e) => setValor(e.target.value)} /></div>
+        <div className="form-field-date"><Label className="text-xs">Data</Label><Input type="date" value={data} onChange={(e) => setData(e.target.value)} /></div>
+        <div className="form-field-money"><Label className="text-xs">Valor recebido</Label><Input mask="moeda" placeholder="0,00" value={valor} onChange={(e) => setValor(e.target.value)} /></div>
         <div className="form-field-medium">
           <Label className="text-xs">Forma</Label>
           <Select value={forma} onValueChange={setForma}>

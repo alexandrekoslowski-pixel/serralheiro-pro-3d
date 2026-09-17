@@ -142,17 +142,27 @@
 
 @layer utilities {
   .form-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
     gap: 0.75rem;
   }
+  .form-grid > * {
+    width: 100%;
+    min-width: 0;
+  }
   @media (min-width: 640px) {
-    .form-grid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
-    .form-field-short { grid-column: span 3 / span 3; }
-    .form-field-medium { grid-column: span 4 / span 4; }
-    .form-field-long { grid-column: span 6 / span 6; }
-    .form-field-wide { grid-column: span 8 / span 8; }
-    .form-field-full { grid-column: 1 / -1; }
+    .form-field-short { flex: 0 1 10rem; width: 10rem; }
+    .form-field-medium { flex: 0 1 15rem; width: 15rem; }
+    .form-field-long { flex: 1 1 22rem; width: 22rem; }
+    .form-field-wide { flex: 1 1 32rem; width: 32rem; }
+    .form-field-full { flex: 0 0 100%; width: 100%; }
+    .form-field-cep { flex: 0 0 9rem; width: 9rem; }
+    .form-field-number { flex: 0 0 8rem; width: 8rem; }
+    .form-field-phone { flex: 0 0 13rem; width: 13rem; }
+    .form-field-document { flex: 0 0 14rem; width: 14rem; }
+    .form-field-date { flex: 0 0 11rem; width: 11rem; }
+    .form-field-money { flex: 0 0 12rem; width: 12rem; }
   }
   .bg-gradient-orange {
     background-image: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
