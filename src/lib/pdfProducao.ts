@@ -7,6 +7,7 @@ import { tipologiaPorId } from "./tipologias";
 import { PlanoCorte, PlanoProducao } from "./producao";
 import { cm } from "@/lib/medidas";
 import { linhasChecklistProjeto } from "./checklistPedido";
+import { nomeArquivoPdf } from "./pdf";
 
 const BLACK: [number, number, number] = [0, 0, 0];
 const GRAY: [number, number, number] = [110, 110, 110];
