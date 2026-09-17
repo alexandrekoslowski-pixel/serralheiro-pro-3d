@@ -105,7 +105,6 @@ export default function AppLayout() {
       </nav>
 
       <div className={cn("border-t border-sidebar-border", mobile ? "space-y-2 p-3" : "space-y-2 p-2")}>
-        {papel !== "serralheiro" && <AvisosMedicao />}
         {nome && (
           <div className={cn("flex items-center rounded-md bg-sidebar-accent", mobile ? "gap-3 px-3 py-2" : "flex-col gap-1 px-1 py-2 text-center")} title={`${nome} · ${papelNome}`}>
             <UserCircle className="h-5 w-5 shrink-0 text-sidebar-primary" />
