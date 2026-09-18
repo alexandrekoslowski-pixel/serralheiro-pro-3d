@@ -788,7 +788,12 @@ export function renomearVendedor(antigo: string, novo: string): void {
       if (userId) {
         void supabase.from('projetos')
           .upsert(projetoParaLinha(atualizado) as never)
-          .then(({ error }) => { if (error) console.error('Falha ao sincronizar renomeação', error); });
+          .then(({ error }) => {
+            if (error) {
+              console.error('Falha ao sincronizar renomeação', error);
+              toast.error("Não foi possível atualizar o vendedor nos orçamentos");
+            }
+          });
       }
       return atualizado;
     }
