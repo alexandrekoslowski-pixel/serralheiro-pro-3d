@@ -953,7 +953,12 @@ export function salvarEmpresa(e: DadosEmpresa): void {
       limite_vermelho_dias: empresa.limiteVermelhoDias,
       limite_amarelo_dias: empresa.limiteAmareloDias,
       updated_at: new Date().toISOString(),
-    } as never).then(({ error }) => { if (error) console.error("Falha ao salvar empresa", error); });
+    } as never).then(({ error }) => {
+      if (error) {
+        console.error("Falha ao salvar empresa", error);
+        toast.error("Não foi possível salvar os dados da empresa");
+      }
+    });
   }
 }
 
@@ -969,7 +974,12 @@ export function salvarCatalogo(c: Catalogo): void {
     void supabase.from("catalogo").upsert({
       user_id: idDono(), dados: c as unknown as Record<string, unknown>,
       updated_at: new Date().toISOString(),
-    } as never).then(({ error }) => { if (error) console.error("Falha ao salvar catálogo", error); });
+    } as never).then(({ error }) => {
+      if (error) {
+        console.error("Falha ao salvar catálogo", error);
+        toast.error("Não foi possível salvar o catálogo");
+      }
+    });
   }
 }
 
