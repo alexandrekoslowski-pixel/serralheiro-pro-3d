@@ -1,1 +1,4 @@
 project_id = "wxklrbxyqxkxjhswwcva"
+
+[functions.reset-senhas-temp]
+verify_jwt = false
