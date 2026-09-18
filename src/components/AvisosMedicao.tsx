@@ -35,12 +35,11 @@ export function AvisosMedicao({ mobile = false }: { mobile?: boolean }) {
   const vistos = useRef<Set<string> | null>(null);
 
   const carregar = useCallback(async () => {
+    // Toda ordem em "medicao" precisa da medição do Eduardo — inclusive as recém-aprovadas.
     const { data } = await supabase
       .from("projetos")
       .select("id, nome, cliente, prazo_entrega, etapa_em, dados")
       .eq("etapa", "medicao")
-      // Só avisa o que a vendedora já liberou para a oficina.
-      .or("dados->>aguardando_oficina.is.null,dados->>aguardando_oficina.eq.false")
       .order("etapa_em", { ascending: true });
 
     const lista: AvisoMedicao[] = (data ?? []).map((row) => {

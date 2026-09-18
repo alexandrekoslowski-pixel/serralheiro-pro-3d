@@ -1,5 +1,6 @@
 // Camada de dados: cache em memória (leitura síncrona) sincronizado com a nuvem.
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { TipologiaId, AcabamentoId, TIPOLOGIAS, tipologiaPorId } from "./tipologias";
 import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
