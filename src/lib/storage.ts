@@ -759,7 +759,12 @@ export function salvarProjeto(p: ProjetoLocal): void {
     void supabase
       .from("projetos")
       .upsert(projetoParaLinha(atualizado) as never)
-      .then(({ error }) => { if (error) console.error("Falha ao salvar projeto", error); });
+      .then(({ error }) => {
+        if (error) {
+          console.error("Falha ao salvar projeto", error);
+          toast.error("Não foi possível salvar o orçamento", { description: "Verifique a conexão e tente de novo." });
+        }
+      });
   }
 }
 
@@ -798,7 +803,12 @@ export function deletarProjeto(id: string): void {
   notificar();
   if (userId) {
     void supabase.from("projetos").delete().eq("id", id)
-      .then(({ error }) => { if (error) console.error("Falha ao excluir projeto", error); });
+      .then(({ error }) => {
+        if (error) {
+          console.error("Falha ao excluir projeto", error);
+          toast.error("Não foi possível excluir o orçamento", { description: "Verifique a conexão e tente de novo." });
+        }
+      });
   }
 }
 
@@ -874,7 +884,11 @@ export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<Paga
     .insert({ ...p, user_id: idDono() } as never)
     .select()
     .single();
-  if (error) throw error;
+  if (error) {
+    console.error("Falha ao registrar pagamento", error);
+    toast.error("Não foi possível registrar o pagamento", { description: "Verifique a conexão e tente de novo." });
+    throw error;
+  }
   const criado = { ...p, id: (data as { id: string }).id };
   pagamentos = [criado, ...pagamentos];
   reconciliarFinanceiro(p.projeto_id);
