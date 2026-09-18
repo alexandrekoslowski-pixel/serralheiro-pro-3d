@@ -34,3 +34,6 @@
 - [x] Unificar vendedores no menu Equipe e refletir alterações de nome nos orçamentos e filtros
 - [x] Reorganizar o orçamento e congelar o total no rodapé do desktop, mantendo Materiais no local original
 - [x] Preservar o responsável escolhido no orçamento e usar “Consultor” no PDF quando o responsável for Eduardo
+- [x] Sino de medição avisa Eduardo de toda ordem recém-aprovada (não só as liberadas)
+- [x] Aviso visível (toast) quando salvar orçamento/pagamento falha na nuvem
+- [x] Vendedor(a) responsável mostra o nome salvo mesmo se não estiver mais no menu Equipe

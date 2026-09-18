@@ -1,5 +1,6 @@
 // Camada de dados: cache em memória (leitura síncrona) sincronizado com a nuvem.
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import { TipologiaId, AcabamentoId, TIPOLOGIAS, tipologiaPorId } from "./tipologias";
 import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
@@ -758,7 +759,12 @@ export function salvarProjeto(p: ProjetoLocal): void {
     void supabase
       .from("projetos")
       .upsert(projetoParaLinha(atualizado) as never)
-      .then(({ error }) => { if (error) console.error("Falha ao salvar projeto", error); });
+      .then(({ error }) => {
+        if (error) {
+          console.error("Falha ao salvar projeto", error);
+          toast.error("Não foi possível salvar o orçamento", { description: "Verifique a conexão e tente de novo." });
+        }
+      });
   }
 }
 
@@ -782,7 +788,12 @@ export function renomearVendedor(antigo: string, novo: string): void {
       if (userId) {
         void supabase.from('projetos')
           .upsert(projetoParaLinha(atualizado) as never)
-          .then(({ error }) => { if (error) console.error('Falha ao sincronizar renomeação', error); });
+          .then(({ error }) => {
+            if (error) {
+              console.error('Falha ao sincronizar renomeação', error);
+              toast.error("Não foi possível atualizar o vendedor nos orçamentos");
+            }
+          });
       }
       return atualizado;
     }
@@ -797,7 +808,12 @@ export function deletarProjeto(id: string): void {
   notificar();
   if (userId) {
     void supabase.from("projetos").delete().eq("id", id)
-      .then(({ error }) => { if (error) console.error("Falha ao excluir projeto", error); });
+      .then(({ error }) => {
+        if (error) {
+          console.error("Falha ao excluir projeto", error);
+          toast.error("Não foi possível excluir o orçamento", { description: "Verifique a conexão e tente de novo." });
+        }
+      });
   }
 }
 
@@ -873,7 +889,11 @@ export async function adicionarPagamento(p: Omit<Pagamento, "id">): Promise<Paga
     .insert({ ...p, user_id: idDono() } as never)
     .select()
     .single();
-  if (error) throw error;
+  if (error) {
+    console.error("Falha ao registrar pagamento", error);
+    toast.error("Não foi possível registrar o pagamento", { description: "Verifique a conexão e tente de novo." });
+    throw error;
+  }
   const criado = { ...p, id: (data as { id: string }).id };
   pagamentos = [criado, ...pagamentos];
   reconciliarFinanceiro(p.projeto_id);
@@ -938,7 +958,12 @@ export function salvarEmpresa(e: DadosEmpresa): void {
       limite_vermelho_dias: empresa.limiteVermelhoDias,
       limite_amarelo_dias: empresa.limiteAmareloDias,
       updated_at: new Date().toISOString(),
-    } as never).then(({ error }) => { if (error) console.error("Falha ao salvar empresa", error); });
+    } as never).then(({ error }) => {
+      if (error) {
+        console.error("Falha ao salvar empresa", error);
+        toast.error("Não foi possível salvar os dados da empresa");
+      }
+    });
   }
 }
 
@@ -954,7 +979,12 @@ export function salvarCatalogo(c: Catalogo): void {
     void supabase.from("catalogo").upsert({
       user_id: idDono(), dados: c as unknown as Record<string, unknown>,
       updated_at: new Date().toISOString(),
-    } as never).then(({ error }) => { if (error) console.error("Falha ao salvar catálogo", error); });
+    } as never).then(({ error }) => {
+      if (error) {
+        console.error("Falha ao salvar catálogo", error);
+        toast.error("Não foi possível salvar o catálogo");
+      }
+    });
   }
 }
 

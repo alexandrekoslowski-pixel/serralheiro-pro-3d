@@ -23,12 +23,11 @@ export default function AppLayout() {
   const [medicoes, setMedicoes] = useState(0);
   const contarMedicoes = useCallback(async () => {
     if (papel === "serralheiro") return;
+    // Toda ordem em "medicao" precisa da medição do Eduardo — inclusive as recém-aprovadas.
     const { count } = await supabase
       .from("projetos")
       .select("id", { count: "exact", head: true })
-      .eq("etapa", "medicao")
-      // Só conta o que a vendedora já liberou para a oficina.
-      .or("dados->>aguardando_oficina.is.null,dados->>aguardando_oficina.eq.false");
+      .eq("etapa", "medicao");
     setMedicoes(count ?? 0);
   }, [papel]);
   useEffect(() => { void contarMedicoes(); }, [contarMedicoes]);
