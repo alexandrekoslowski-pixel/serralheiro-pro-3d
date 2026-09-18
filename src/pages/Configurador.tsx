@@ -722,24 +722,24 @@ export default function Configurador() {
               </div>
               <div className="form-field-medium">
                 <Label className="text-xs">Vendedor(a) responsável</Label>
-                {vendedores.length > 0 ? (
-                  <Select
-                    value={projeto.vendedora || "__nenhuma__"}
-                    onValueChange={(v) => upd("vendedora", v === "__nenhuma__" ? "" : v)}
-                  >
-                    <SelectTrigger className="h-9"><SelectValue placeholder="Selecionar" /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="__nenhuma__">Sem vendedor(a)</SelectItem>
-                      {vendedores.map((v) => <SelectItem key={v} value={v}>{v}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Input
-                    className="h-9"
-                    placeholder="Cadastre a pessoa no menu Equipe"
-                    value={projeto.vendedora ?? ""}
-                    onChange={(e) => upd("vendedora", e.target.value)}
-                  />
+                <Select
+                  value={projeto.vendedora || "__nenhuma__"}
+                  onValueChange={(v) => upd("vendedora", v === "__nenhuma__" ? "" : v)}
+                >
+                  <SelectTrigger className="h-9"><SelectValue placeholder="Selecionar" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="__nenhuma__">Sem vendedor(a)</SelectItem>
+                    {Array.from(new Set([...vendedores, ...(projeto.vendedora ? [projeto.vendedora] : [])]))
+                      .sort((a, b) => a.localeCompare(b))
+                      .map((v) => (
+                        <SelectItem key={v} value={v}>{v}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                {projeto.vendedora && !vendedores.includes(projeto.vendedora) && (
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    "{projeto.vendedora}" não está mais no menu Equipe. Troque por um nome cadastrado para manter os filtros.
+                  </p>
                 )}
               </div>
               <div className="form-field-number">
