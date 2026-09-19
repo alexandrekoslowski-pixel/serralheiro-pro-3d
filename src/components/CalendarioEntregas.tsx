@@ -72,14 +72,23 @@ export default function CalendarioEntregas() {
           const doDia = porDia.get(chave) ?? [];
           const foraDoMes = d.getMonth() !== ref.getMonth();
           const ehHoje = chave === iso(hoje);
+          const abertas = doDia.filter(ordemAberta).length;
+          const cheio = abertas > capacidadeDia(empresa);
           return (
             <button
               key={chave}
               onClick={() => setDiaSel(doDia.length ? chave : null)}
-              className={`min-h-20 bg-background p-1.5 text-left align-top transition hover:bg-card ${foraDoMes ? "opacity-40" : ""}`}
+              className={`min-h-20 p-1.5 text-left align-top transition hover:bg-card ${foraDoMes ? "opacity-40" : ""} ${cheio ? "bg-amber-500/10 ring-1 ring-inset ring-amber-500/50" : "bg-background"}`}
             >
-              <div className={`mb-1 text-xs ${ehHoje ? "inline-grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
-                {d.getDate()}
+              <div className="mb-1 flex items-center justify-between gap-1">
+                <span className={`text-xs ${ehHoje ? "inline-grid h-5 w-5 place-items-center rounded-full bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+                  {d.getDate()}
+                </span>
+                {cheio && (
+                  <span className="rounded bg-amber-500 px-1 text-[9px] font-bold text-white" title={`${abertas} entregas neste dia`}>
+                    {abertas}
+                  </span>
+                )}
               </div>
               <div className="space-y-1">
                 {doDia.slice(0, 3).map((p) => {
