@@ -467,25 +467,13 @@ export default function Painel() {
                   </span>
                 </div>
 
-                <div className="mt-3 flex items-center gap-2">
-                  <span className={`text-xs font-medium ${cls.texto}`}>{textoPrazo(p)}</span>
-                  {(() => {
-                    const d = diasRestantes(p.prazo_entrega);
-                    if (d === null || p.status === "entregue" || p.status === "faturado") return null;
-                    if (d < 0)
-                      return (
-                        <span className="rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold uppercase text-destructive-foreground">
-                          {Math.abs(d)} d de atraso
-                        </span>
-                      );
-                    if (d <= empresa.limiteVermelhoDias)
-                      return (
-                        <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-                          {d === 0 ? "vence hoje" : `faltam ${d} d`}
-                        </span>
-                      );
-                    return null;
-                  })()}
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${cls.badge}`}>{etiquetaPrazo(p)}</span>
+                  {p.prazo_entrega && (
+                    <span className="text-[11px] text-muted-foreground">
+                      entrega {new Date(`${p.prazo_entrega}T00:00:00`).toLocaleDateString("pt-BR")}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
