@@ -200,6 +200,10 @@ export interface DadosEmpresa {
   prazoPadraoDias: number;
   limiteVermelhoDias: number;
   limiteAmareloDias: number;
+  /** Quantas entregas a oficina consegue fazer no mesmo dia. */
+  entregasPorDia: number;
+  /** Sábado também recebe entrega? (domingo nunca) */
+  entregaSabado: boolean;
   /** Meta semanal de faturamento (R$) exibida no painel do gestor. */
   metaSemanal: number;
   codigoOficina: string;
@@ -279,6 +283,8 @@ export const EMPRESA_PADRAO: DadosEmpresa = {
   prazoPadraoDias: 15,
   limiteVermelhoDias: 3,
   limiteAmareloDias: 7,
+  entregasPorDia: 2,
+  entregaSabado: true,
   metaSemanal: 40000,
   codigoOficina: "",
   vendedoras: [],
