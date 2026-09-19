@@ -44,7 +44,8 @@ import { valorACobrar } from "@/lib/financeiro";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
-import { STATUS_LABEL, somarDias } from "@/lib/ordens";
+import { STATUS_LABEL } from "@/lib/ordens";
+import { dataEntregaSugerida } from "@/lib/agenda";
 import { abrirWhatsApp, linkWhatsApp, numeroWhatsApp, textoContrato, textoOrcamento } from "@/lib/whatsapp";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
