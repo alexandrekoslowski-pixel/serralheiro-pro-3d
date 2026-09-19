@@ -16,8 +16,9 @@ import {
 } from "@/lib/storage";
 import {
   STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
-  diasRestantes, somarDias, ETAPA_LABEL, totalComServicos,
+  diasRestantes, ETAPA_LABEL, totalComServicos,
 } from "@/lib/ordens";
+import { datasSobrecarregadas, proximaDataLivre, dataEntregaSugerida, dataBR, capacidadeDia } from "@/lib/agenda";
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
 import { useVendedores } from "@/hooks/useVendedores";
@@ -142,6 +143,14 @@ export default function Painel() {
     return { atrasadas, urgentes };
   }, [base, empresa]);
 
+  // Dias com mais entregas do que a oficina aguenta.
+  const diasCheios = useMemo(() => datasSobrecarregadas(projetos, empresa), [projetos, empresa]);
+
+  const remarcar = (p: ProjetoLocal, nova: string) => {
+    salvarProjeto({ ...p, prazo_entrega: nova });
+    toast.success(`Entrega de ${p.nome} remarcada para ${dataBR(nova)}`);
+  };
+
   const nomesVendedores = useVendedores();
 
   const lista = useMemo(() => {
@@ -188,7 +197,7 @@ export default function Painel() {
       patch.aprovado_em = agora;
       patch.etapa = "medicao";
       patch.etapa_em = agora;
-      if (!p.prazo_entrega) patch.prazo_entrega = somarDias(empresa.prazoPadraoDias);
+      if (!p.prazo_entrega) patch.prazo_entrega = dataEntregaSugerida(projetos, empresa, p.id);
     }
     if (prox === "entregue") patch.entregue_em = agora;
     if (prox === "faturado") {
@@ -210,7 +219,7 @@ export default function Painel() {
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="font-display text-2xl md:text-3xl">Painel de ordens</h1>
-          <p className="text-sm text-muted-foreground">Vermelho é urgente, amarelo merece atenção, verde tem folga.</p>
+          <p className="text-sm text-muted-foreground">Cada ordem mostra por escrito quantos dias faltam para a entrega.</p>
         </div>
         <Button onClick={criar} className="bg-gradient-orange text-primary-foreground shadow-orange">
           <Plus className="mr-2 h-4 w-4" /> Novo orçamento
