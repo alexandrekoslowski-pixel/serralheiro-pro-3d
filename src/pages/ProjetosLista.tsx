@@ -16,7 +16,8 @@ import { progressoOrcamento, ROTULO_PENDENCIA, type TipoPendencia } from "@/lib/
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { tipologiaPorId } from "@/lib/tipologias";
-import { STATUS_LABEL, somarDias, totalComServicos } from "@/lib/ordens";
+import { STATUS_LABEL, totalComServicos } from "@/lib/ordens";
+import { dataEntregaSugerida } from "@/lib/agenda";
 import { useDados } from "@/hooks/useDados";
 import { cm } from "@/lib/medidas";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
@@ -102,7 +103,7 @@ export default function ProjetosLista() {
       aguardando_oficina: false,
       etapa: "medicao",
       etapa_em: agora,
-      prazo_entrega: p.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+      prazo_entrega: p.prazo_entrega ?? dataEntregaSugerida(todosProjetos, empresa, p.id),
     });
     toast.success("Ordem enviada para a oficina");
   };
@@ -116,7 +117,7 @@ export default function ProjetosLista() {
       aguardando_oficina: true,
       etapa: "medicao",
       etapa_em: agora,
-      prazo_entrega: p.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+      prazo_entrega: p.prazo_entrega ?? dataEntregaSugerida(todosProjetos, empresa, p.id),
     });
     toast.success("Orçamento aprovado");
   };
