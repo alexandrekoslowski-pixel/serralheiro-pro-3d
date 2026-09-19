@@ -309,6 +309,43 @@ export default function Painel() {
         </div>
       )}
 
+      {papel === "gestor" && diasCheios.length > 0 && (
+        <div className="surface-card mt-4 rounded-lg border border-amber-500/40 p-4">
+          <h2 className="flex items-center gap-2 font-display text-sm uppercase tracking-wide text-muted-foreground">
+            <CalendarClock className="h-4 w-4 text-amber-500" /> Entregas concentradas
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            A oficina entrega até {capacidadeDia(empresa)} por dia (segunda a {empresa.entregaSabado === false ? "sexta" : "sábado"}).
+          </p>
+          <div className="mt-3 space-y-3">
+            {diasCheios.map((dia) => (
+              <div key={dia.data}>
+                <p className="text-sm font-semibold">
+                  {dataBR(dia.data)} · {dia.ordens.length} entrega{dia.ordens.length === 1 ? "" : "s"} marcada{dia.ordens.length === 1 ? "" : "s"}
+                </p>
+                <div className="mt-1.5 space-y-1.5">
+                  {dia.ordens.map((p, i) => {
+                    const sugerida = proximaDataLivre(dia.data, projetos, empresa, p.id);
+                    const precisaMover = i >= dia.capacidade || sugerida !== dia.data;
+                    return (
+                      <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+                        <Link to={`/app/projeto/${p.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">{p.nome}</Link>
+                        <span className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {ETAPA_LABEL[p.etapa]}</span>
+                        {precisaMover && sugerida !== dia.data && (
+                          <Button size="sm" variant="outline" onClick={() => remarcar(p, sugerida)}>
+                            Remarcar para {dataBR(sugerida)}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
         {[
           { l: "Orçado no mês", v: resumo.atual.orcado, ant: resumo.anterior.orcado },
