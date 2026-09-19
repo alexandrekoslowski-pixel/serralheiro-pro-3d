@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useDados } from "@/hooks/useDados";
 import { listarProjetos, obterEmpresa, formatarBRL, ProjetoLocal } from "@/lib/storage";
 import { corPrazo, CLASSES_PRAZO, STATUS_LABEL } from "@/lib/ordens";
+import { capacidadeDia, ordemAberta } from "@/lib/agenda";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
