@@ -959,6 +959,8 @@ export function salvarEmpresa(e: DadosEmpresa): void {
         politicaValores: empresa.politicaValores ?? {},
         margemMotorPct: empresa.margemMotorPct ?? 30,
         metaSemanal: empresa.metaSemanal,
+        entregasPorDia: empresa.entregasPorDia ?? 2,
+        entregaSabado: empresa.entregaSabado !== false,
       },
       prazo_padrao_dias: empresa.prazoPadraoDias,
       limite_vermelho_dias: empresa.limiteVermelhoDias,

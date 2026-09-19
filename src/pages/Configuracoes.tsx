@@ -102,6 +102,22 @@ export default function Configuracoes() {
             <Input mask="inteiro" value={empresa.limiteAmareloDias}
               onChange={(e) => setEmpresa({ ...empresa, limiteAmareloDias: Number(e.target.value) })} />
           </div>
+          <div className="form-field-number">
+            <Label>Entregas por dia (máximo)</Label>
+            <Input mask="inteiro" value={empresa.entregasPorDia ?? 2}
+              onChange={(e) => setEmpresa({ ...empresa, entregasPorDia: Math.max(1, Number(e.target.value) || 1) })} />
+          </div>
+          <div className="form-field-short">
+            <Label>Entrega no sábado</Label>
+            <Select value={empresa.entregaSabado === false ? "nao" : "sim"}
+              onValueChange={(v) => setEmpresa({ ...empresa, entregaSabado: v === "sim" })}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sim">Sim</SelectItem>
+                <SelectItem value="nao">Não</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
           <div className="form-field-money">
             <Label>Meta semanal de faturamento (R$)</Label>
             <Input mask="moeda" value={String(empresa.metaSemanal ?? 40000).replace(".", ",")}
