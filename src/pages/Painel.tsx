@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Target, Send } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Target, Send, CalendarClock } from "lucide-react";
 import { useSessao } from "@/lib/sessao";
 import { useMeuNome } from "@/hooks/useMeuNome";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,10 @@ import {
   listarPagamentos, OrdemStatus,
 } from "@/lib/storage";
 import {
-  STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
-  diasRestantes, somarDias, ETAPA_LABEL, totalComServicos,
+  STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, etiquetaPrazo,
+  diasRestantes, ETAPA_LABEL, totalComServicos,
 } from "@/lib/ordens";
+import { datasSobrecarregadas, proximaDataLivre, dataEntregaSugerida, dataBR, capacidadeDia } from "@/lib/agenda";
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
 import { useVendedores } from "@/hooks/useVendedores";
@@ -142,6 +143,14 @@ export default function Painel() {
     return { atrasadas, urgentes };
   }, [base, empresa]);
 
+  // Dias com mais entregas do que a oficina aguenta.
+  const diasCheios = useMemo(() => datasSobrecarregadas(projetos, empresa), [projetos, empresa]);
+
+  const remarcar = (p: ProjetoLocal, nova: string) => {
+    salvarProjeto({ ...p, prazo_entrega: nova });
+    toast.success(`Entrega de ${p.nome} remarcada para ${dataBR(nova)}`);
+  };
+
   const nomesVendedores = useVendedores();
 
   const lista = useMemo(() => {
@@ -188,7 +197,7 @@ export default function Painel() {
       patch.aprovado_em = agora;
       patch.etapa = "medicao";
       patch.etapa_em = agora;
-      if (!p.prazo_entrega) patch.prazo_entrega = somarDias(empresa.prazoPadraoDias);
+      if (!p.prazo_entrega) patch.prazo_entrega = dataEntregaSugerida(projetos, empresa, p.id);
     }
     if (prox === "entregue") patch.entregue_em = agora;
     if (prox === "faturado") {
@@ -210,7 +219,7 @@ export default function Painel() {
       <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
           <h1 className="font-display text-2xl md:text-3xl">Painel de ordens</h1>
-          <p className="text-sm text-muted-foreground">Vermelho é urgente, amarelo merece atenção, verde tem folga.</p>
+          <p className="text-sm text-muted-foreground">Cada ordem mostra por escrito quantos dias faltam para a entrega.</p>
         </div>
         <Button onClick={criar} className="bg-gradient-orange text-primary-foreground shadow-orange">
           <Plus className="mr-2 h-4 w-4" /> Novo orçamento
@@ -297,6 +306,43 @@ export default function Painel() {
               })}
             </div>
           )}
+        </div>
+      )}
+
+      {papel === "gestor" && diasCheios.length > 0 && (
+        <div className="surface-card mt-4 rounded-lg border border-amber-500/40 p-4">
+          <h2 className="flex items-center gap-2 font-display text-sm uppercase tracking-wide text-muted-foreground">
+            <CalendarClock className="h-4 w-4 text-amber-500" /> Entregas concentradas
+          </h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            A oficina entrega até {capacidadeDia(empresa)} por dia (segunda a {empresa.entregaSabado === false ? "sexta" : "sábado"}).
+          </p>
+          <div className="mt-3 space-y-3">
+            {diasCheios.map((dia) => (
+              <div key={dia.data}>
+                <p className="text-sm font-semibold">
+                  {dataBR(dia.data)} · {dia.ordens.length} entrega{dia.ordens.length === 1 ? "" : "s"} marcada{dia.ordens.length === 1 ? "" : "s"}
+                </p>
+                <div className="mt-1.5 space-y-1.5">
+                  {dia.ordens.map((p, i) => {
+                    const sugerida = proximaDataLivre(dia.data, projetos, empresa, p.id);
+                    const precisaMover = i >= dia.capacidade || sugerida !== dia.data;
+                    return (
+                      <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
+                        <Link to={`/app/projeto/${p.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">{p.nome}</Link>
+                        <span className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {ETAPA_LABEL[p.etapa]}</span>
+                        {precisaMover && sugerida !== dia.data && (
+                          <Button size="sm" variant="outline" onClick={() => remarcar(p, sugerida)}>
+                            Remarcar para {dataBR(sugerida)}
+                          </Button>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
@@ -402,7 +448,6 @@ export default function Painel() {
           const prox = proximoStatus(p.status);
           return (
             <div key={p.id} className="surface-card relative cursor-pointer overflow-hidden rounded-lg border border-border transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg">
-              <div className={`h-1.5 w-full ${cls.faixa}`} />
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
@@ -421,25 +466,13 @@ export default function Painel() {
                   </span>
                 </div>
 
-                <div className="mt-3 flex items-center gap-2">
-                  <span className={`text-xs font-medium ${cls.texto}`}>{textoPrazo(p)}</span>
-                  {(() => {
-                    const d = diasRestantes(p.prazo_entrega);
-                    if (d === null || p.status === "entregue" || p.status === "faturado") return null;
-                    if (d < 0)
-                      return (
-                        <span className="rounded bg-destructive px-1.5 py-0.5 text-[10px] font-bold uppercase text-destructive-foreground">
-                          {Math.abs(d)} d de atraso
-                        </span>
-                      );
-                    if (d <= empresa.limiteVermelhoDias)
-                      return (
-                        <span className="rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold uppercase text-white">
-                          {d === 0 ? "vence hoje" : `faltam ${d} d`}
-                        </span>
-                      );
-                    return null;
-                  })()}
+                <div className="mt-3 flex flex-wrap items-center gap-2">
+                  <span className={`rounded px-2 py-0.5 text-[11px] font-semibold ${cls.badge}`}>{etiquetaPrazo(p)}</span>
+                  {p.prazo_entrega && (
+                    <span className="text-[11px] text-muted-foreground">
+                      entrega {new Date(`${p.prazo_entrega}T00:00:00`).toLocaleDateString("pt-BR")}
+                    </span>
+                  )}
                 </div>
 
                 <div className="mt-3 grid grid-cols-3 gap-2 text-xs">

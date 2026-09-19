@@ -34,7 +34,7 @@ import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
 } from "@/lib/tipologias";
 import {
-  ProjetoLocal, Peca, obterProjeto, salvarProjeto, nomeSugeridoOrcamento,
+  ProjetoLocal, Peca, obterProjeto, salvarProjeto, nomeSugeridoOrcamento, listarProjetos,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
   categoriaNomePeca, renumerarNomesAutomaticosPecas,
 } from "@/lib/storage";
@@ -44,7 +44,8 @@ import { valorACobrar } from "@/lib/financeiro";
 import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { PassosOrcamento } from "@/components/PassosOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
-import { STATUS_LABEL, somarDias } from "@/lib/ordens";
+import { STATUS_LABEL } from "@/lib/ordens";
+import { dataEntregaSugerida } from "@/lib/agenda";
 import { abrirWhatsApp, linkWhatsApp, numeroWhatsApp, textoContrato, textoOrcamento } from "@/lib/whatsapp";
 import {
   FIXACAO_TIPOS, FIXACAO_LADOS, FIXACAO_PADRAO, FIXACAO_LADOS_PADRAO,
@@ -418,7 +419,7 @@ export default function Configurador() {
       aguardando_oficina: true,
       etapa: "medicao",
       etapa_em: agora,
-      prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+      prazo_entrega: projeto.prazo_entrega ?? dataEntregaSugerida(listarProjetos(), empresa, projeto.id),
     });
     toast.success("Orçamento aprovado — gere o contrato e siga os passos");
   };
@@ -431,7 +432,7 @@ export default function Configurador() {
       aguardando_oficina: false,
       etapa: "medicao",
       etapa_em: agora,
-      prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+      prazo_entrega: projeto.prazo_entrega ?? dataEntregaSugerida(listarProjetos(), empresa, projeto.id),
     });
     toast.success("Ordem liberada para a oficina");
   };
