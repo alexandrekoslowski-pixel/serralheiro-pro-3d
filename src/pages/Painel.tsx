@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Target, Send } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Target, Send, CalendarClock } from "lucide-react";
 import { useSessao } from "@/lib/sessao";
 import { useMeuNome } from "@/hooks/useMeuNome";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,7 @@ import {
   listarPagamentos, OrdemStatus,
 } from "@/lib/storage";
 import {
-  STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, textoPrazo,
+  STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, etiquetaPrazo,
   diasRestantes, ETAPA_LABEL, totalComServicos,
 } from "@/lib/ordens";
 import { datasSobrecarregadas, proximaDataLivre, dataEntregaSugerida, dataBR, capacidadeDia } from "@/lib/agenda";
