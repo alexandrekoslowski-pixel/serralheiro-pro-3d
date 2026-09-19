@@ -418,7 +418,7 @@ export default function Configurador() {
       aguardando_oficina: true,
       etapa: "medicao",
       etapa_em: agora,
-      prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+      prazo_entrega: projeto.prazo_entrega ?? dataEntregaSugerida(listarProjetos(), empresa, projeto.id),
     });
     toast.success("Orçamento aprovado — gere o contrato e siga os passos");
   };
@@ -431,7 +431,7 @@ export default function Configurador() {
       aguardando_oficina: false,
       etapa: "medicao",
       etapa_em: agora,
-      prazo_entrega: projeto.prazo_entrega ?? somarDias(empresa.prazoPadraoDias),
+      prazo_entrega: projeto.prazo_entrega ?? dataEntregaSugerida(listarProjetos(), empresa, projeto.id),
     });
     toast.success("Ordem liberada para a oficina");
   };
