@@ -448,7 +448,6 @@ export default function Painel() {
           const prox = proximoStatus(p.status);
           return (
             <div key={p.id} className="surface-card relative cursor-pointer overflow-hidden rounded-lg border border-border transition hover:-translate-y-0.5 hover:border-primary hover:shadow-lg">
-              <div className={`h-1.5 w-full ${cls.faixa}`} />
               <div className="p-4">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">

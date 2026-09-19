@@ -120,6 +120,18 @@ export function textoPrazo(p: ProjetoLocal): string {
   return `Faltam ${d} d · ${data}`;
 }
 
+/** Etiqueta escrita do prazo, para não depender só da cor. */
+export function etiquetaPrazo(p: ProjetoLocal): string {
+  if (p.status === "entregue") return "Entregue";
+  if (p.status === "faturado") return "Faturada";
+  if (!p.prazo_entrega) return "Sem data de entrega";
+  const d = diasRestantes(p.prazo_entrega)!;
+  if (d < 0) return `Atrasada ${Math.abs(d)} ${Math.abs(d) === 1 ? "dia" : "dias"}`;
+  if (d === 0) return "Entrega hoje";
+  if (d === 1) return "Entrega amanhã";
+  return `Faltam ${d} dias`;
+}
+
 export const dataISO = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
