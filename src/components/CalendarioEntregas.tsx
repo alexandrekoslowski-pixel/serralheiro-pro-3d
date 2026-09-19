@@ -1,12 +1,13 @@
 // Calendário de entregas reutilizável (widget sem wrapper de página).
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useDados } from "@/hooks/useDados";
-import { listarProjetos, obterEmpresa, formatarBRL, ProjetoLocal } from "@/lib/storage";
+import { listarProjetos, obterEmpresa, formatarBRL, ProjetoLocal, salvarProjeto } from "@/lib/storage";
 import { corPrazo, CLASSES_PRAZO, STATUS_LABEL } from "@/lib/ordens";
-import { capacidadeDia, ordemAberta } from "@/lib/agenda";
+import { capacidadeDia, dataBR, ordemAberta, proximaDataLivre } from "@/lib/agenda";
+import { toast } from "sonner";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -44,6 +45,21 @@ export default function CalendarioEntregas() {
   }, [ref]);
 
   const selecionadas = diaSel ? porDia.get(diaSel) ?? [] : [];
+  const abertasSelecionadas = selecionadas.filter(ordemAberta);
+  const diaSobrecarregado = abertasSelecionadas.length > capacidadeDia(empresa);
+
+  const diaSeguinte = (data: string) => {
+    const d = new Date(`${data}T00:00:00`);
+    d.setDate(d.getDate() + 1);
+    return iso(d);
+  };
+
+  const remarcar = (p: ProjetoLocal) => {
+    if (!diaSel) return;
+    const novaData = proximaDataLivre(diaSeguinte(diaSel), projetos, empresa, p.id);
+    salvarProjeto({ ...p, prazo_entrega: novaData });
+    toast.success(`Entrega de ${p.nome} remarcada para ${dataBR(novaData)}`);
+  };
 
   return (
     <div>
@@ -110,26 +126,41 @@ export default function CalendarioEntregas() {
 
       {diaSel && (
         <div className="mt-4 space-y-2">
-          <h3 className="font-display text-base">
-            Entregas de {new Date(diaSel + "T00:00:00").toLocaleDateString("pt-BR")}
-          </h3>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="font-display text-base">
+              Entregas de {new Date(diaSel + "T00:00:00").toLocaleDateString("pt-BR")}
+            </h3>
+            {diaSobrecarregado && (
+              <span className="inline-flex items-center gap-1.5 rounded-md bg-amber-500/15 px-2.5 py-1 text-xs font-semibold text-amber-500">
+                <CalendarClock className="h-3.5 w-3.5" />
+                {abertasSelecionadas.length} entregas para {capacidadeDia(empresa)} vagas
+              </span>
+            )}
+          </div>
           {selecionadas.length === 0 && (
             <p className="text-sm text-muted-foreground">Nenhuma entrega neste dia.</p>
           )}
-          {selecionadas.map((p) => (
-            <Link
-              key={p.id}
-              to={`/app/projeto/${p.id}`}
-              className="surface-card flex items-center justify-between rounded-lg border border-border p-3 text-sm hover:border-primary"
-            >
-              <span>
-                <strong>{p.cliente || "Sem cliente"}</strong> · {p.nome}
-              </span>
-              <span className="text-muted-foreground">
-                {STATUS_LABEL[p.status]} · {formatarBRL(p.total)}
-              </span>
-            </Link>
-          ))}
+          {selecionadas.map((p) => {
+            const novaData = diaSel ? proximaDataLivre(diaSeguinte(diaSel), projetos, empresa, p.id) : null;
+            return (
+              <div
+                key={p.id}
+                className="surface-card flex flex-wrap items-center gap-3 rounded-lg border border-border p-3 text-sm"
+              >
+                <Link to={`/app/projeto/${p.id}`} className="min-w-0 flex-1 hover:text-primary">
+                  <strong>{p.cliente || "Sem cliente"}</strong> · {p.nome}
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {STATUS_LABEL[p.status]} · {formatarBRL(p.total)}
+                  </span>
+                </Link>
+                {diaSobrecarregado && ordemAberta(p) && novaData && (
+                  <Button variant="outline" size="sm" onClick={() => remarcar(p)}>
+                    Remarcar para {dataBR(novaData)}
+                  </Button>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

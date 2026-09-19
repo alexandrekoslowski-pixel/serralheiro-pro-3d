@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Target, Send, CalendarClock } from "lucide-react";
+import { ArrowRight, Wallet, Plus, Search, Monitor, AlertTriangle, Clock, MessageCircle, Target, Send } from "lucide-react";
 import { useSessao } from "@/lib/sessao";
 import { useMeuNome } from "@/hooks/useMeuNome";
 import { Button } from "@/components/ui/button";
@@ -18,13 +18,12 @@ import {
   STATUS_LABEL, STATUS_ORDEM, STATUS_CORES, proximoStatus, corPrazo, CLASSES_PRAZO, etiquetaPrazo,
   diasRestantes, ETAPA_LABEL, totalComServicos,
 } from "@/lib/ordens";
-import { datasSobrecarregadas, proximaDataLivre, dataEntregaSugerida, dataBR, capacidadeDia } from "@/lib/agenda";
+import { dataEntregaSugerida } from "@/lib/agenda";
 import { tipologiaPorId } from "@/lib/tipologias";
 import CalendarioEntregas from "@/components/CalendarioEntregas";
 import { useVendedores } from "@/hooks/useVendedores";
 import { pendentesComunsChecklist, pendentesPecaChecklist } from "@/lib/checklistPedido";
 import { progressoOrcamento, ROTULO_PENDENCIA } from "@/lib/progressoOrcamento";
-import { TrilhaOrcamento } from "@/components/TrilhaOrcamento";
 import { DialogOrdemFinanceiro } from "@/components/DialogOrdemFinanceiro";
 import { recebidoDe, saldoDe, valorACobrar } from "@/lib/financeiro";
 
@@ -142,14 +141,6 @@ export default function Painel() {
       .sort((a, b) => (diasRestantes(a.prazo_entrega) ?? 99) - (diasRestantes(b.prazo_entrega) ?? 99));
     return { atrasadas, urgentes };
   }, [base, empresa]);
-
-  // Dias com mais entregas do que a oficina aguenta.
-  const diasCheios = useMemo(() => datasSobrecarregadas(projetos, empresa), [projetos, empresa]);
-
-  const remarcar = (p: ProjetoLocal, nova: string) => {
-    salvarProjeto({ ...p, prazo_entrega: nova });
-    toast.success(`Entrega de ${p.nome} remarcada para ${dataBR(nova)}`);
-  };
 
   const nomesVendedores = useVendedores();
 
@@ -309,43 +300,6 @@ export default function Painel() {
         </div>
       )}
 
-      {papel === "gestor" && diasCheios.length > 0 && (
-        <div className="surface-card mt-4 rounded-lg border border-amber-500/40 p-4">
-          <h2 className="flex items-center gap-2 font-display text-sm uppercase tracking-wide text-muted-foreground">
-            <CalendarClock className="h-4 w-4 text-amber-500" /> Entregas concentradas
-          </h2>
-          <p className="mt-1 text-xs text-muted-foreground">
-            A oficina entrega até {capacidadeDia(empresa)} por dia (segunda a {empresa.entregaSabado === false ? "sexta" : "sábado"}).
-          </p>
-          <div className="mt-3 space-y-3">
-            {diasCheios.map((dia) => (
-              <div key={dia.data}>
-                <p className="text-sm font-semibold">
-                  {dataBR(dia.data)} · {dia.ordens.length} entrega{dia.ordens.length === 1 ? "" : "s"} marcada{dia.ordens.length === 1 ? "" : "s"}
-                </p>
-                <div className="mt-1.5 space-y-1.5">
-                  {dia.ordens.map((p, i) => {
-                    const sugerida = proximaDataLivre(dia.data, projetos, empresa, p.id);
-                    const precisaMover = i >= dia.capacidade || sugerida !== dia.data;
-                    return (
-                      <div key={p.id} className="flex flex-wrap items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm">
-                        <Link to={`/app/projeto/${p.id}`} className="min-w-0 flex-1 truncate font-medium hover:underline">{p.nome}</Link>
-                        <span className="truncate text-xs text-muted-foreground">{p.cliente || "Sem cliente"} · {ETAPA_LABEL[p.etapa]}</span>
-                        {precisaMover && sugerida !== dia.data && (
-                          <Button size="sm" variant="outline" onClick={() => remarcar(p, sugerida)}>
-                            Remarcar para {dataBR(sugerida)}
-                          </Button>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-6">
         {[
           { l: "Orçado no mês", v: resumo.atual.orcado, ant: resumo.anterior.orcado },
@@ -480,8 +434,6 @@ export default function Painel() {
                   <div><div className="text-[10px] uppercase text-muted-foreground">Recebido</div><div className={recebido > 0 ? "text-emerald-500" : ""}>{formatarBRL(recebido)}</div></div>
                   <div><div className="text-[10px] uppercase text-muted-foreground">Em aberto</div><div className={saldoDe(p) > 0 ? "text-amber-500" : "text-emerald-500"}>{formatarBRL(saldoDe(p))}</div></div>
                 </div>
-
-                <TrilhaOrcamento compacta className="mt-3" marcos={progressos.get(p.id)?.marcos ?? []} />
 
                 <div className="relative z-10 mt-3 flex flex-wrap gap-1 border-t border-border pt-3">
                   {p.status === "orcamento" ? (
