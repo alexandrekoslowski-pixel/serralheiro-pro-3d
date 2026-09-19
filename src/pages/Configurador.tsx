@@ -34,7 +34,7 @@ import {
   TIPOLOGIAS, ACABAMENTOS, AcabamentoId, TipologiaId, tipologiaPorId,
 } from "@/lib/tipologias";
 import {
-  ProjetoLocal, Peca, obterProjeto, salvarProjeto, nomeSugeridoOrcamento,
+  ProjetoLocal, Peca, obterProjeto, salvarProjeto, nomeSugeridoOrcamento, listarProjetos,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
   categoriaNomePeca, renumerarNomesAutomaticosPecas,
 } from "@/lib/storage";
