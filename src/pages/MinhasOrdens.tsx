@@ -134,6 +134,9 @@ export default function MinhasOrdens() {
     void carregar();
   };
 
+  const dialogoMedicaoAlvo = medicaoAlvo ? (
+    <MedicaoDialog key={medicaoAlvo} projetoId={medicaoAlvo} semBotao abrirAgora onFechar={() => setParams({}, { replace: true })} />
+  ) : null;
   const aguardandoMedicao = ordens.filter((o) => o.etapa === "medicao").length;
   const sugestoes = mover?.etapa === "pintura" ? (empresa.empresasPintura ?? []) : equipe.map((m) => m.nome).filter(Boolean);
   const pedirFoto = mover?.etapa === "entrega";
@@ -143,6 +146,7 @@ export default function MinhasOrdens() {
 
   return (
     <div className="container mx-auto space-y-4 px-4 py-6">
+      {dialogoMedicaoAlvo}
       <header className="flex items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl">{papel === "serralheiro" ? "Minhas ordens" : "Kanban"}</h1>
@@ -236,7 +240,7 @@ export default function MinhasOrdens() {
                               etapaInicial={etapaFotoDaOficina(o.etapa)}
                               total={o.fotos ?? 0}
                             />
-                            <MedicaoDialog projetoId={o.id} abrirAgora={medicaoAlvo === o.id} onFechar={() => { if (medicaoAlvo) setParams({}, { replace: true }); }} />
+                            <MedicaoDialog projetoId={o.id} />
                             {o.etapa === "pos_venda" && papel !== "serralheiro" ? (
                               <PosVendaDialog projetoId={o.id} />
                             ) : null}
