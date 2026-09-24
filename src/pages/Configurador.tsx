@@ -774,25 +774,6 @@ export default function Configurador() {
               }}
               extraPeca={(
                 <div className="grid gap-4 rounded-lg border border-border p-3 lg:grid-cols-2">
-                  <div className="lg:col-span-2 min-w-0">
-                    <Label className="text-sm">Cor / acabamento</Label>
-                    <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
-                      {ACABAMENTOS.map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          onClick={() => updPeca({ cor: a.id as AcabamentoId })}
-                          className={cn(
-                            "h-8 w-8 shrink-0 rounded-full border-2 transition",
-                            pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
-                          )}
-                          style={{ backgroundColor: a.hex }}
-                          title={a.nome}
-                        />
-                      ))}
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome}</p>
-                  </div>
                   <div>
                     <Label className="text-sm">Sistema de fixação</Label>
                     <Select value={pecaSel.fixacao ?? FIXACAO_PADRAO} onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}>
@@ -1007,6 +988,28 @@ export default function Configurador() {
                 )}
               </div>
             </div>
+          </section>
+
+          <section className="rounded-lg border border-border p-3">
+                  <div className="min-w-0">
+                    <Label className="text-sm">Cor / acabamento</Label>
+                    <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
+                      {ACABAMENTOS.map((a) => (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => updPeca({ cor: a.id as AcabamentoId })}
+                          className={cn(
+                            "h-8 w-8 shrink-0 rounded-full border-2 transition",
+                            pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
+                          )}
+                          style={{ backgroundColor: a.hex }}
+                          title={a.nome}
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome}</p>
+                  </div>
           </section>
 
           <section className="rounded-lg border border-border p-3">
