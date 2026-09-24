@@ -32,12 +32,12 @@ interface Props {
 
 export function ChecklistPedido({ pecas, selecionadaId, respostas, onChange, onChangePeca, onSelecionarPeca, mostrarPendencias = false, extraPeca }: Props) {
   const peca = pecas.find((item) => item.id === selecionadaId) ?? pecas[0];
-  const perguntasComuns = useMemo(() => perguntasComunsChecklist(), []);
-  const perguntasPeca = useMemo(() => perguntasPecaChecklist(peca.tipologia, peca.checklist_respostas), [peca]);
+  const perguntasComuns = useMemo(() => perguntasComunsChecklist().filter((q) => !q.comercial), []);
+  const perguntasPeca = useMemo(() => perguntasPecaChecklist(peca.tipologia, peca.checklist_respostas).filter((q) => !q.comercial), [peca]);
   const pendentesComuns = pendentesComunsChecklist(respostas);
   const pendentesPecas = pecas.flatMap((item) => pendentesPecaChecklist(item.tipologia, item.checklist_respostas));
   const pendentes = [...pendentesComuns, ...pendentesPecas];
-  const obrigatorias = [...perguntasComuns, ...pecas.flatMap((item) => perguntasPecaChecklist(item.tipologia, item.checklist_respostas))].filter((p) => p.obrigatoria !== false);
+  const obrigatorias = [...perguntasComuns, ...pecas.flatMap((item) => perguntasPecaChecklist(item.tipologia, item.checklist_respostas))].filter((p) => p.obrigatoria !== false && !p.comercial);
   const respondidas = obrigatorias.length - pendentes.length;
 
   const atualizar = (id: string, valor: string, daPeca: boolean) => {
@@ -103,11 +103,10 @@ export function ChecklistPedido({ pecas, selecionadaId, respostas, onChange, onC
 
       <section className="space-y-3"><h3 className="font-display text-base">Informações gerais do orçamento</h3>{renderPerguntas(perguntasComuns, respostas, false)}</section>
       <section className="space-y-3 border-t border-border pt-4">
-        <h3 className="font-display text-base">Configuração de cada peça</h3>
+        <h3 className="font-display text-base">Detalhes técnicos por item</h3>
         <div className="flex gap-2 overflow-x-auto pb-1">
-          {pecas.map((item, index) => <Button key={item.id} type="button" variant={item.id === peca.id ? "default" : "outline"} className="shrink-0" onClick={() => onSelecionarPeca(item.id)}>Peça {index + 1} · {item.nome}</Button>)}
+          {pecas.map((item, index) => <Button key={item.id} type="button" variant={item.id === peca.id ? "default" : "outline"} className="shrink-0" onClick={() => onSelecionarPeca(item.id)}>{item.nome}</Button>)}
         </div>
-        <p className="text-sm font-semibold">{peca.nome}</p>
         {extraPeca}
         {perguntasPeca.length ? renderPerguntas(perguntasPeca, peca.checklist_respostas, true) : <p className="text-sm text-muted-foreground">Esta peça não exige perguntas técnicas adicionais.</p>}
       </section>
