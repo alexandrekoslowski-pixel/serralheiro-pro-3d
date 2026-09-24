@@ -279,6 +279,7 @@ export default function Configurador() {
   const tip = tipologiaPorId(pecaSel.tipologia);
   const precoSel = precoPeca(pecaSel, politica);
   const automacaoSel = precoAutomacaoPeca(pecaSel);
+  const fechadurasSel = precoFechadurasPeca(pecaSel, politica);
   const motorSel = precoMotorPeca(pecaSel, margemMotor);
   const totalPecaSel = totalPeca(pecaSel, politica, margemMotor);
   // Motor do basculante: porte recomendado pelo vão e lista com os compatíveis primeiro.
