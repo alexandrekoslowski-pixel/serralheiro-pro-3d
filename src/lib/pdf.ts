@@ -141,6 +141,7 @@ export function gerarOrcamentoPDF(
       `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`,
       acabamentoPorId(pc.cor).nome,
       `${fixacaoTipo(pc.fixacao).curto} · ${fixacaoLados(pc.fixacaoLados).curto}`,
+      nomesFechaduras(pc) || "—",
       [nomesAutomacoes(pc), pc.motor_nome || ""]
         .filter(Boolean).join(" · ") || "—",
     ]),
