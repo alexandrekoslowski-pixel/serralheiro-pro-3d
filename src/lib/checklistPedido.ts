@@ -168,11 +168,11 @@ export function perguntasPecaChecklist(tipo: TipologiaId, respostas: RespostasCh
 }
 
 export function pendentesComunsChecklist(respostas: RespostasChecklist) {
-  return COMUNS.filter((pergunta) => pergunta.obrigatoria !== false && !respostas[pergunta.id]?.trim());
+  return COMUNS.filter((pergunta) => pergunta.obrigatoria !== false && !pergunta.comercial && !respostas[pergunta.id]?.trim());
 }
 
 export function pendentesPecaChecklist(tipo: TipologiaId, respostas: RespostasChecklist) {
-  return perguntasPecaChecklist(tipo, respostas).filter((pergunta) => pergunta.obrigatoria !== false && !respostas[pergunta.id]?.trim());
+  return perguntasPecaChecklist(tipo, respostas).filter((pergunta) => pergunta.obrigatoria !== false && !pergunta.comercial && !respostas[pergunta.id]?.trim());
 }
 
 export function limparRespostasOcultasPeca(tipo: TipologiaId, respostas: RespostasChecklist): RespostasChecklist {

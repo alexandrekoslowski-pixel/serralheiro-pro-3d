@@ -36,7 +36,7 @@ export function ChecklistPedido({ pecas, selecionadaId, respostas, onChange, onC
   const perguntasPeca = useMemo(() => perguntasPecaChecklist(peca.tipologia, peca.checklist_respostas).filter((q) => !q.comercial), [peca]);
   const pendentesComuns = pendentesComunsChecklist(respostas);
   const pendentesPecas = pecas.flatMap((item) => pendentesPecaChecklist(item.tipologia, item.checklist_respostas));
-  const pendentes = [...pendentesComuns, ...pendentesPecas].filter((q: any) => !(typeof q === "object" && q?.comercial));
+  const pendentes = [...pendentesComuns, ...pendentesPecas];
   const obrigatorias = [...perguntasComuns, ...pecas.flatMap((item) => perguntasPecaChecklist(item.tipologia, item.checklist_respostas))].filter((p) => p.obrigatoria !== false && !p.comercial);
   const respondidas = obrigatorias.length - pendentes.length;
 
