@@ -8,7 +8,7 @@ import { acabamentoPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
 import { linhasChecklistProjeto } from "./checklistPedido";
 import { enderecoCompleto } from "@/lib/endereco";
-import { nomesAutomacoes, nomesFechaduras } from "./politicaPrecos";
+import { automacaoPolitica, automacoesDaPeca, nomesFechaduras, precoMotorPeca } from "./politicaPrecos";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -137,14 +137,12 @@ export function gerarOrcamentoPDF(
 
   autoTable(doc, {
     startY: nextY + 2,
-    head: [["Peça", "Medidas (cm)", "Cor", "Fechadura", "Automação"]],
+    head: [["Peça", "Medidas (cm)", "Cor", "Fechadura"]],
     body: projeto.pecas.map((pc) => [
       pc.nome,
       `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`,
       acabamentoPorId(pc.cor).nome,
       nomesFechaduras(pc) || "—",
-      [nomesAutomacoes(pc), pc.motor_nome || ""]
-        .filter(Boolean).join(" · ") || "—",
     ]),
     styles: { fontSize: 8.5, cellPadding: 2 },
     headStyles: { fillColor: DARK, textColor: 255, fontStyle: "bold" },
@@ -156,10 +154,21 @@ export function gerarOrcamentoPDF(
 
   // ===== Serviços =====
   const servicos = projeto.servicos_politica ?? [];
-  const linhasServicos: Array<[string, string]> = servicos.map((s) => [
+  const linhasAutomacao: Array<[string, string]> = projeto.pecas.flatMap((pc) => [
+    ...automacoesDaPeca(pc).map((a): [string, string] => {
+      const item = automacaoPolitica(a.id);
+      const valor = a.valor != null ? Number(a.valor) : item?.valor ?? 0;
+      return [`${item?.nome || "Automação"} — ${pc.nome}`, formatarBRL(valor)];
+    }),
+    ...(pc.motor_material_id ? [[
+      `${pc.motor_nome || "Motor"} — ${pc.nome}`,
+      formatarBRL(precoMotorPeca(pc, empresa.margemMotorPct ?? 30)),
+    ] as [string, string]] : []),
+  ]);
+  const linhasServicos: Array<[string, string]> = [...linhasAutomacao, ...servicos.map((s) => [
     s.nome?.trim() || "Serviço adicional",
     formatarBRL(Number(s.valor || 0)),
-  ]);
+  ] as [string, string])];
   if (linhasServicos.length === 0 && projeto.servicos_valor != null) {
     linhasServicos.push(["Serviços", formatarBRL(projeto.servicos_valor)]);
   }
