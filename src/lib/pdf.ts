@@ -254,7 +254,7 @@ export function gerarOrcamentoPDF(
       const sigW = 70;
       const sigH = 25;
       const sigX = pageW - margin - sigW;
-      const sigY = Math.min(yTot + 4, pageH - 45);
+      const sigY = Math.max(18, Math.min(yTot - 40, pageH - 45));
       doc.addImage(assinatura.dataUrl, "PNG", sigX, sigY, sigW, sigH);
       doc.setDrawColor(...DARK);
       doc.setLineWidth(0.3);
