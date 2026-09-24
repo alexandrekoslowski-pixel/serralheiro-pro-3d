@@ -134,7 +134,7 @@ export function gerarOrcamentoPDF(
   doc.text("Peças do orçamento", margin, nextY);
   nextY += 2;
 
-  const AUTOMACOES_QUE_SAO_PECAS = new Set(["automacao-basculante", "automacao-eletroima"]);
+  const AUTOMACOES_QUE_SAO_PECAS = new Set(["automacao-basculante", "automacao-fechadura-eletrica", "automacao-eletroima"]);
   const linhasPecas = projeto.pecas.flatMap((pc): string[][] => {
     const preco = precoPeca(pc);
     const modelo = preco.item?.modelo?.trim() || "Padrão";
@@ -153,15 +153,14 @@ export function gerarOrcamentoPDF(
         formatarBRL(precoMotorPeca(pc, empresa.margemMotorPct ?? 30)),
       ]);
     }
-    const eletroimas = fechadurasDaPeca(pc)
-      .filter((f) => f.id === "eletroima-par-com-acessorios-e-infra")
+    const fechaduras = fechadurasDaPeca(pc)
       .map((f) => {
         const item = itemPolitica(f.id);
         const qtd = Math.max(1, Number(f.qtd) || 1);
         const unitario = f.valor != null ? Number(f.valor) : item?.valor ?? 0;
         return [qtd > 1 ? `${qtd}x ${nomeFechadura(item)}` : nomeFechadura(item), "—", `Para ${pc.nome}`, formatarBRL(unitario * qtd)];
       });
-    return [[pc.nome, `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`, modelo, formatarBRL(preco.valor)], ...adicionais, ...eletroimas];
+    return [[pc.nome, `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`, modelo, formatarBRL(preco.valor)], ...adicionais, ...fechaduras];
   });
 
   autoTable(doc, {
@@ -176,36 +175,6 @@ export function gerarOrcamentoPDF(
 
   // @ts-expect-error lastAutoTable é fornecido pelo autotable
   nextY = (doc.lastAutoTable?.finalY ?? nextY) + 6;
-
-  // ===== Itens =====
-  const linhasItens: Array<[string, string]> = projeto.pecas.flatMap((pc) =>
-    fechadurasDaPeca(pc)
-      .filter((f) => f.id !== "eletroima-par-com-acessorios-e-infra")
-      .map((f): [string, string] => {
-        const item = itemPolitica(f.id);
-        const qtd = Math.max(1, Number(f.qtd) || 1);
-        const unitario = f.valor != null ? Number(f.valor) : item?.valor ?? 0;
-        const nome = nomeFechadura(item) || "Fechadura";
-        return [`${qtd > 1 ? `${qtd}x ` : ""}${nome} — ${pc.nome}`, formatarBRL(unitario * qtd)];
-      }),
-  );
-  if (linhasItens.length > 0) {
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
-    doc.setTextColor(...DARK);
-    doc.text("Itens", margin, nextY);
-    autoTable(doc, {
-      startY: nextY + 2,
-      head: [["Item", "Valor"]],
-      body: linhasItens,
-      styles: { fontSize: 8.5, cellPadding: 2 },
-      headStyles: { fillColor: DARK, textColor: 255, fontStyle: "bold" },
-      columnStyles: { 1: { halign: "right" } },
-      margin: { left: margin, right: margin },
-    });
-    // @ts-expect-error lastAutoTable é fornecido pelo autotable
-    nextY = (doc.lastAutoTable?.finalY ?? nextY) + 6;
-  }
 
   // ===== Serviços =====
   const servicos = projeto.servicos_politica ?? [];
