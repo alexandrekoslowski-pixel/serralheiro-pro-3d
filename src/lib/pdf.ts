@@ -4,9 +4,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ResultadoCalculo } from "./calculator";
 import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
-import { acabamentoPorId, tipologiaPorId } from "./tipologias";
+import { acabamentoPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
-import { fixacaoTipo, fixacaoLados } from "./fixacao";
 import { linhasChecklistProjeto } from "./checklistPedido";
 import { enderecoCompleto } from "@/lib/endereco";
 import { nomesAutomacoes, nomesFechaduras } from "./politicaPrecos";
@@ -138,13 +137,11 @@ export function gerarOrcamentoPDF(
 
   autoTable(doc, {
     startY: nextY + 2,
-    head: [["Peça", "Tipologia", "Medidas (cm)", "Cor", "Fixação", "Fechadura", "Automação"]],
+    head: [["Peça", "Medidas (cm)", "Cor", "Fechadura", "Automação"]],
     body: projeto.pecas.map((pc) => [
       pc.nome,
-      tipologiaPorId(pc.tipologia).nome,
       `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`,
       acabamentoPorId(pc.cor).nome,
-      `${fixacaoTipo(pc.fixacao).curto} · ${fixacaoLados(pc.fixacaoLados).curto}`,
       nomesFechaduras(pc) || "—",
       [nomesAutomacoes(pc), pc.motor_nome || ""]
         .filter(Boolean).join(" · ") || "—",
@@ -157,47 +154,40 @@ export function gerarOrcamentoPDF(
   // @ts-expect-error lastAutoTable é fornecido pelo autotable
   nextY = (doc.lastAutoTable?.finalY ?? nextY) + 6;
 
-  // ===== Totais =====
-  // O orçamento do cliente mostra apenas o total — sem detalhar perfis, acessórios,
-  // vidros, mão de obra ou margem (essas são composições internas de custo).
-  // @ts-expect-error lastAutoTable é fornecido pelo autotable
-  let yTot = (doc.lastAutoTable?.finalY ?? nextY + 50) + 6;
-
-  doc.setFontSize(10);
-  doc.setTextColor(...DARK);
-  const escreverLinha = (label: string, valor: number | string, bold = false) => {
-    doc.setFont("helvetica", bold ? "bold" : "normal");
-    doc.text(label, pageW - margin - 70, yTot, { align: "left" });
-    doc.text(typeof valor === "number" ? formatarBRL(valor) : valor, pageW - margin, yTot, { align: "right" });
-    yTot += 5;
-  };
-  
-  // Serviços aparecem item a item (inclusive os digitados livremente pela vendedora),
-  // para o cliente entender cada taxa cobrada.
+  // ===== Serviços =====
   const servicos = projeto.servicos_politica ?? [];
-  if (servicos.length > 0) {
-    servicos.forEach((s) => escreverLinha(s.nome?.trim() || "Serviço adicional", Number(s.valor || 0)));
-  } else {
-    escreverLinha("Serviços", projeto.servicos_valor != null ? projeto.servicos_valor : "não incluso");
+  const linhasServicos: Array<[string, string]> = servicos.map((s) => [
+    s.nome?.trim() || "Serviço adicional",
+    formatarBRL(Number(s.valor || 0)),
+  ]);
+  if (linhasServicos.length === 0 && projeto.servicos_valor != null) {
+    linhasServicos.push(["Serviços", formatarBRL(projeto.servicos_valor)]);
   }
-  escreverLinha("Frete", projeto.frete_valor != null ? projeto.frete_valor : "não incluso");
+  if (projeto.frete_valor != null) linhasServicos.push(["Deslocamento / frete", formatarBRL(projeto.frete_valor)]);
+
+  if (linhasServicos.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...DARK);
+    doc.text("Serviços", margin, nextY);
+    autoTable(doc, {
+      startY: nextY + 2,
+      head: [["Serviço", "Valor"]],
+      body: linhasServicos,
+      styles: { fontSize: 8.5, cellPadding: 2 },
+      headStyles: { fillColor: DARK, textColor: 255, fontStyle: "bold" },
+      columnStyles: { 1: { halign: "right" } },
+      margin: { left: margin, right: margin },
+    });
+    // @ts-expect-error lastAutoTable é fornecido pelo autotable
+    nextY = (doc.lastAutoTable?.finalY ?? nextY) + 7;
+  }
 
   const totalProposta =
     resultado.totalGeral + (projeto.servicos_valor ?? 0) + (projeto.frete_valor ?? 0);
 
-  yTot += 2;
-  doc.setDrawColor(...ORANGE);
-  doc.setLineWidth(0.6);
-  doc.line(pageW - margin - 70, yTot, pageW - margin, yTot);
-  yTot += 7;
-  doc.setFontSize(14);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(...ORANGE);
-  doc.text("TOTAL", pageW - margin - 70, yTot);
-  doc.text(formatarBRL(totalProposta), pageW - margin, yTot, { align: "right" });
-
   // ===== Prazo em destaque =====
-  yTot += 10;
+  let yTot = nextY + 4;
   const previsao = somarDiasUteis(prazoDias).toLocaleDateString("pt-BR");
   doc.setFontSize(10);
   doc.setFont("helvetica", "bold");
@@ -240,13 +230,31 @@ export function gerarOrcamentoPDF(
     });
   }
 
+  // ===== Total no final da folha =====
+  // Mantém o valor como o último bloco comercial, separado das peças e serviços.
+  if (yTot > pageH - 30) {
+    doc.addPage();
+    yTot = 22;
+  } else {
+    yTot = Math.max(yTot + 8, pageH - 24);
+  }
+  doc.setDrawColor(...ORANGE);
+  doc.setLineWidth(0.6);
+  doc.line(pageW - margin - 70, yTot, pageW - margin, yTot);
+  yTot += 7;
+  doc.setFontSize(14);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(...ORANGE);
+  doc.text("TOTAL", pageW - margin - 70, yTot);
+  doc.text(formatarBRL(totalProposta), pageW - margin, yTot, { align: "right" });
+
   // ===== Assinatura =====
   if (assinatura?.dataUrl) {
     try {
       const sigW = 70;
       const sigH = 25;
       const sigX = pageW - margin - sigW;
-      const sigY = Math.min(yTot + 4, pageH - 45);
+      const sigY = Math.max(18, Math.min(yTot - 40, pageH - 45));
       doc.addImage(assinatura.dataUrl, "PNG", sigX, sigY, sigW, sigH);
       doc.setDrawColor(...DARK);
       doc.setLineWidth(0.3);

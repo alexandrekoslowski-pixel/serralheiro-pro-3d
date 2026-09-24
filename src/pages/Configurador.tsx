@@ -888,7 +888,6 @@ export default function Configurador() {
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Peça {i + 1}</span>
                 </div>
                 <div className="mt-1 truncate text-sm font-semibold">{pc.nome}</div>
-                <div className="truncate text-xs text-muted-foreground">{tipologiaPorId(pc.tipologia).nome}</div>
                 <div className="mt-1 text-xs font-medium">{cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm</div>
                 {sel && projeto.pecas.length > 1 && (
                   <button
@@ -1254,8 +1253,7 @@ export default function Configurador() {
 
           <p className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
             <strong>{pecaSel.nome || tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
-            {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome} ·{" "}
-            {fixacaoTipo(pecaSel.fixacao).nome}
+            {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome}
             {nomesFechaduras(pecaSel, politica) && <> · {nomesFechaduras(pecaSel, politica)}</>}
             {nomesAutomacoes(pecaSel) && <> · {nomesAutomacoes(pecaSel)}</>}
             {pecaSel.motor_material_id && <> · motor</>}
@@ -1698,6 +1696,7 @@ export default function Configurador() {
 
             {/* Orçamento */}
             <TabsContent value="orcamento" className="surface-card rounded-lg border border-border p-4 space-y-4">
+              <h3 className="font-display text-sm uppercase">Peças</h3>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] text-sm">
                   <thead>
@@ -1729,28 +1728,41 @@ export default function Configurador() {
                         </tr>
                       );
                     })}
+                  </tbody>
+                </table>
+              </div>
+
+              <h3 className="border-t border-border pt-4 font-display text-sm uppercase">Serviços</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-xs uppercase text-muted-foreground">
+                      <th className="py-2 pr-2 text-left">Serviço</th>
+                      <th className="py-2 pr-2 text-right">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody>
                     {servicosEscolhidos.map((s) => (
                       <tr key={s.id} className="border-b border-border/40">
                         <td className="py-1.5 pr-2">{s.nome}</td>
-                        <td className="py-1.5 pr-2 text-muted-foreground">Serviço</td>
-                        <td className="py-1.5 pr-2 text-right">1</td>
                         <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(s.valor)}</td>
                       </tr>
                     ))}
                     {(projeto.frete_valor ?? 0) > 0 && (
                       <tr className="border-b border-border/40">
                         <td className="py-1.5 pr-2">Deslocamento</td>
-                        <td className="py-1.5 pr-2 text-muted-foreground">Frete</td>
-                        <td className="py-1.5 pr-2 text-right">1</td>
                         <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(projeto.frete_valor ?? 0)}</td>
                       </tr>
                     )}
-                    <tr className="bg-card">
-                      <td colSpan={3} className="py-3 pr-2 text-right font-display text-sm uppercase">Total geral</td>
-                      <td className="py-3 pr-2 text-right font-display text-xl text-gradient-orange">{formatarBRL(totalProposta)}</td>
-                    </tr>
+                    {servicosEscolhidos.length === 0 && (projeto.frete_valor ?? 0) <= 0 && (
+                      <tr><td colSpan={2} className="py-3 text-sm text-muted-foreground">Nenhum serviço adicional.</td></tr>
+                    )}
                   </tbody>
                 </table>
+              </div>
+              <div className="flex items-center justify-between border-t-2 border-primary pt-4">
+                <span className="font-display text-sm uppercase">Total geral</span>
+                <span className="font-display text-xl text-primary">{formatarBRL(totalProposta)}</span>
               </div>
               <div className="flex flex-wrap gap-2">
                 <Button onClick={exportarOrcamento} className="bg-gradient-orange text-primary-foreground shadow-orange">
