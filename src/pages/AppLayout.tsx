@@ -175,6 +175,7 @@ export default function AppLayout() {
           </Link>
           <div className="flex items-center gap-2">
             {papel !== "serralheiro" && <AvisosMedicao mobile />}
+            <BotaoTema className="" />
             <Button variant="soft" size="icon" onClick={sair} aria-label="Sair">
               <LogOut className="h-4 w-4" />
             </Button>
