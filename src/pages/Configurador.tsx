@@ -888,7 +888,6 @@ export default function Configurador() {
                   <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Peça {i + 1}</span>
                 </div>
                 <div className="mt-1 truncate text-sm font-semibold">{pc.nome}</div>
-                <div className="truncate text-xs text-muted-foreground">{tipologiaPorId(pc.tipologia).nome}</div>
                 <div className="mt-1 text-xs font-medium">{cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm</div>
                 {sel && projeto.pecas.length > 1 && (
                   <button
@@ -1254,8 +1253,7 @@ export default function Configurador() {
 
           <p className="rounded-lg bg-muted/40 px-3 py-2 text-sm">
             <strong>{pecaSel.nome || tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
-            {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome} ·{" "}
-            {fixacaoTipo(pecaSel.fixacao).nome}
+            {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome}
             {nomesFechaduras(pecaSel, politica) && <> · {nomesFechaduras(pecaSel, politica)}</>}
             {nomesAutomacoes(pecaSel) && <> · {nomesAutomacoes(pecaSel)}</>}
             {pecaSel.motor_material_id && <> · motor</>}
