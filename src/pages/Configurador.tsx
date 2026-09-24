@@ -1013,6 +1013,84 @@ export default function Configurador() {
           </section>
 
           <section className="rounded-lg border border-border p-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fechaduras desta peça</h4>
+            {(() => {
+              const opcoes = fechadurasPolitica(politica);
+              const lista = fechadurasDaPeca(pecaSel);
+              const salvar = (l: { id: string; qtd: number; valor: number | null }[]) => updPeca({ fechaduras: l });
+              return (
+                <>
+                  <p className="mb-2 text-xs text-muted-foreground">Pode marcar mais de uma e ajustar a quantidade.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button" size="sm"
+                      variant={lista.length ? "outline" : "default"}
+                      className={cn("h-auto min-h-10", !lista.length && "bg-primary text-primary-foreground")}
+                      onClick={() => salvar([])}
+                    >
+                      Sem fechadura
+                    </Button>
+                    {opcoes.map((f) => {
+                      const ativo = lista.some((x) => x.id === f.id);
+                      return (
+                        <Button
+                          key={f.id}
+                          type="button" size="sm"
+                          variant={ativo ? "default" : "outline"}
+                          aria-pressed={ativo}
+                          className={cn("h-auto min-h-10 whitespace-normal text-left", ativo && "bg-primary text-primary-foreground")}
+                          onClick={() => salvar(ativo ? lista.filter((x) => x.id !== f.id) : [...lista, { id: f.id, qtd: 1, valor: null }])}
+                        >
+                          {ativo ? "✓ " : ""}{nomeFechadura(f)} · {formatarBRL(f.valor)}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  {lista.length > 0 && (
+                    <div className="form-grid mt-3">
+                      {lista.map((x) => {
+                        const item = itemPolitica(x.id, politica);
+                        return (
+                          <Fragment key={x.id}>
+                            <div className="form-field-number">
+                              <Label>{nomeFechadura(item)} · qtd</Label>
+                              <Input
+                                className="mt-2"
+                                inputMode="numeric"
+                                value={String(x.qtd ?? 1)}
+                                onChange={(e) => {
+                                  const n = Math.max(1, Number(e.target.value.replace(/\D/g, "")) || 1);
+                                  salvar(lista.map((y) => (y.id === x.id ? { ...y, qtd: n } : y)));
+                                }}
+                              />
+                            </div>
+                            <div className="form-field-money">
+                              <Label>Valor unitário (R$)</Label>
+                              <Input
+                                className="mt-2"
+                                mask="moeda"
+                                placeholder={formatarBRL(item?.valor ?? 0)}
+                                value={x.valor == null ? "" : String(x.valor).replace(".", ",")}
+                                onChange={(e) => salvar(lista.map((y) => (y.id === x.id
+                                  ? { ...y, valor: e.target.value === "" ? null : numeroMascarado(e.target.value) } : y)))}
+                              />
+                            </div>
+                          </Fragment>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {lista.length > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Fechaduras: <strong>{formatarBRL(fechadurasSel)}</strong>
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </section>
+
+          <section className="rounded-lg border border-border p-3">
             <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Automação e motor desta peça</h4>
             {(() => {
               const lista = automacoesDaPeca(pecaSel);
