@@ -120,7 +120,7 @@ export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar, semBota
         </div>
         <div className="flex flex-wrap gap-2">
           <Button onClick={salvar} className="flex-1">
-            <Save className="mr-1 h-4 w-4" /> Salvar medidas
+            <Save className="mr-1 h-4 w-4" /> Salvar checklist e medidas
           </Button>
           <Button variant="outline" className="flex-1" onClick={() => setEditor(true)}>
             <Pencil className="mr-1 h-4 w-4" /> Anotar foto com medidas
