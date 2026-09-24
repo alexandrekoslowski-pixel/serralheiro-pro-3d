@@ -1719,7 +1719,7 @@ export default function Configurador() {
                         </tr>
                       )];
                       const pecasAdicionais = automacoesDaPeca(pc)
-                        .filter((a) => ["automacao-basculante", "automacao-eletroima"].includes(a.id))
+                        .filter((a) => ["automacao-basculante", "automacao-fechadura-eletrica", "automacao-eletroima"].includes(a.id))
                         .map((a) => {
                           const item = automacaoPolitica(a.id);
                           const valor = a.valor != null ? Number(a.valor) : item?.valor ?? 0;
@@ -1742,7 +1742,7 @@ export default function Configurador() {
                           </tr>,
                         );
                       }
-                      fechadurasDaPeca(pc).filter((f) => f.id === "eletroima-par-com-acessorios-e-infra").forEach((f) => {
+                      fechadurasDaPeca(pc).forEach((f) => {
                         const item = itemPolitica(f.id, politica);
                         const qtd = Math.max(1, Number(f.qtd) || 1);
                         const unitario = f.valor != null ? Number(f.valor) : item?.valor ?? 0;
@@ -1761,22 +1761,6 @@ export default function Configurador() {
                 </table>
               </div>
 
-              <h3 className="border-t border-border pt-4 font-display text-sm uppercase">Itens</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[560px] text-sm">
-                  <thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 pr-2 text-left">Item</th><th className="py-2 pr-2 text-right">Valor</th></tr></thead>
-                  <tbody>
-                    {projeto.pecas.flatMap((pc) => fechadurasDaPeca(pc).filter((f) => f.id !== "eletroima-par-com-acessorios-e-infra").map((f) => {
-                      const item = itemPolitica(f.id, politica);
-                      const qtd = Math.max(1, Number(f.qtd) || 1);
-                      const unitario = f.valor != null ? Number(f.valor) : item?.valor ?? 0;
-                      return <tr key={`${pc.id}-item-${f.id}`} className="border-b border-border/40"><td className="py-1.5 pr-2"><span className="font-medium">{qtd > 1 ? `${qtd}x ` : ""}{nomeFechadura(item)}</span><span className="ml-1 text-xs text-muted-foreground">· {pc.nome}</span></td><td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(unitario * qtd)}</td></tr>;
-                    }))}
-                    {projeto.pecas.every((pc) => fechadurasDaPeca(pc).filter((f) => f.id !== "eletroima-par-com-acessorios-e-infra").length === 0) && <tr><td colSpan={2} className="py-3 text-sm text-muted-foreground">Nenhum item adicional.</td></tr>}
-                  </tbody>
-                </table>
-              </div>
-
               <h3 className="border-t border-border pt-4 font-display text-sm uppercase">Serviços</h3>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[560px] text-sm">
@@ -1788,7 +1772,7 @@ export default function Configurador() {
                   </thead>
                   <tbody>
                     {projeto.pecas.flatMap((pc) => [
-                      ...automacoesDaPeca(pc).filter((a) => !["automacao-basculante", "automacao-eletroima"].includes(a.id)).map((a) => {
+                      ...automacoesDaPeca(pc).filter((a) => !["automacao-basculante", "automacao-fechadura-eletrica", "automacao-eletroima"].includes(a.id)).map((a) => {
                         const item = automacaoPolitica(a.id);
                         const valor = a.valor != null ? Number(a.valor) : item?.valor ?? 0;
                         return (
@@ -1814,7 +1798,7 @@ export default function Configurador() {
                         <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(projeto.frete_valor ?? 0)}</td>
                       </tr>
                     )}
-                    {servicosEscolhidos.length === 0 && (projeto.frete_valor ?? 0) <= 0 && projeto.pecas.every((pc) => automacoesDaPeca(pc).filter((a) => !["automacao-basculante", "automacao-eletroima"].includes(a.id)).length === 0) && (
+                    {servicosEscolhidos.length === 0 && (projeto.frete_valor ?? 0) <= 0 && projeto.pecas.every((pc) => automacoesDaPeca(pc).filter((a) => !["automacao-basculante", "automacao-fechadura-eletrica", "automacao-eletroima"].includes(a.id)).length === 0) && (
                       <tr><td colSpan={2} className="py-3 text-sm text-muted-foreground">Nenhum serviço adicional.</td></tr>
                     )}
                   </tbody>
