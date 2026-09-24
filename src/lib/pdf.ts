@@ -134,7 +134,7 @@ export function gerarOrcamentoPDF(
 
   autoTable(doc, {
     startY: nextY + 2,
-    head: [["Peça", "Tipologia", "Medidas (cm)", "Cor", "Fixação", "Automação"]],
+    head: [["Peça", "Tipologia", "Medidas (cm)", "Cor", "Fixação", "Fechadura", "Automação"]],
     body: projeto.pecas.map((pc) => [
       pc.nome,
       tipologiaPorId(pc.tipologia).nome,
