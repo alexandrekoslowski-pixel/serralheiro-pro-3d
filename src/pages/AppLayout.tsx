@@ -13,6 +13,25 @@ import { useRealtimeProjetos } from "@/hooks/useRealtimeProjetos";
 import { useMeuNome } from "@/hooks/useMeuNome";
 import { AvisosMedicao } from "@/components/AvisosMedicao";
 
+function BotaoTema({ mobile = false }: { mobile?: boolean }) {
+  const [tema, setTema] = useState<Tema>(() => temaAtual());
+  const alternar = () => setTema(alternarTema());
+  const escuro = tema === "escuro";
+  return (
+    <Button
+      variant="soft"
+      size={mobile ? "sm" : "icon"}
+      className="w-full"
+      onClick={alternar}
+      title={escuro ? "Mudar para tema claro" : "Mudar para tema escuro"}
+      aria-label={escuro ? "Mudar para tema claro" : "Mudar para tema escuro"}
+    >
+      {escuro ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {mobile && (escuro ? "Tema claro" : "Tema escuro")}
+    </Button>
+  );
+}
+
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
   const [pendentes, setPendentes] = useState(0);
@@ -116,6 +135,7 @@ export default function AppLayout() {
             </span>
           </div>
         )}
+        <BotaoTema mobile={mobile} />
         <Button variant="soft" size={mobile ? "sm" : "icon"} className={cn(mobile ? "w-full" : "w-full")} onClick={sair} title="Sair">
           <LogOut className="h-4 w-4" />
           {mobile && "Sair"}
