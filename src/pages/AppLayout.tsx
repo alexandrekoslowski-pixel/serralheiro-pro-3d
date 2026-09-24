@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useCallback, useEffect, useState } from "react";
-import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, ShieldCheck, UserCircle } from "lucide-react";
+import { Wrench, Menu, X, Building2, FolderKanban, LayoutDashboard, Wallet, LogOut, CalendarDays, Users, Package, ShieldCheck, UserCircle, Sun, Moon } from "lucide-react";
+import { alternarTema, temaAtual, type Tema } from "@/lib/tema";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -11,6 +12,25 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRealtimeProjetos } from "@/hooks/useRealtimeProjetos";
 import { useMeuNome } from "@/hooks/useMeuNome";
 import { AvisosMedicao } from "@/components/AvisosMedicao";
+
+function BotaoTema({ mobile = false, className }: { mobile?: boolean; className?: string }) {
+  const [tema, setTema] = useState<Tema>(() => temaAtual());
+  const alternar = () => setTema(alternarTema());
+  const escuro = tema === "escuro";
+  return (
+    <Button
+      variant="soft"
+      size={mobile ? "sm" : "icon"}
+      className={cn(className ?? "w-full")}
+      onClick={alternar}
+      title={escuro ? "Mudar para tema claro" : "Mudar para tema escuro"}
+      aria-label={escuro ? "Mudar para tema claro" : "Mudar para tema escuro"}
+    >
+      {escuro ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+      {mobile && (escuro ? "Tema claro" : "Tema escuro")}
+    </Button>
+  );
+}
 
 export default function AppLayout() {
   const [open, setOpen] = useState(false);
@@ -115,6 +135,7 @@ export default function AppLayout() {
             </span>
           </div>
         )}
+        <BotaoTema mobile={mobile} />
         <Button variant="soft" size={mobile ? "sm" : "icon"} className={cn(mobile ? "w-full" : "w-full")} onClick={sair} title="Sair">
           <LogOut className="h-4 w-4" />
           {mobile && "Sair"}
@@ -154,17 +175,17 @@ export default function AppLayout() {
           </Link>
           <div className="flex items-center gap-2">
             {papel !== "serralheiro" && <AvisosMedicao mobile />}
+            <BotaoTema className="" />
             <Button variant="soft" size="icon" onClick={sair} aria-label="Sair">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </header>
 
-        {papel !== "serralheiro" && (
-          <div className="hidden justify-end border-b border-border bg-background/95 px-6 py-2 backdrop-blur lg:flex">
-            <AvisosMedicao />
-          </div>
-        )}
+        <div className="hidden items-center justify-end gap-2 border-b border-border bg-background/95 px-6 py-2 backdrop-blur lg:flex">
+          {papel !== "serralheiro" && <AvisosMedicao />}
+          <BotaoTema className="" />
+        </div>
 
         {pendentes > 0 && (
           <div className="border-b border-border bg-card">
