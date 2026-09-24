@@ -1249,6 +1249,7 @@ export default function Configurador() {
             <strong>{pecaSel.nome || tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
             {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome} ·{" "}
             {fixacaoTipo(pecaSel.fixacao).nome}
+            {nomesFechaduras(pecaSel, politica) && <> · {nomesFechaduras(pecaSel, politica)}</>}
             {nomesAutomacoes(pecaSel) && <> · {nomesAutomacoes(pecaSel)}</>}
             {pecaSel.motor_material_id && <> · motor</>}
             {" · "}
