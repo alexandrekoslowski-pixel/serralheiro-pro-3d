@@ -1763,7 +1763,7 @@ export default function Configurador() {
           </Tabs>
         </div>
 
-      <aside className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-primary/40 bg-card/95 shadow-[0_-8px_24px_hsl(var(--background)/0.45)] backdrop-blur md:block lg:left-[5.5rem]" aria-label="Total congelado do orçamento">
+      <aside className={abaCadastro === "checklist" ? "hidden" : undefined} data-x="" style={undefined} /><aside className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-primary/40 bg-card/95 shadow-[0_-8px_24px_hsl(var(--background)/0.45)] backdrop-blur md:block lg:left-[5.5rem]" aria-label="Total congelado do orçamento">
         <div className="container flex min-h-20 items-center justify-between gap-6 py-3">
           <div className="flex min-w-0 items-center gap-6 text-sm">
             <div className="min-w-0">
