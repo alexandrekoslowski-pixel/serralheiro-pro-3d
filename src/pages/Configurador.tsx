@@ -801,6 +801,11 @@ export default function Configurador() {
                 </div>
               )}
             />
+            <div className="mt-5 border-t border-border pt-4">
+              <h3 className="font-display text-base">Fotos</h3>
+              <p className="mb-3 text-sm text-muted-foreground">Fotos da medição no local.</p>
+              <PainelFotos projetoId={projeto.id} etapaInicial="medicao" />
+            </div>
           </TabsContent>
 
           <TabsContent value="ordem" className="mt-0 p-4">
@@ -848,6 +853,7 @@ export default function Configurador() {
       </div>
 
       {/* Peças e medidas */}
+      {abaCadastro !== "checklist" && (
       <div className="surface-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="font-display text-sm flex items-center gap-2">
@@ -1266,6 +1272,7 @@ export default function Configurador() {
 
         </div>
       </div>
+      )}
 
       {/* Desenho e detalhamento */}
       <div className="space-y-4 min-w-0">
