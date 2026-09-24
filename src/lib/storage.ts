@@ -41,6 +41,8 @@ export interface Peca {
   automacao_valor?: number | null;
   /** Várias automações na mesma peça (ex.: motor + eletroímã). */
   automacoes?: { id: string; valor: number | null }[];
+  /** Fechaduras escolhidas para esta peça (preço da política, editável). */
+  fechaduras?: { id: string; qtd: number; valor: number | null }[];
   /** Motor vindo do cadastro de materiais. */
   motor_material_id?: string | null;
   motor_nome?: string;
@@ -413,6 +415,7 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
     automacao_id: pc.automacao_id ?? null,
     automacao_valor: pc.automacao_valor ?? null,
     automacoes: pc.automacoes ?? (pc.automacao_id ? [{ id: pc.automacao_id, valor: pc.automacao_valor ?? null }] : []),
+    fechaduras: Array.isArray(pc.fechaduras) ? pc.fechaduras : [],
     motor_material_id: pc.motor_material_id ?? null,
     motor_nome: pc.motor_nome ?? "",
     motor_custo: pc.motor_custo ?? null,

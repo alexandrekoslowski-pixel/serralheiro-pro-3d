@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft, Save, Download, Settings2, DollarSign, Send, FileSignature, Loader2,
@@ -59,6 +59,7 @@ import {
   precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
   precoAutomacaoPeca, automacoesDaPeca, nomesAutomacoes, precoMotorPeca, precoMotorSugerido, tipologiaDoItem, automacaoPolitica,
   porteMotorRecomendado, porteDoMotor, motorSubdimensionado,
+  fechadurasPolitica, fechadurasDaPeca, nomesFechaduras, precoFechadurasPeca, nomeFechadura, itemPolitica,
 } from "@/lib/politicaPrecos";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
@@ -278,6 +279,7 @@ export default function Configurador() {
   const tip = tipologiaPorId(pecaSel.tipologia);
   const precoSel = precoPeca(pecaSel, politica);
   const automacaoSel = precoAutomacaoPeca(pecaSel);
+  const fechadurasSel = precoFechadurasPeca(pecaSel, politica);
   const motorSel = precoMotorPeca(pecaSel, margemMotor);
   const totalPecaSel = totalPeca(pecaSel, politica, margemMotor);
   // Motor do basculante: porte recomendado pelo vão e lista com os compatíveis primeiro.
@@ -1013,6 +1015,84 @@ export default function Configurador() {
           </section>
 
           <section className="rounded-lg border border-border p-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Fechaduras desta peça</h4>
+            {(() => {
+              const opcoes = fechadurasPolitica(politica);
+              const lista = fechadurasDaPeca(pecaSel);
+              const salvar = (l: { id: string; qtd: number; valor: number | null }[]) => updPeca({ fechaduras: l });
+              return (
+                <>
+                  <p className="mb-2 text-xs text-muted-foreground">Pode marcar mais de uma e ajustar a quantidade.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button" size="sm"
+                      variant={lista.length ? "outline" : "default"}
+                      className={cn("h-auto min-h-10", !lista.length && "bg-primary text-primary-foreground")}
+                      onClick={() => salvar([])}
+                    >
+                      Sem fechadura
+                    </Button>
+                    {opcoes.map((f) => {
+                      const ativo = lista.some((x) => x.id === f.id);
+                      return (
+                        <Button
+                          key={f.id}
+                          type="button" size="sm"
+                          variant={ativo ? "default" : "outline"}
+                          aria-pressed={ativo}
+                          className={cn("h-auto min-h-10 whitespace-normal text-left", ativo && "bg-primary text-primary-foreground")}
+                          onClick={() => salvar(ativo ? lista.filter((x) => x.id !== f.id) : [...lista, { id: f.id, qtd: 1, valor: null }])}
+                        >
+                          {ativo ? "✓ " : ""}{nomeFechadura(f)} · {formatarBRL(f.valor)}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  {lista.length > 0 && (
+                    <div className="form-grid mt-3">
+                      {lista.map((x) => {
+                        const item = itemPolitica(x.id, politica);
+                        return (
+                          <Fragment key={x.id}>
+                            <div className="form-field-number">
+                              <Label>{nomeFechadura(item)} · qtd</Label>
+                              <Input
+                                className="mt-2"
+                                inputMode="numeric"
+                                value={String(x.qtd ?? 1)}
+                                onChange={(e) => {
+                                  const n = Math.max(1, Number(e.target.value.replace(/\D/g, "")) || 1);
+                                  salvar(lista.map((y) => (y.id === x.id ? { ...y, qtd: n } : y)));
+                                }}
+                              />
+                            </div>
+                            <div className="form-field-money">
+                              <Label>Valor unitário (R$)</Label>
+                              <Input
+                                className="mt-2"
+                                mask="moeda"
+                                placeholder={formatarBRL(item?.valor ?? 0)}
+                                value={x.valor == null ? "" : String(x.valor).replace(".", ",")}
+                                onChange={(e) => salvar(lista.map((y) => (y.id === x.id
+                                  ? { ...y, valor: e.target.value === "" ? null : numeroMascarado(e.target.value) } : y)))}
+                              />
+                            </div>
+                          </Fragment>
+                        );
+                      })}
+                    </div>
+                  )}
+                  {lista.length > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Fechaduras: <strong>{formatarBRL(fechadurasSel)}</strong>
+                    </p>
+                  )}
+                </>
+              );
+            })()}
+          </section>
+
+          <section className="rounded-lg border border-border p-3">
             <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Automação e motor desta peça</h4>
             {(() => {
               const lista = automacoesDaPeca(pecaSel);
@@ -1169,13 +1249,15 @@ export default function Configurador() {
             <strong>{pecaSel.nome || tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
             {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome} ·{" "}
             {fixacaoTipo(pecaSel.fixacao).nome}
+            {nomesFechaduras(pecaSel, politica) && <> · {nomesFechaduras(pecaSel, politica)}</>}
             {nomesAutomacoes(pecaSel) && <> · {nomesAutomacoes(pecaSel)}</>}
             {pecaSel.motor_material_id && <> · motor</>}
             {" · "}
             <strong>{formatarBRL(totalPecaSel)}</strong>
-            {(automacaoSel > 0 || motorSel > 0) && (
+            {(automacaoSel > 0 || motorSel > 0 || fechadurasSel > 0) && (
               <span className="ml-1 text-xs text-muted-foreground">
                 (peça {formatarBRL(precoSel.valor)}
+                {fechadurasSel > 0 && ` + fechaduras ${formatarBRL(fechadurasSel)}`}
                 {automacaoSel > 0 && ` + automação ${formatarBRL(automacaoSel)}`}
                 {motorSel > 0 && ` + motor ${formatarBRL(motorSel)}`})
               </span>

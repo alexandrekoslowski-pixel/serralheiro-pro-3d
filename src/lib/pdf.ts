@@ -8,7 +8,7 @@ import { cm } from "@/lib/medidas";
 import { fixacaoTipo, fixacaoLados } from "./fixacao";
 import { linhasChecklistProjeto } from "./checklistPedido";
 import { enderecoCompleto } from "@/lib/endereco";
-import { nomesAutomacoes } from "./politicaPrecos";
+import { nomesAutomacoes, nomesFechaduras } from "./politicaPrecos";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -134,13 +134,14 @@ export function gerarOrcamentoPDF(
 
   autoTable(doc, {
     startY: nextY + 2,
-    head: [["Peça", "Tipologia", "Medidas (cm)", "Cor", "Fixação", "Automação"]],
+    head: [["Peça", "Tipologia", "Medidas (cm)", "Cor", "Fixação", "Fechadura", "Automação"]],
     body: projeto.pecas.map((pc) => [
       pc.nome,
       tipologiaPorId(pc.tipologia).nome,
       `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`,
       acabamentoPorId(pc.cor).nome,
       `${fixacaoTipo(pc.fixacao).curto} · ${fixacaoLados(pc.fixacaoLados).curto}`,
+      nomesFechaduras(pc) || "—",
       [nomesAutomacoes(pc), pc.motor_nome || ""]
         .filter(Boolean).join(" · ") || "—",
     ]),

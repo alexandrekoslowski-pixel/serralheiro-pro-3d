@@ -270,6 +270,53 @@ export function precoAutomacaoPeca(peca: Peca): number {
     (s, a) => s + (a.valor != null ? Number(a.valor) : automacaoPolitica(a.id)?.valor ?? 0), 0);
 }
 
+/** Itens da tabela que são fechaduras/travas, oferecidos peça a peça no orçamento. */
+export const FECHADURAS_POLITICA_IDS = [
+  "fechadura-de-sobrepor",
+  "fechadura-bico-de-papagaio",
+  "fechadura-de-macaneta",
+  "fechadura-de-miolo",
+  "fechadura-eletrica-ppa-uno-traver",
+  "fechadura-eletrica-ppa-traver-com-sistema-wifi",
+  "eletroima-par-com-acessorios-e-infra",
+];
+
+/** Fechaduras disponíveis para escolha, já com o valor vigente da política. */
+export function fechadurasPolitica(lista: ItemPolitica[] = POLITICA_PADRAO): ItemPolitica[] {
+  return FECHADURAS_POLITICA_IDS.map((id) => itemPolitica(id, lista)).filter(Boolean) as ItemPolitica[];
+}
+
+export const nomeFechadura = (item?: ItemPolitica) =>
+  item ? [item.produto, item.modelo].filter(Boolean).join(" ") : "";
+
+export const fechadurasDaPeca = (peca: Peca) =>
+  (peca.fechaduras ?? []).filter((f) => f && f.id);
+
+/** Texto com as fechaduras da peça, para documentos e oficina. */
+export function nomesFechaduras(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO): string {
+  return fechadurasDaPeca(peca)
+    .map((f) => {
+      const nome = nomeFechadura(itemPolitica(f.id, lista));
+      const qtd = Math.max(1, Number(f.qtd) || 1);
+      return nome ? (qtd > 1 ? `${qtd}x ${nome}` : nome) : "";
+    })
+    .filter(Boolean)
+    .join(" + ");
+}
+
+/** Valor somado das fechaduras da peça (valor da política x quantidade, editável). */
+export function precoFechadurasPeca(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO): number {
+  return Number(
+    fechadurasDaPeca(peca)
+      .reduce((s, f) => {
+        const qtd = Math.max(1, Number(f.qtd) || 1);
+        const unit = f.valor != null ? Number(f.valor) : itemPolitica(f.id, lista)?.valor ?? 0;
+        return s + unit * qtd;
+      }, 0)
+      .toFixed(2),
+  );
+}
+
 /** Preço de venda sugerido do motor: custo do material + margem da empresa. */
 export function precoMotorSugerido(custo?: number | null, margemPct = MARGEM_MOTOR_PADRAO): number {
   if (!custo) return 0;
@@ -283,9 +330,9 @@ export function precoMotorPeca(peca: Peca, margemPct = MARGEM_MOTOR_PADRAO): num
   return precoMotorSugerido(peca.motor_custo, margemPct);
 }
 
-/** Total cobrado por uma peça: tabela + automação + motor. */
+/** Total cobrado por uma peça: tabela + fechaduras + automação + motor. */
 export function totalPeca(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO, margemPct = MARGEM_MOTOR_PADRAO): number {
-  return Number((precoPeca(peca, lista).valor + precoAutomacaoPeca(peca) + precoMotorPeca(peca, margemPct)).toFixed(2));
+  return Number((precoPeca(peca, lista).valor + precoFechadurasPeca(peca, lista) + precoAutomacaoPeca(peca) + precoMotorPeca(peca, margemPct)).toFixed(2));
 }
 
 /** Soma das peças pela política, já com automação e motor. */
