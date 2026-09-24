@@ -13,7 +13,7 @@ import { numeroMascarado } from "@/lib/mascaras";
 import { PainelFotos } from "@/components/FotosOrdem";
 import { EditorMedicao } from "@/components/EditorMedicao";
 
-export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar }: { projetoId: string; abrirAgora?: boolean; onFechar?: () => void }) {
+export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar, semBotao = false }: { projetoId: string; abrirAgora?: boolean; onFechar?: () => void; semBotao?: boolean }) {
   const { toast } = useToast();
   const [aberto, setAberto] = useState(false);
   const [editor, setEditor] = useState(false);
@@ -35,7 +35,11 @@ export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar }: { pro
     setCarregado(true);
   }, [aberto, carregado, projeto]);
 
-  useEffect(() => { if (abrirAgora) setAberto(true); }, [abrirAgora]);
+  useEffect(() => {
+    if (!abrirAgora) return;
+    const t = setTimeout(() => setAberto(true), 50);
+    return () => clearTimeout(t);
+  }, [abrirAgora]);
   const abrir = (o: boolean) => { setAberto(o); if (!o) onFechar?.(); };
 
   const salvar = () => {
@@ -56,11 +60,13 @@ export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar }: { pro
 
   return (
     <Dialog open={aberto} onOpenChange={abrir}>
+      {!semBotao && (
       <DialogTrigger asChild>
         <Button size="sm" variant="soft" className="flex-1">
           <Ruler className="mr-1 h-3.5 w-3.5" /> Medição
         </Button>
       </DialogTrigger>
+      )}
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Medição da ordem</DialogTitle>
