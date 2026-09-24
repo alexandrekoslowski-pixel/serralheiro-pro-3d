@@ -38,4 +38,4 @@
 - [x] Aviso visível (toast) quando salvar orçamento/pagamento falha na nuvem
 - [x] Vendedor(a) responsável mostra o nome salvo mesmo se não estiver mais no menu Equipe
 - [x] Remarcação de entregas pelo dia selecionado no calendário e cartões do painel sem traços coloridos
-- [ ] Logo Kochinski no orçamento em PDF
+- [x] Logo Kochinski no orçamento em PDF
