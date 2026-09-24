@@ -1,6 +1,6 @@
 // Tela do serralheiro: apenas as ordens da oficina, sem nenhum valor.
 import { useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ArrowRight, RefreshCw, FileText, User, Camera, MapPin } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -59,6 +59,8 @@ const textoPrazo = (prazo: string | null) => {
 export default function MinhasOrdens() {
   useDados();
   const { papel } = useSessao();
+  const [params, setParams] = useSearchParams();
+  const medicaoAlvo = params.get("medicao");
   const empresa = obterEmpresa();
   const codigo = empresa.codigoOficina;
   const [ordens, setOrdens] = useState<OrdemOficina[]>([]);
@@ -234,7 +236,7 @@ export default function MinhasOrdens() {
                               etapaInicial={etapaFotoDaOficina(o.etapa)}
                               total={o.fotos ?? 0}
                             />
-                            <MedicaoDialog projetoId={o.id} />
+                            <MedicaoDialog projetoId={o.id} abrirAgora={medicaoAlvo === o.id} onFechar={() => { if (medicaoAlvo) setParams({}, { replace: true }); }} />
                             {o.etapa === "pos_venda" && papel !== "serralheiro" ? (
                               <PosVendaDialog projetoId={o.id} />
                             ) : null}

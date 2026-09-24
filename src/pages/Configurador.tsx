@@ -57,7 +57,7 @@ import { gerarOrcamentoPDF, nomeArquivoPdf } from "@/lib/pdf";
 import {
   FRETE_MINIMO, SERVICOS_POLITICA, SERVICO_MINIMO, servicoTemMinimo, AUTOMACOES_POLITICA, UNIDADE_LABEL, politicaComValores,
   precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
-  precoAutomacaoPeca, precoMotorPeca, precoMotorSugerido, tipologiaDoItem, automacaoPolitica,
+  precoAutomacaoPeca, automacoesDaPeca, nomesAutomacoes, precoMotorPeca, precoMotorSugerido, tipologiaDoItem, automacaoPolitica,
   porteMotorRecomendado, porteDoMotor, motorSubdimensionado,
 } from "@/lib/politicaPrecos";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
@@ -774,25 +774,6 @@ export default function Configurador() {
               }}
               extraPeca={(
                 <div className="grid gap-4 rounded-lg border border-border p-3 lg:grid-cols-2">
-                  <div className="lg:col-span-2 min-w-0">
-                    <Label className="text-sm">Cor / acabamento</Label>
-                    <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
-                      {ACABAMENTOS.map((a) => (
-                        <button
-                          key={a.id}
-                          type="button"
-                          onClick={() => updPeca({ cor: a.id as AcabamentoId })}
-                          className={cn(
-                            "h-8 w-8 shrink-0 rounded-full border-2 transition",
-                            pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
-                          )}
-                          style={{ backgroundColor: a.hex }}
-                          title={a.nome}
-                        />
-                      ))}
-                    </div>
-                    <p className="mt-1 text-[11px] text-muted-foreground">{ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome}</p>
-                  </div>
                   <div>
                     <Label className="text-sm">Sistema de fixação</Label>
                     <Select value={pecaSel.fixacao ?? FIXACAO_PADRAO} onValueChange={(v) => updPeca({ fixacao: v as FixacaoTipo })}>
@@ -1010,44 +991,81 @@ export default function Configurador() {
           </section>
 
           <section className="rounded-lg border border-border p-3">
-            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Automação e motor desta peça</h4>
-            <div className="flex flex-wrap gap-2">
-              <Button
-                type="button" size="sm"
-                variant={pecaSel.automacao_id ? "outline" : "default"}
-                className={cn("h-auto min-h-10", !pecaSel.automacao_id && "bg-primary text-primary-foreground")}
-                onClick={() => updPeca({ automacao_id: null, automacao_valor: null })}
-              >
-                Sem automação
-              </Button>
-              {AUTOMACOES_POLITICA.map((a) => {
-                const ativo = pecaSel.automacao_id === a.id;
-                return (
-                  <Button
-                    key={a.id}
-                    type="button" size="sm"
-                    variant={ativo ? "default" : "outline"}
-                    className={cn("h-auto min-h-10 whitespace-normal text-left", ativo && "bg-primary text-primary-foreground")}
-                    onClick={() => updPeca({ automacao_id: a.id, automacao_valor: null })}
-                  >
-                    {a.nome} · {formatarBRL(a.valor)}
-                  </Button>
-                );
-              })}
-            </div>
+                  <div className="min-w-0">
+                    <Label className="text-sm">Cor / acabamento</Label>
+                    <div className="mt-2 flex w-full gap-1.5 overflow-x-auto px-1 py-1 scrollbar-thin">
+                      {ACABAMENTOS.map((a) => (
+                        <button
+                          key={a.id}
+                          type="button"
+                          onClick={() => updPeca({ cor: a.id as AcabamentoId })}
+                          className={cn(
+                            "h-8 w-8 shrink-0 rounded-full border-2 transition",
+                            pecaSel.cor === a.id ? "border-primary scale-110 shadow-orange" : "border-border",
+                          )}
+                          style={{ backgroundColor: a.hex }}
+                          title={a.nome}
+                        />
+                      ))}
+                    </div>
+                    <p className="mt-1 text-[11px] text-muted-foreground">{ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome}</p>
+                  </div>
+          </section>
 
-            {pecaSel.automacao_id && (
-              <div className="mt-3">
-                <Label>Valor da instalação da automação (R$)</Label>
-                <Input
-                  className="mt-2 sm:max-w-xs"
-                  mask="moeda"
-                  placeholder={formatarBRL(automacaoPolitica(pecaSel.automacao_id)?.valor ?? 0)}
-                  value={pecaSel.automacao_valor == null ? "" : String(pecaSel.automacao_valor).replace(".", ",")}
-                  onChange={(e) => updPeca({ automacao_valor: e.target.value === "" ? null : numeroMascarado(e.target.value) })}
-                />
-              </div>
-            )}
+          <section className="rounded-lg border border-border p-3">
+            <h4 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Automação e motor desta peça</h4>
+            {(() => {
+              const lista = automacoesDaPeca(pecaSel);
+              const salvar = (l: { id: string; valor: number | null }[]) =>
+                updPeca({ automacoes: l, automacao_id: l[0]?.id ?? null, automacao_valor: l[0]?.valor ?? null });
+              return (
+                <>
+                  <p className="mb-2 text-xs text-muted-foreground">Pode marcar mais de uma (ex.: motor + eletroímã).</p>
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      type="button" size="sm"
+                      variant={lista.length ? "outline" : "default"}
+                      className={cn("h-auto min-h-10", !lista.length && "bg-primary text-primary-foreground")}
+                      onClick={() => salvar([])}
+                    >
+                      Sem automação
+                    </Button>
+                    {AUTOMACOES_POLITICA.map((a) => {
+                      const ativo = lista.some((x) => x.id === a.id);
+                      return (
+                        <Button
+                          key={a.id}
+                          type="button" size="sm"
+                          variant={ativo ? "default" : "outline"}
+                          aria-pressed={ativo}
+                          className={cn("h-auto min-h-10 whitespace-normal text-left", ativo && "bg-primary text-primary-foreground")}
+                          onClick={() => salvar(ativo ? lista.filter((x) => x.id !== a.id) : [...lista, { id: a.id, valor: null }])}
+                        >
+                          {ativo ? "✓ " : ""}{a.nome} · {formatarBRL(a.valor)}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                  {lista.length > 0 && (
+                    <div className="form-grid mt-3">
+                      {lista.map((x) => (
+                        <div key={x.id} className="form-field-money">
+                          <Label>{automacaoPolitica(x.id)?.nome ?? "Automação"} (R$)</Label>
+                          <Input
+                            className="mt-2"
+                            mask="moeda"
+                            placeholder={formatarBRL(automacaoPolitica(x.id)?.valor ?? 0)}
+                            value={x.valor == null ? "" : String(x.valor).replace(".", ",")}
+                            onChange={(e) => salvar(lista.map((y) => y.id === x.id
+                              ? { ...y, valor: e.target.value === "" ? null : numeroMascarado(e.target.value) } : y))}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              );
+            })()}
 
             {/* Motor: opcional, com porte recomendado pelo tamanho do portão */}
             <div className="mt-4 rounded-lg border border-border/70 bg-muted/20 p-3">
@@ -1150,7 +1168,7 @@ export default function Configurador() {
             <strong>{pecaSel.nome || tip.nome}</strong> · {cm(pecaSel.largura_mm)} × {cm(pecaSel.altura_mm)} cm ·{" "}
             {ACABAMENTOS.find((a) => a.id === pecaSel.cor)?.nome} ·{" "}
             {fixacaoTipo(pecaSel.fixacao).nome}
-            {pecaSel.automacao_id && <> · {automacaoPolitica(pecaSel.automacao_id)?.nome}</>}
+            {nomesAutomacoes(pecaSel) && <> · {nomesAutomacoes(pecaSel)}</>}
             {pecaSel.motor_material_id && <> · motor</>}
             {" · "}
             <strong>{formatarBRL(totalPecaSel)}</strong>
@@ -1761,8 +1779,8 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
         <Button
           type="button" variant="outline" size="icon"
           className="h-14 w-12 shrink-0 text-lg font-bold"
-          aria-label={`Diminuir ${label} 10 cm`}
-          onClick={() => ajustar(-10)}
+          aria-label={`Diminuir ${label} 1 cm`}
+          onClick={() => ajustar(-1)}
         >
           −
         </Button>
@@ -1783,8 +1801,8 @@ function SliderMm({ label, value, min, max, onChange }: { label: string; value: 
         <Button
           type="button" variant="outline" size="icon"
           className="h-14 w-12 shrink-0 text-lg font-bold"
-          aria-label={`Aumentar ${label} 10 cm`}
-          onClick={() => ajustar(10)}
+          aria-label={`Aumentar ${label} 1 cm`}
+          onClick={() => ajustar(1)}
         >
           +
         </Button>

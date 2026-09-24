@@ -31,18 +31,13 @@ const texto = (id: string, label: string, extra: Partial<PerguntaChecklist> = {}
 
 const COMUNS: PerguntaChecklist[] = [
   opcao("comum.medidas", "As medidas são estimadas ou finais?", ["Estimadas", "Finais"], { comercial: true }),
-  opcao("comum.visita", "Precisa de visita para medição fina?", SN, { comercial: true }),
-  opcao("comum.servico", "Qual é o tipo do serviço?", ["Fabricação nova", "Reforma", "Substituição"]),
   opcao("comum.retirada", "Precisa retirar a estrutura existente?", SN),
   opcao("comum.local", "Onde será a instalação?", ["Residência", "Comércio", "Condomínio", "Indústria"]),
   opcao("comum.altura", "Como é o acesso para instalação?", ["Térreo e livre", "Precisa de escada", "Precisa de andaime", "Acesso restrito"]),
-  opcao("comum.esquadro", "O vão está no esquadro e no nível?", ["Sim", "Não", "A confirmar na medição"]),
-  opcao("comum.base", "Qual é a base de fixação?", ["Alvenaria", "Concreto", "Estrutura metálica", "Madeira", "A confirmar"]),
-  multipla("comum.interferencias", "Existem interferências no local?", ["Nenhuma", "Piso", "Parede", "Viga", "Forro", "Tubulação", "Outra"]),
+  opcao("comum.base", "Qual é a base de fixação?", ["Alvenaria", "Concreto", "Estrutura metálica", "Madeira", "Drywall", "A confirmar"]),
   opcao("comum.energia", "Há energia próxima ao equipamento?", ["Sim, 127 V", "Sim, 220 V", "Não", "Não se aplica"]),
   opcao("comum.lado", "Referência do lado de abertura", ["Visto por dentro do imóvel", "Visto pela rua", "Não se aplica"]),
   opcao("comum.cor", "Acabamento e cor foram confirmados?", SN, { comercial: true }),
-  multipla("comum.inclusos", "O que está incluído no pedido?", ["Frete", "Instalação", "Pedreiro", "Elétrica", "Automação", "Somente fabricação"], { comercial: true }),
   texto("comum.observacoes", "Observações e detalhes combinados", { obrigatoria: false, ajuda: "Opcional" }),
 ];
 
@@ -76,7 +71,6 @@ const CORRER: PerguntaChecklist[] = [
   opcao("correr.folhas", "Quantidade de folhas", ["1 folha", "2 folhas"]),
   opcao("correr.recolhimento", "Lado de recolhimento visto por dentro", ["Esquerda", "Direita", "Ambos"]),
   opcao("correr.trilho", "Sistema do trilho", ["Trilho no piso", "Suspenso"]),
-  opcao("correr.piso", "O piso está nivelado e pronto?", ["Sim", "Não", "A confirmar"]),
   opcao("correr.espaco", "Há espaço lateral para recolhimento total?", ["Sim", "Não", "A confirmar"]),
   opcao("acionamento", "O portão será manual ou automatizado?", ["Manual", "Automatizado"]),
   ...MOTOR,
@@ -89,10 +83,9 @@ const PIVOTANTE: PerguntaChecklist[] = [
   opcao("pivotante.folhas", "Quantidade de folhas", ["1 folha", "2 folhas"]),
   opcao("pivotante.mao", "Mão de abertura vista por dentro", ["Esquerda", "Direita", "Duas folhas"]),
   opcao("pivotante.sentido", "Abre para dentro ou para fora?", ["Para dentro", "Para fora"]),
-  opcao("pivotante.articulacao", "Sistema de articulação", ["Dobradiça", "Pivô", "Aproveitar existente"]),
+  opcao("pivotante.articulacao", "Sistema de articulação", ["Dobradiça", "Pivô", "Basculante", "Deslizante", "Aproveitar existente"]),
   opcao("pivotante.social", "Terá folha social?", SN),
   multipla("pivotante.fechamento", "Tipos de fechamento aplicáveis", FECHAMENTOS),
-  opcao("pivotante.piso", "Condição do piso e folga inferior", ["Nivelado", "Com desnível", "A confirmar"]),
   opcao("acionamento", "Será manual ou automatizado?", ["Manual", "Automatizado"]),
   ...MOTOR,
 ];

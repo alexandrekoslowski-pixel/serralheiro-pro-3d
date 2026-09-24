@@ -1,3 +1,4 @@
+import { automacoesDaPeca } from "./politicaPrecos";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { type DadosEmpresa, type ProjetoLocal, formatarBRL } from "./storage";
@@ -32,7 +33,7 @@ export function gerarContratoPDF(projeto: ProjetoLocal, empresa: DadosEmpresa, r
     startY: y,
     head: [["Item", "Serviço / peça", "Medidas"]],
     body: projeto.pecas.map((p, i) => {
-      const extras = [p.automacao_id ? "com automação" : "", p.motor_nome || ""].filter(Boolean).join(" · ");
+      const extras = [automacoesDaPeca(p).length ? "com automação" : "", p.motor_nome || ""].filter(Boolean).join(" · ");
       return [String(i + 1), `${p.nome} — ${tipologiaPorId(p.tipologia).nome}${extras ? ` (${extras})` : ""}`, `${cm(p.largura_mm)} × ${cm(p.altura_mm)}`];
     }),
     theme: "grid", styles: { fontSize: 9 }, margin: { left: margem, right: margem },
