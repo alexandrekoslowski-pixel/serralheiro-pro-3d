@@ -39,6 +39,8 @@ export interface Peca {
   /** Automação escolhida para esta peça. */
   automacao_id?: string | null;
   automacao_valor?: number | null;
+  /** Várias automações na mesma peça (ex.: motor + eletroímã). */
+  automacoes?: { id: string; valor: number | null }[];
   /** Motor vindo do cadastro de materiais. */
   motor_material_id?: string | null;
   motor_nome?: string;
@@ -410,6 +412,7 @@ const normalizarProjeto = (p: Partial<ProjetoLocal>): ProjetoLocal => {
     preco_manual: pc.preco_manual ?? null,
     automacao_id: pc.automacao_id ?? null,
     automacao_valor: pc.automacao_valor ?? null,
+    automacoes: pc.automacoes ?? (pc.automacao_id ? [{ id: pc.automacao_id, valor: pc.automacao_valor ?? null }] : []),
     motor_material_id: pc.motor_material_id ?? null,
     motor_nome: pc.motor_nome ?? "",
     motor_custo: pc.motor_custo ?? null,

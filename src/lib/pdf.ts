@@ -8,7 +8,7 @@ import { cm } from "@/lib/medidas";
 import { fixacaoTipo, fixacaoLados } from "./fixacao";
 import { linhasChecklistProjeto } from "./checklistPedido";
 import { enderecoCompleto } from "@/lib/endereco";
-import { automacaoPolitica } from "./politicaPrecos";
+import { nomesAutomacoes } from "./politicaPrecos";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -141,7 +141,7 @@ export function gerarOrcamentoPDF(
       `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`,
       acabamentoPorId(pc.cor).nome,
       `${fixacaoTipo(pc.fixacao).curto} · ${fixacaoLados(pc.fixacaoLados).curto}`,
-      [pc.automacao_id ? automacaoPolitica(pc.automacao_id)?.nome ?? "" : "", pc.motor_nome || ""]
+      [nomesAutomacoes(pc), pc.motor_nome || ""]
         .filter(Boolean).join(" · ") || "—",
     ]),
     styles: { fontSize: 8.5, cellPadding: 2 },

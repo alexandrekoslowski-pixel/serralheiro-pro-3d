@@ -256,10 +256,18 @@ export function precoPeca(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO): 
 }
 
 /** Valor da automação escolhida na peça (editável). */
+export function automacoesDaPeca(peca: Peca): { id: string; valor: number | null }[] {
+  if (peca.automacoes) return peca.automacoes;
+  return peca.automacao_id ? [{ id: peca.automacao_id, valor: peca.automacao_valor ?? null }] : [];
+}
+
+export function nomesAutomacoes(peca: Peca): string {
+  return automacoesDaPeca(peca).map((a) => automacaoPolitica(a.id)?.nome ?? "").filter(Boolean).join(" + ");
+}
+
 export function precoAutomacaoPeca(peca: Peca): number {
-  if (!peca.automacao_id) return 0;
-  if (peca.automacao_valor != null) return Number(peca.automacao_valor);
-  return automacaoPolitica(peca.automacao_id)?.valor ?? 0;
+  return automacoesDaPeca(peca).reduce(
+    (s, a) => s + (a.valor != null ? Number(a.valor) : automacaoPolitica(a.id)?.valor ?? 0), 0);
 }
 
 /** Preço de venda sugerido do motor: custo do material + margem da empresa. */
