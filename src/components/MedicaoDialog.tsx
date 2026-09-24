@@ -83,8 +83,8 @@ export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar, semBota
         </DialogHeader>
         {projeto && (
           <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
-            <p className="font-semibold">{projeto.cliente?.nome || projeto.nome}</p>
-            <p className="text-muted-foreground">{[projeto.dados?.cliente_endereco, projeto.dados?.cliente_numero, projeto.dados?.cliente_bairro, projeto.dados?.cliente_cidade].filter(Boolean).join(", ") || "Endereço não informado"}</p>
+            <p className="font-semibold">{projeto.cliente_nome || projeto.nome}</p>
+            <p className="text-muted-foreground">{[projeto.cliente_endereco, projeto.cliente_numero, projeto.cliente_bairro, projeto.cliente_cidade].filter(Boolean).join(", ") || "Endereço não informado"}</p>
           </div>
         )}
         {projeto && projeto.pecas.length > 0 && carregado && (
