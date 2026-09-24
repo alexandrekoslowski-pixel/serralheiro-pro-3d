@@ -4,11 +4,10 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { ResultadoCalculo } from "./calculator";
 import { ProjetoLocal, DadosEmpresa, formatarBRL } from "./storage";
-import { acabamentoPorId } from "./tipologias";
 import { cm } from "@/lib/medidas";
 import { linhasChecklistProjeto } from "./checklistPedido";
 import { enderecoCompleto } from "@/lib/endereco";
-import { automacaoPolitica, automacoesDaPeca, nomesFechaduras, precoMotorPeca } from "./politicaPrecos";
+import { automacaoPolitica, automacoesDaPeca, fechadurasDaPeca, itemPolitica, nomeFechadura, precoMotorPeca, precoPeca } from "./politicaPrecos";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
@@ -135,35 +134,87 @@ export function gerarOrcamentoPDF(
   doc.text("Peças do orçamento", margin, nextY);
   nextY += 2;
 
+  const AUTOMACOES_QUE_SAO_PECAS = new Set(["automacao-basculante", "automacao-eletroima"]);
+  const linhasPecas = projeto.pecas.flatMap((pc): string[][] => {
+    const preco = precoPeca(pc);
+    const modelo = preco.item?.modelo?.trim() || "Padrão";
+    const adicionais = automacoesDaPeca(pc)
+      .filter((a) => AUTOMACOES_QUE_SAO_PECAS.has(a.id))
+      .map((a) => {
+        const item = automacaoPolitica(a.id);
+        const valor = a.valor != null ? Number(a.valor) : item?.valor ?? 0;
+        return [item?.nome || "Peça", "—", `Para ${pc.nome}`, formatarBRL(valor)];
+      });
+    if (pc.motor_material_id) {
+      adicionais.push([
+        pc.motor_nome || "Motor PPA",
+        "—",
+        `Para ${pc.nome}`,
+        formatarBRL(precoMotorPeca(pc, empresa.margemMotorPct ?? 30)),
+      ]);
+    }
+    const eletroimas = fechadurasDaPeca(pc)
+      .filter((f) => f.id === "eletroima-par-com-acessorios-e-infra")
+      .map((f) => {
+        const item = itemPolitica(f.id);
+        const qtd = Math.max(1, Number(f.qtd) || 1);
+        const unitario = f.valor != null ? Number(f.valor) : item?.valor ?? 0;
+        return [qtd > 1 ? `${qtd}x ${nomeFechadura(item)}` : nomeFechadura(item), "—", `Para ${pc.nome}`, formatarBRL(unitario * qtd)];
+      });
+    return [[pc.nome, `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`, modelo, formatarBRL(preco.valor)], ...adicionais, ...eletroimas];
+  });
+
   autoTable(doc, {
     startY: nextY + 2,
-    head: [["Peça", "Medidas (cm)", "Cor", "Fechadura"]],
-    body: projeto.pecas.map((pc) => [
-      pc.nome,
-      `${cm(pc.largura_mm)} × ${cm(pc.altura_mm)}`,
-      acabamentoPorId(pc.cor).nome,
-      nomesFechaduras(pc) || "—",
-    ]),
+    head: [["Peça", "Medida (cm)", "Modelo", "Valor"]],
+    body: linhasPecas,
     styles: { fontSize: 8.5, cellPadding: 2 },
     headStyles: { fillColor: DARK, textColor: 255, fontStyle: "bold" },
+    columnStyles: { 3: { halign: "right" } },
     margin: { left: margin, right: margin },
   });
 
   // @ts-expect-error lastAutoTable é fornecido pelo autotable
   nextY = (doc.lastAutoTable?.finalY ?? nextY) + 6;
 
+  // ===== Itens =====
+  const linhasItens: Array<[string, string]> = projeto.pecas.flatMap((pc) =>
+    fechadurasDaPeca(pc)
+      .filter((f) => f.id !== "eletroima-par-com-acessorios-e-infra")
+      .map((f): [string, string] => {
+        const item = itemPolitica(f.id);
+        const qtd = Math.max(1, Number(f.qtd) || 1);
+        const unitario = f.valor != null ? Number(f.valor) : item?.valor ?? 0;
+        const nome = nomeFechadura(item) || "Fechadura";
+        return [`${qtd > 1 ? `${qtd}x ` : ""}${nome} — ${pc.nome}`, formatarBRL(unitario * qtd)];
+      }),
+  );
+  if (linhasItens.length > 0) {
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...DARK);
+    doc.text("Itens", margin, nextY);
+    autoTable(doc, {
+      startY: nextY + 2,
+      head: [["Item", "Valor"]],
+      body: linhasItens,
+      styles: { fontSize: 8.5, cellPadding: 2 },
+      headStyles: { fillColor: DARK, textColor: 255, fontStyle: "bold" },
+      columnStyles: { 1: { halign: "right" } },
+      margin: { left: margin, right: margin },
+    });
+    // @ts-expect-error lastAutoTable é fornecido pelo autotable
+    nextY = (doc.lastAutoTable?.finalY ?? nextY) + 6;
+  }
+
   // ===== Serviços =====
   const servicos = projeto.servicos_politica ?? [];
   const linhasAutomacao: Array<[string, string]> = projeto.pecas.flatMap((pc) => [
-    ...automacoesDaPeca(pc).map((a): [string, string] => {
+    ...automacoesDaPeca(pc).filter((a) => !AUTOMACOES_QUE_SAO_PECAS.has(a.id)).map((a): [string, string] => {
       const item = automacaoPolitica(a.id);
       const valor = a.valor != null ? Number(a.valor) : item?.valor ?? 0;
       return [`${item?.nome || "Automação"} — ${pc.nome}`, formatarBRL(valor)];
     }),
-    ...(pc.motor_material_id ? [[
-      `${pc.motor_nome || "Motor"} — ${pc.nome}`,
-      formatarBRL(precoMotorPeca(pc, empresa.margemMotorPct ?? 30)),
-    ] as [string, string]] : []),
   ]);
   const linhasServicos: Array<[string, string]> = [...linhasAutomacao, ...servicos.map((s) => [
     s.nome?.trim() || "Serviço adicional",
