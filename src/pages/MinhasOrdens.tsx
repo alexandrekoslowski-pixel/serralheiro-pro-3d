@@ -146,6 +146,7 @@ export default function MinhasOrdens() {
 
   return (
     <div className="container mx-auto space-y-4 px-4 py-6">
+      {dialogoMedicaoAlvo}
       <header className="flex items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl">{papel === "serralheiro" ? "Minhas ordens" : "Kanban"}</h1>
