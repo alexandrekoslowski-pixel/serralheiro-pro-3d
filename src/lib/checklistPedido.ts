@@ -37,7 +37,6 @@ const COMUNS: PerguntaChecklist[] = [
   opcao("comum.base", "Qual é a base de fixação?", ["Alvenaria", "Concreto", "Estrutura metálica", "Madeira", "Drywall", "A confirmar"]),
   opcao("comum.energia", "Há energia próxima ao equipamento?", ["Sim, 127 V", "Sim, 220 V", "Não", "Não se aplica"]),
   opcao("comum.lado", "Referência do lado de abertura", ["Visto por dentro do imóvel", "Visto pela rua", "Não se aplica"]),
-  opcao("comum.cor", "Acabamento e cor foram confirmados?", SN, { comercial: true }),
   texto("comum.observacoes", "Observações e detalhes combinados", { obrigatoria: false, ajuda: "Opcional" }),
 ];
 
