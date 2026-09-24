@@ -1254,9 +1254,10 @@ export default function Configurador() {
             {pecaSel.motor_material_id && <> · motor</>}
             {" · "}
             <strong>{formatarBRL(totalPecaSel)}</strong>
-            {(automacaoSel > 0 || motorSel > 0) && (
+            {(automacaoSel > 0 || motorSel > 0 || fechadurasSel > 0) && (
               <span className="ml-1 text-xs text-muted-foreground">
                 (peça {formatarBRL(precoSel.valor)}
+                {fechadurasSel > 0 && ` + fechaduras ${formatarBRL(fechadurasSel)}`}
                 {automacaoSel > 0 && ` + automação ${formatarBRL(automacaoSel)}`}
                 {motorSel > 0 && ` + motor ${formatarBRL(motorSel)}`})
               </span>
