@@ -8,7 +8,7 @@ import { cm } from "@/lib/medidas";
 import { fixacaoTipo, fixacaoLados } from "./fixacao";
 import { linhasChecklistProjeto } from "./checklistPedido";
 import { enderecoCompleto } from "@/lib/endereco";
-import { nomesAutomacoes } from "./politicaPrecos";
+import { nomesAutomacoes, nomesFechaduras } from "./politicaPrecos";
 
 const ORANGE: [number, number, number] = [232, 97, 44];
 const DARK: [number, number, number] = [40, 35, 32];
