@@ -1701,33 +1701,78 @@ export default function Configurador() {
                 <table className="w-full min-w-[560px] text-sm">
                   <thead>
                     <tr className="border-b border-border text-xs uppercase text-muted-foreground">
-                      <th className="text-left py-2 pr-2">Item</th>
-                      <th className="text-left py-2 pr-2">Tabela</th>
-                      <th className="text-right py-2 pr-2">Qtd</th>
+                      <th className="text-left py-2 pr-2">Peça</th>
+                      <th className="text-left py-2 pr-2">Medida</th>
+                      <th className="text-left py-2 pr-2">Modelo</th>
                       <th className="text-right py-2 pr-2">Total</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {projeto.pecas.map((pc) => {
+                    {projeto.pecas.flatMap((pc) => {
                       const pr = precoPeca(pc, politica);
-                      return (
+                      const linhasPeca = [(
                         <tr key={pc.id} className="border-b border-border/40">
-                          <td className="py-1.5 pr-2">
-                            <div className="font-medium">{pc.nome}</div>
-                            <div className="text-[10px] text-muted-foreground">{cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm</div>
-                          </td>
-                          <td className="py-1.5 pr-2">
-                            {pr.item ? `${pr.item.produto}${pr.item.modelo ? ` · ${pr.item.modelo}` : ""}` : "—"}
-                          </td>
-                          <td className="py-1.5 pr-2 text-right">
-                            {pr.item && pr.item.unidade !== "sob_orcamento"
-                              ? `${pr.quantidade.toLocaleString("pt-BR")} ${UNIDADE_LABEL[pr.item.unidade].replace("por ", "")}`
-                              : "—"}
-                          </td>
+                          <td className="py-1.5 pr-2 font-medium">{pc.nome}</td>
+                          <td className="py-1.5 pr-2">{cm(pc.largura_mm)} × {cm(pc.altura_mm)} cm</td>
+                          <td className="py-1.5 pr-2">{pr.item?.modelo?.trim() || "Padrão"}</td>
                           <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(pr.valor)}</td>
                         </tr>
-                      );
+                      )];
+                      const pecasAdicionais = automacoesDaPeca(pc)
+                        .filter((a) => ["automacao-basculante", "automacao-eletroima"].includes(a.id))
+                        .map((a) => {
+                          const item = automacaoPolitica(a.id);
+                          const valor = a.valor != null ? Number(a.valor) : item?.valor ?? 0;
+                          return (
+                            <tr key={`${pc.id}-peca-${a.id}`} className="border-b border-border/40">
+                              <td className="py-1.5 pr-2 font-medium">{item?.nome || "Peça"}</td>
+                              <td className="py-1.5 pr-2">—</td>
+                              <td className="py-1.5 pr-2 text-muted-foreground">Para {pc.nome}</td>
+                              <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(valor)}</td>
+                            </tr>
+                          );
+                        });
+                      if (pc.motor_material_id) {
+                        pecasAdicionais.push(
+                          <tr key={`${pc.id}-motor`} className="border-b border-border/40">
+                            <td className="py-1.5 pr-2 font-medium">{pc.motor_nome || "Motor PPA"}</td>
+                            <td className="py-1.5 pr-2">—</td>
+                            <td className="py-1.5 pr-2 text-muted-foreground">Para {pc.nome}</td>
+                            <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(precoMotorPeca(pc, margemMotor))}</td>
+                          </tr>,
+                        );
+                      }
+                      fechadurasDaPeca(pc).filter((f) => f.id === "eletroima-par-com-acessorios-e-infra").forEach((f) => {
+                        const item = itemPolitica(f.id, politica);
+                        const qtd = Math.max(1, Number(f.qtd) || 1);
+                        const unitario = f.valor != null ? Number(f.valor) : item?.valor ?? 0;
+                        pecasAdicionais.push(
+                          <tr key={`${pc.id}-eletroima-${f.id}`} className="border-b border-border/40">
+                            <td className="py-1.5 pr-2 font-medium">{qtd > 1 ? `${qtd}x ` : ""}{nomeFechadura(item)}</td>
+                            <td className="py-1.5 pr-2">—</td>
+                            <td className="py-1.5 pr-2 text-muted-foreground">Para {pc.nome}</td>
+                            <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(unitario * qtd)}</td>
+                          </tr>,
+                        );
+                      });
+                      return [...linhasPeca, ...pecasAdicionais];
                     })}
+                  </tbody>
+                </table>
+              </div>
+
+              <h3 className="border-t border-border pt-4 font-display text-sm uppercase">Itens</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[560px] text-sm">
+                  <thead><tr className="border-b border-border text-xs uppercase text-muted-foreground"><th className="py-2 pr-2 text-left">Item</th><th className="py-2 pr-2 text-right">Valor</th></tr></thead>
+                  <tbody>
+                    {projeto.pecas.flatMap((pc) => fechadurasDaPeca(pc).filter((f) => f.id !== "eletroima-par-com-acessorios-e-infra").map((f) => {
+                      const item = itemPolitica(f.id, politica);
+                      const qtd = Math.max(1, Number(f.qtd) || 1);
+                      const unitario = f.valor != null ? Number(f.valor) : item?.valor ?? 0;
+                      return <tr key={`${pc.id}-item-${f.id}`} className="border-b border-border/40"><td className="py-1.5 pr-2"><span className="font-medium">{qtd > 1 ? `${qtd}x ` : ""}{nomeFechadura(item)}</span><span className="ml-1 text-xs text-muted-foreground">· {pc.nome}</span></td><td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(unitario * qtd)}</td></tr>;
+                    }))}
+                    {projeto.pecas.every((pc) => fechadurasDaPeca(pc).filter((f) => f.id !== "eletroima-par-com-acessorios-e-infra").length === 0) && <tr><td colSpan={2} className="py-3 text-sm text-muted-foreground">Nenhum item adicional.</td></tr>}
                   </tbody>
                 </table>
               </div>
@@ -1743,7 +1788,7 @@ export default function Configurador() {
                   </thead>
                   <tbody>
                     {projeto.pecas.flatMap((pc) => [
-                      ...automacoesDaPeca(pc).map((a) => {
+                      ...automacoesDaPeca(pc).filter((a) => !["automacao-basculante", "automacao-eletroima"].includes(a.id)).map((a) => {
                         const item = automacaoPolitica(a.id);
                         const valor = a.valor != null ? Number(a.valor) : item?.valor ?? 0;
                         return (
@@ -1756,15 +1801,6 @@ export default function Configurador() {
                           </tr>
                         );
                       }),
-                      ...(pc.motor_material_id ? [(
-                        <tr key={`${pc.id}-motor`} className="border-b border-border/40">
-                          <td className="py-1.5 pr-2">
-                            <span className="font-medium">{pc.motor_nome || "Motor"}</span>
-                            <span className="ml-1 text-xs text-muted-foreground">· {pc.nome}</span>
-                          </td>
-                          <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(precoMotorPeca(pc, margemMotor))}</td>
-                        </tr>
-                      )] : []),
                     ])}
                     {servicosEscolhidos.map((s) => (
                       <tr key={s.id} className="border-b border-border/40">
@@ -1778,7 +1814,7 @@ export default function Configurador() {
                         <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(projeto.frete_valor ?? 0)}</td>
                       </tr>
                     )}
-                    {servicosEscolhidos.length === 0 && (projeto.frete_valor ?? 0) <= 0 && projeto.pecas.every((pc) => automacoesDaPeca(pc).length === 0 && !pc.motor_material_id) && (
+                    {servicosEscolhidos.length === 0 && (projeto.frete_valor ?? 0) <= 0 && projeto.pecas.every((pc) => automacoesDaPeca(pc).filter((a) => !["automacao-basculante", "automacao-eletroima"].includes(a.id)).length === 0) && (
                       <tr><td colSpan={2} className="py-3 text-sm text-muted-foreground">Nenhum serviço adicional.</td></tr>
                     )}
                   </tbody>
