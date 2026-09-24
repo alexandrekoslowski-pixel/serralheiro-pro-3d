@@ -801,6 +801,11 @@ export default function Configurador() {
                 </div>
               )}
             />
+            <div className="mt-5 border-t border-border pt-4">
+              <h3 className="font-display text-base">Fotos</h3>
+              <p className="mb-3 text-sm text-muted-foreground">Fotos da medição no local.</p>
+              <PainelFotos projetoId={projeto.id} etapaInicial="medicao" />
+            </div>
           </TabsContent>
 
           <TabsContent value="ordem" className="mt-0 p-4">
@@ -848,6 +853,7 @@ export default function Configurador() {
       </div>
 
       {/* Peças e medidas */}
+      {abaCadastro !== "checklist" && (
       <div className="surface-card rounded-lg border border-border p-4 space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="font-display text-sm flex items-center gap-2">
@@ -1266,6 +1272,7 @@ export default function Configurador() {
 
         </div>
       </div>
+      )}
 
       {/* Desenho e detalhamento */}
       <div className="space-y-4 min-w-0">
@@ -1756,7 +1763,7 @@ export default function Configurador() {
           </Tabs>
         </div>
 
-      <aside className="fixed inset-x-0 bottom-0 z-30 hidden border-t border-primary/40 bg-card/95 shadow-[0_-8px_24px_hsl(var(--background)/0.45)] backdrop-blur md:block lg:left-[5.5rem]" aria-label="Total congelado do orçamento">
+      <aside className={`fixed inset-x-0 bottom-0 z-30 hidden border-t border-primary/40 bg-card/95 shadow-[0_-8px_24px_hsl(var(--background)/0.45)] backdrop-blur lg:left-[5.5rem] ${abaCadastro === "checklist" ? "" : "md:block"}`} aria-label="Total congelado do orçamento">
         <div className="container flex min-h-20 items-center justify-between gap-6 py-3">
           <div className="flex min-w-0 items-center gap-6 text-sm">
             <div className="min-w-0">
