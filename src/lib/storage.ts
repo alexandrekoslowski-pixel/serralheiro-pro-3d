@@ -5,7 +5,7 @@ import { TipologiaId, AcabamentoId, TIPOLOGIAS, tipologiaPorId } from "./tipolog
 import { ItemOverride, ItemExtra } from "./calculator";
 import { Catalogo, CATALOGO_PADRAO } from "./catalogo";
 import { CHECKLIST_VERSAO, normalizarRespostasChecklist, type RespostasChecklist } from "./checklistPedido";
-import { POLITICA_POR_TIPOLOGIA } from "./politicaPrecos";
+import { POLITICA_POR_TIPOLOGIA, POLITICA_PADRAO, itemPolitica } from "./politicaPrecos";
 
 export type OrdemStatus = "orcamento" | "aprovado" | "producao" | "entregue" | "faturado";
 export type EtapaOficina =
@@ -59,6 +59,13 @@ export function categoriaNomePeca(tipologia: TipologiaId): string {
   return tipologiaPorId(tipologia).nome;
 }
 
+/** Nome base da peça: produto escolhido na tabela de preços; senão, o nome da tipologia. */
+export function nomeBasePeca(peca: Pick<Peca, "tipologia" | "politica_id">): string {
+  const produto = itemPolitica(peca.politica_id)?.produto?.trim();
+  if (produto) return produto.replace(/^Peca\b/, "Peça");
+  return categoriaNomePeca(peca.tipologia);
+}
+
 const NOME_PECA_LEGADO = /^(?:Peça|Portão|Janela|Grade|Estrutura|Veneziana|Item)\s+\d+$/i;
 
 const escaparRegex = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -70,8 +77,9 @@ function nomePecaEhAutomatico(nome: string): boolean {
   if (/\s*\((?:c[oó]pia)\)\s*$/i.test(n)) return true;
   if (NOME_PECA_LEGADO.test(n)) return true;
   const alvo = n.toLocaleLowerCase("pt-BR");
-  return TIPOLOGIAS.some((t) => {
-    const base = t.nome.toLocaleLowerCase("pt-BR");
+  const bases = [...TIPOLOGIAS.map((t) => t.nome), ...POLITICA_PADRAO.map((i) => i.produto), "Peça metálica"];
+  return bases.some((nomeBase) => {
+    const base = nomeBase.toLocaleLowerCase("pt-BR");
     return alvo === base || new RegExp(`^${escaparRegex(base)}\\s+\\d+$`).test(alvo);
   });
 }
@@ -85,13 +93,13 @@ export function renumerarNomesAutomaticosPecas(pecas: Peca[]): Peca[] {
   const totais = new Map<string, number>();
   pecas.forEach((p) => {
     if (p.nome_manual || !nomePecaEhAutomatico(p.nome ?? "")) return;
-    const categoria = categoriaNomePeca(p.tipologia);
+    const categoria = nomeBasePeca(p);
     totais.set(categoria, (totais.get(categoria) ?? 0) + 1);
   });
   const contadores = new Map<string, number>();
   return pecas.map((peca) => {
     if (peca.nome_manual || !nomePecaEhAutomatico(peca.nome ?? "")) return peca;
-    const categoria = categoriaNomePeca(peca.tipologia);
+    const categoria = nomeBasePeca(peca);
     const numero = (contadores.get(categoria) ?? 0) + 1;
     contadores.set(categoria, numero);
     const nome = (totais.get(categoria) ?? 0) > 1 ? `${categoria} ${numero}` : categoria;

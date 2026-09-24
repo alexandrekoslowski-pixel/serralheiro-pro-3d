@@ -36,7 +36,7 @@ import {
 import {
   ProjetoLocal, Peca, obterProjeto, salvarProjeto, nomeSugeridoOrcamento, listarProjetos,
   obterEmpresa, obterCatalogo, formatarBRL, gerarId, listarPagamentos,
-  categoriaNomePeca, renumerarNomesAutomaticosPecas,
+  categoriaNomePeca, nomeBasePeca, renumerarNomesAutomaticosPecas,
 } from "@/lib/storage";
 import { progressoOrcamento, pendenciasOrdem } from "@/lib/progressoOrcamento";
 import { valorACobrar } from "@/lib/financeiro";
@@ -330,8 +330,9 @@ export default function Configurador() {
     const t = tipologiaPorId(pecaSel.tipologia);
     const nova: Peca = {
       id: gerarId(),
-      nome: categoriaNomePeca(pecaSel.tipologia),
+      nome: nomeBasePeca(pecaSel),
       tipologia: pecaSel.tipologia,
+      politica_id: pecaSel.politica_id,
       largura_mm: t.larguraDefault,
       altura_mm: t.alturaDefault,
       cor: pecaSel.cor,
@@ -347,7 +348,7 @@ export default function Configurador() {
     const nova: Peca = {
       ...pecaSel,
       id: gerarId(),
-      nome: categoriaNomePeca(pecaSel.tipologia),
+      nome: nomeBasePeca(pecaSel),
       checklist_respostas: { ...pecaSel.checklist_respostas },
     };
     setProjeto({ ...projeto, pecas: renumerarNomesAutomaticosPecas([...projeto.pecas, nova]) });
@@ -946,7 +947,7 @@ export default function Configurador() {
                   value={pecaSel.nome}
                   onChange={(e) => {
                     const v = e.target.value;
-                    updPeca(v.trim() === "" ? { nome: categoriaNomePeca(pecaSel.tipologia), nome_manual: false } : { nome: v, nome_manual: true });
+                    updPeca(v.trim() === "" ? { nome: nomeBasePeca(pecaSel), nome_manual: false } : { nome: v, nome_manual: true });
                   }}
                 />
                 <p className="mt-1 text-[11px] text-muted-foreground">Aparece na oficina e nos documentos. Apague o texto para voltar ao nome automático.</p>

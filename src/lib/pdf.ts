@@ -1,3 +1,4 @@
+import { LOGO_KOCHINSKI, LOGO_PROPORCAO } from "./logoKochinski";
 // Geração do PDF da proposta comercial (orçamento + condições).
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -62,10 +63,13 @@ export function gerarOrcamentoPDF(
   // ===== Header =====
   doc.setFillColor(...ORANGE);
   doc.rect(0, 0, pageW, 4, "F");
+  const logoW = 32;
+  doc.addImage(LOGO_KOCHINSKI, "JPEG", margin, 7, logoW, logoW * LOGO_PROPORCAO);
+  const xEmp = margin + logoW + 5;
   doc.setTextColor(...ORANGE);
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(18);
-  doc.text(empresa.nome || "Sua Serralheria", margin, 16);
+  doc.setFontSize(14);
+  doc.text(empresa.nome || "Sua Serralheria", xEmp, 13);
 
   doc.setTextColor(...GRAY);
   doc.setFont("helvetica", "normal");
@@ -76,7 +80,7 @@ export function gerarOrcamentoPDF(
     empresa.email || null,
     empresa.endereco || null,
   ].filter(Boolean) as string[];
-  empresaLines.forEach((l, i) => doc.text(l, margin, 22 + i * 4));
+  empresaLines.forEach((l, i) => doc.text(l, xEmp, 18 + i * 4));
 
   doc.setTextColor(...DARK);
   doc.setFont("helvetica", "bold");
