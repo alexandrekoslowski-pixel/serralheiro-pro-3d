@@ -201,6 +201,9 @@ export default function ModoOficina() {
                 {resumoFixacao(pc.largura_mm, pc.altura_mm, pc.fixacao, pc.fixacaoLados)}
               </p>
               <p className="text-sm text-zinc-300 print:text-black">{fixacaoTipo(pc.fixacao).instrucao}</p>
+              {nomesFechaduras(pc) && (
+                <p className="mt-1 text-lg font-bold uppercase">Fechadura: {nomesFechaduras(pc)}</p>
+              )}
               {(nomesAutomacoes(pc) || pc.motor_nome) && (
                 <p className="mt-1 text-lg font-bold uppercase">
                   Automação: {[nomesAutomacoes(pc), pc.motor_nome].filter(Boolean).join(" · ")}
