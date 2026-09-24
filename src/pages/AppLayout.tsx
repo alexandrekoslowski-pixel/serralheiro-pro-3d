@@ -13,7 +13,7 @@ import { useRealtimeProjetos } from "@/hooks/useRealtimeProjetos";
 import { useMeuNome } from "@/hooks/useMeuNome";
 import { AvisosMedicao } from "@/components/AvisosMedicao";
 
-function BotaoTema({ mobile = false }: { mobile?: boolean }) {
+function BotaoTema({ mobile = false, className }: { mobile?: boolean; className?: string }) {
   const [tema, setTema] = useState<Tema>(() => temaAtual());
   const alternar = () => setTema(alternarTema());
   const escuro = tema === "escuro";
@@ -21,7 +21,7 @@ function BotaoTema({ mobile = false }: { mobile?: boolean }) {
     <Button
       variant="soft"
       size={mobile ? "sm" : "icon"}
-      className="w-full"
+      className={cn(className ?? "w-full")}
       onClick={alternar}
       title={escuro ? "Mudar para tema claro" : "Mudar para tema escuro"}
       aria-label={escuro ? "Mudar para tema claro" : "Mudar para tema escuro"}
