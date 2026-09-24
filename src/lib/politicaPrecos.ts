@@ -330,9 +330,9 @@ export function precoMotorPeca(peca: Peca, margemPct = MARGEM_MOTOR_PADRAO): num
   return precoMotorSugerido(peca.motor_custo, margemPct);
 }
 
-/** Total cobrado por uma peça: tabela + automação + motor. */
+/** Total cobrado por uma peça: tabela + fechaduras + automação + motor. */
 export function totalPeca(peca: Peca, lista: ItemPolitica[] = POLITICA_PADRAO, margemPct = MARGEM_MOTOR_PADRAO): number {
-  return Number((precoPeca(peca, lista).valor + precoAutomacaoPeca(peca) + precoMotorPeca(peca, margemPct)).toFixed(2));
+  return Number((precoPeca(peca, lista).valor + precoFechadurasPeca(peca, lista) + precoAutomacaoPeca(peca) + precoMotorPeca(peca, margemPct)).toFixed(2));
 }
 
 /** Soma das peças pela política, já com automação e motor. */
