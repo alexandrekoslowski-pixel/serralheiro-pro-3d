@@ -1116,6 +1116,7 @@ export default function Configurador() {
                           <SelectItem key={m.id} value={m.id}>
                             {porteDoMotor(m.porte_motor) ? `[${m.porte_motor}] ` : ""}{m.nome}
                             {compativel(m) ? " · indicado" : ""}
+                            {" · "}{m.custo ? formatarBRL(precoMotorSugerido(m.custo, margemMotor)) : "sem preço cadastrado"}
                           </SelectItem>
                         ))}
                       </SelectContent>
