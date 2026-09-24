@@ -120,7 +120,7 @@ export function AvisosMedicao({ mobile = false }: { mobile?: boolean }) {
                 {i.prazo ? ` · entrega ${new Date(`${i.prazo}T00:00:00`).toLocaleDateString("pt-BR")}` : ""}
               </p>
               <div className="flex flex-wrap gap-1.5 pt-0.5">
-                <Button size="sm" variant="soft" onClick={() => { setAberto(false); navigate("/app/oficina"); }}>
+                <Button size="sm" variant="soft" onClick={() => { setAberto(false); navigate(`/app/oficina?medicao=${i.id}`); }}>
                   <Ruler className="mr-1 h-3.5 w-3.5" /> Fazer medição
                 </Button>
                 {i.endereco && (

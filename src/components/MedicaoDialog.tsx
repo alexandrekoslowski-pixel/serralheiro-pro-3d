@@ -13,7 +13,7 @@ import { numeroMascarado } from "@/lib/mascaras";
 import { PainelFotos } from "@/components/FotosOrdem";
 import { EditorMedicao } from "@/components/EditorMedicao";
 
-export function MedicaoDialog({ projetoId }: { projetoId: string }) {
+export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar }: { projetoId: string; abrirAgora?: boolean; onFechar?: () => void }) {
   const { toast } = useToast();
   const [aberto, setAberto] = useState(false);
   const [editor, setEditor] = useState(false);
@@ -35,7 +35,8 @@ export function MedicaoDialog({ projetoId }: { projetoId: string }) {
     setCarregado(true);
   }, [aberto, carregado, projeto]);
 
-  const abrir = (o: boolean) => setAberto(o);
+  useEffect(() => { if (abrirAgora) setAberto(true); }, [abrirAgora]);
+  const abrir = (o: boolean) => { setAberto(o); if (!o) onFechar?.(); };
 
   const salvar = () => {
     if (!projeto) {
