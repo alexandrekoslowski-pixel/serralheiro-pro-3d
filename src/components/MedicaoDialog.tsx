@@ -12,6 +12,8 @@ import { useDados } from "@/hooks/useDados";
 import { numeroMascarado } from "@/lib/mascaras";
 import { PainelFotos } from "@/components/FotosOrdem";
 import { EditorMedicao } from "@/components/EditorMedicao";
+import { ChecklistPedido } from "@/components/ChecklistPedido";
+import type { RespostasChecklist } from "@/lib/checklistPedido";
 
 export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar, semBotao = false }: { projetoId: string; abrirAgora?: boolean; onFechar?: () => void; semBotao?: boolean }) {
   const { toast } = useToast();
@@ -25,6 +27,9 @@ export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar, semBota
   const [altura, setAltura] = useState("");
   const [obs, setObs] = useState("");
   const [carregado, setCarregado] = useState(false);
+  const [respostas, setRespostas] = useState<RespostasChecklist>({});
+  const [respPecas, setRespPecas] = useState<Record<string, RespostasChecklist>>({});
+  const [pecaSel, setPecaSel] = useState("");
 
   // Só preenche quando a ordem já chegou, para não apagar a medição salva antes.
   useEffect(() => {
@@ -32,6 +37,9 @@ export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar, semBota
     setLargura(projeto.medicao.largura_mm ? String(projeto.medicao.largura_mm / 10).replace(".", ",") : "");
     setAltura(projeto.medicao.altura_mm ? String(projeto.medicao.altura_mm / 10).replace(".", ",") : "");
     setObs(projeto.medicao.observacoes ?? "");
+    setRespostas(projeto.checklist_respostas ?? {});
+    setRespPecas(Object.fromEntries(projeto.pecas.map((pc) => [pc.id, pc.checklist_respostas ?? {}])));
+    setPecaSel(projeto.pecas[0]?.id ?? "");
     setCarregado(true);
   }, [aberto, carregado, projeto]);
 
@@ -49,13 +57,15 @@ export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar, semBota
     }
     salvarProjeto({
       ...projeto,
+      checklist_respostas: respostas,
+      pecas: projeto.pecas.map((pc) => ({ ...pc, checklist_respostas: respPecas[pc.id] ?? pc.checklist_respostas })),
       medicao: {
         largura_mm: largura.trim() ? Math.round(numeroMascarado(largura) * 10) : null,
         altura_mm: altura.trim() ? Math.round(numeroMascarado(altura) * 10) : null,
         observacoes: obs.trim(),
       },
     });
-    toast({ title: "Medição salva na ordem." });
+    toast({ title: "Checklist e medição salvos na ordem." });
   };
 
   return (
@@ -67,10 +77,31 @@ export function MedicaoDialog({ projetoId, abrirAgora = false, onFechar, semBota
         </Button>
       </DialogTrigger>
       )}
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Medição da ordem</DialogTitle>
         </DialogHeader>
+        {projeto && (
+          <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm">
+            <p className="font-semibold">{projeto.cliente?.nome || projeto.nome}</p>
+            <p className="text-muted-foreground">{[projeto.dados?.cliente_endereco, projeto.dados?.cliente_numero, projeto.dados?.cliente_bairro, projeto.dados?.cliente_cidade].filter(Boolean).join(", ") || "Endereço não informado"}</p>
+          </div>
+        )}
+        {projeto && projeto.pecas.length > 0 && carregado && (
+          <section className="space-y-2">
+            <h3 className="font-display text-base">Checklist técnico</h3>
+            <ChecklistPedido
+              pecas={projeto.pecas.map((pc) => ({ id: pc.id, nome: pc.nome, tipologia: pc.tipologia, checklist_respostas: respPecas[pc.id] ?? {} }))}
+              selecionadaId={pecaSel || projeto.pecas[0].id}
+              respostas={respostas}
+              onChange={setRespostas}
+              onChangePeca={(id, r) => setRespPecas((a) => ({ ...a, [id]: r }))}
+              onSelecionarPeca={setPecaSel}
+              mostrarPendencias
+            />
+          </section>
+        )}
+        <h3 className="border-t border-border pt-3 font-display text-base">Medidas no local</h3>
 
         <div className="form-grid">
           <div className="form-field-measure">
