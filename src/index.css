@@ -117,15 +117,26 @@
     --border: 24 8% 22%;
     --input: 24 8% 20%;
     --ring: 18 78% 52%;
+
+    --success: 142 65% 45%;
+    --success-foreground: 30 15% 96%;
+    --warning: 38 92% 55%;
+    --warning-foreground: 24 10% 8%;
+
+    --sidebar-background: 24 9% 11%;
+    --sidebar-foreground: 30 15% 92%;
+    --sidebar-primary: 18 78% 52%;
+    --sidebar-primary-foreground: 24 10% 8%;
+    --sidebar-accent: 24 8% 18%;
+    --sidebar-accent-foreground: 30 15% 96%;
+    --sidebar-border: 24 8% 22%;
+    --sidebar-ring: 18 78% 52%;
   }
 }
 
 @layer base {
   * {
     @apply border-border;
-  }
-  html {
-    @apply dark;
   }
   body {
     @apply bg-background text-foreground;
