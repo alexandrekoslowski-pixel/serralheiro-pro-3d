@@ -1742,6 +1742,30 @@ export default function Configurador() {
                     </tr>
                   </thead>
                   <tbody>
+                    {projeto.pecas.flatMap((pc) => [
+                      ...automacoesDaPeca(pc).map((a) => {
+                        const item = automacaoPolitica(a.id);
+                        const valor = a.valor != null ? Number(a.valor) : item?.valor ?? 0;
+                        return (
+                          <tr key={`${pc.id}-automacao-${a.id}`} className="border-b border-border/40">
+                            <td className="py-1.5 pr-2">
+                              <span className="font-medium">{item?.nome || "Automação"}</span>
+                              <span className="ml-1 text-xs text-muted-foreground">· {pc.nome}</span>
+                            </td>
+                            <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(valor)}</td>
+                          </tr>
+                        );
+                      }),
+                      ...(pc.motor_material_id ? [(
+                        <tr key={`${pc.id}-motor`} className="border-b border-border/40">
+                          <td className="py-1.5 pr-2">
+                            <span className="font-medium">{pc.motor_nome || "Motor"}</span>
+                            <span className="ml-1 text-xs text-muted-foreground">· {pc.nome}</span>
+                          </td>
+                          <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(precoMotorPeca(pc, margemMotor))}</td>
+                        </tr>
+                      )] : []),
+                    ])}
                     {servicosEscolhidos.map((s) => (
                       <tr key={s.id} className="border-b border-border/40">
                         <td className="py-1.5 pr-2">{s.nome}</td>
@@ -1754,7 +1778,7 @@ export default function Configurador() {
                         <td className="py-1.5 pr-2 text-right font-medium">{formatarBRL(projeto.frete_valor ?? 0)}</td>
                       </tr>
                     )}
-                    {servicosEscolhidos.length === 0 && (projeto.frete_valor ?? 0) <= 0 && (
+                    {servicosEscolhidos.length === 0 && (projeto.frete_valor ?? 0) <= 0 && projeto.pecas.every((pc) => automacoesDaPeca(pc).length === 0 && !pc.motor_material_id) && (
                       <tr><td colSpan={2} className="py-3 text-sm text-muted-foreground">Nenhum serviço adicional.</td></tr>
                     )}
                   </tbody>
