@@ -59,6 +59,7 @@ import {
   precoPeca, produtosPolitica, modelosPolitica, totalPecasPolitica, totalPeca,
   precoAutomacaoPeca, automacoesDaPeca, nomesAutomacoes, precoMotorPeca, precoMotorSugerido, tipologiaDoItem, automacaoPolitica,
   porteMotorRecomendado, porteDoMotor, motorSubdimensionado,
+  fechadurasPolitica, fechadurasDaPeca, nomesFechaduras, precoFechadurasPeca, nomeFechadura, itemPolitica,
 } from "@/lib/politicaPrecos";
 import { gerarOrdemProducaoPDF } from "@/lib/pdfProducao";
 import { cm, mmParaCm, cmParaMm } from "@/lib/medidas";
