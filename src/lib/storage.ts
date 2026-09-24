@@ -41,6 +41,8 @@ export interface Peca {
   automacao_valor?: number | null;
   /** Várias automações na mesma peça (ex.: motor + eletroímã). */
   automacoes?: { id: string; valor: number | null }[];
+  /** Fechaduras escolhidas para esta peça (preço da política, editável). */
+  fechaduras?: { id: string; qtd: number; valor: number | null }[];
   /** Motor vindo do cadastro de materiais. */
   motor_material_id?: string | null;
   motor_nome?: string;
